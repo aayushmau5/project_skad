@@ -35,7 +35,7 @@ These documents are the current source of truth. Avoid creating a new planning f
 
 ## Current stage
 
-The product direction, v0 architecture, and first data model are settled enough to begin implementation. The next useful step is a thin vertical slice: import a small reviewed dataset, search it, view an entry, submit a change, and approve it through the real persistence path.
+The product direction, v0 architecture, and first data model are settled enough to begin implementation. The immediate focus is scaffolding the Phoenix project and nothing beyond it. [implementation-layers.md](docs/implementation-layers.md) holds a deliberately rough map of later layers; only the next layer should be planned in depth.
 
 ## Existing source material
 
