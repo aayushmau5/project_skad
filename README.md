@@ -37,13 +37,6 @@ These documents are the current source of truth. Avoid creating a new planning f
 
 The product direction, v0 architecture, and first data model are settled enough to begin implementation. The immediate focus is scaffolding the Phoenix project and nothing beyond it. [implementation-layers.md](docs/implementation-layers.md) holds a deliberately rough map of later layers; only the next layer should be planned in depth.
 
-## Existing source material
-
-- [Current Zed Tells website](https://www.zedtells.com/)
-- [Existing dictionary dataset](https://docs.google.com/spreadsheets/d/1DP8Y66XIfZoM14Zteo_EtUKmlRfT1woa86i6TVPoVHY/edit?gid=0#gid=0)
-- [Existing contribution form](https://docs.google.com/forms/d/e/1FAIpQLScqBV3_pVMQ_morV5zkwu-OjV7sNfBku9as9ai1w-ma61BNKQ/viewform)
-- [Donate-a-word responses](https://docs.google.com/spreadsheets/d/1DS5h6Q38MUHDRvJ1w335q3VCbD9AnS0ZYafQIv4y1k8/edit?gid=2013417617#gid=2013417617)
-
 ## Historical artifacts
 
 - [first-web.png](first-web.png) is an early interface sketch.
