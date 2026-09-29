@@ -8,6 +8,7 @@ defmodule Skad.Archive do
   alias Skad.Archive.Example
   alias Skad.Archive.ExampleLink
   alias Skad.Archive.Language
+  alias Skad.Archive.Search
   alias Skad.Repo
 
   @lookup_limit 20
@@ -32,6 +33,21 @@ defmodule Skad.Archive do
   def exact_lookup(query, language \\ nil), do: lookup(query, language, :exact)
 
   def prefix_lookup(query, language \\ nil), do: lookup(query, language, :prefix)
+
+  def search(query, language \\ nil) do
+    with normalized when is_binary(normalized) and normalized != "" <- normalize_text(query),
+         {:ok, language_id} <- lookup_language_id(language) do
+      (exact_lookup(normalized, language) ++
+         prefix_lookup(normalized, language) ++
+         Search.full_text_lookup(normalized, language_id))
+      |> Enum.uniq_by(& &1.entry.id)
+      |> Enum.take(@lookup_limit)
+    else
+      _invalid_query_or_language -> []
+    end
+  end
+
+  def rebuild_search_index, do: Search.rebuild()
 
   defp lookup(query, language, match) do
     with normalized when is_binary(normalized) and normalized != "" <- normalize_text(query),
@@ -99,6 +115,9 @@ defmodule Skad.Archive do
       |> Multi.run(:forms, fn repo, %{entry: entry} ->
         insert_forms(repo, entry, forms_attrs)
       end)
+      |> Multi.run(:search_index, fn repo, %{entry: entry} ->
+        Search.refresh(repo, [entry.id])
+      end)
       |> Repo.transaction()
       |> public_entry_result()
     end
@@ -125,6 +144,9 @@ defmodule Skad.Archive do
       |> Multi.run(:forms, fn repo, %{entry: entry} ->
         insert_forms(repo, entry, forms_attrs)
       end)
+      |> Multi.run(:search_index, fn repo, %{entry: entry} ->
+        Search.refresh(repo, [entry.id])
+      end)
       |> Repo.transaction()
       |> public_entry_result()
     end
@@ -148,6 +170,10 @@ defmodule Skad.Archive do
       |> Multi.insert(:example, Example.changeset(example, example_attrs))
       |> Multi.run(:links, fn repo, %{example: example} ->
         insert_example_links(repo, example, links_attrs)
+      end)
+      |> Multi.run(:search_index, fn repo, %{links: links} ->
+        entry_ids = for link <- links, link.role == :focus, do: link.entry_id
+        Search.refresh(repo, entry_ids)
       end)
       |> Repo.transaction()
       |> public_example_result()

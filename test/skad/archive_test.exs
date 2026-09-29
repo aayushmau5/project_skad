@@ -403,6 +403,7 @@ defmodule Skad.ArchiveTest do
     |> Repo.update!()
 
     assert Archive.get_public_entry(entry.public_id) == nil
+    assert Archive.search("water") == []
   end
 
   defp create_language do
