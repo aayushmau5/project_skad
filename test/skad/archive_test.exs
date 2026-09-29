@@ -62,6 +62,53 @@ defmodule Skad.ArchiveTest do
     assert Archive.get_public_entry(entry.public_id).id == entry.id
   end
 
+  test "looks up exact forms without losing homographs or duplicating entries" do
+    {:ok, english} = create_language()
+
+    {:ok, water} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: "english", text: "A clear liquid."}]},
+        forms: [
+          %{text: "Water", kind: :spelling, is_primary: true},
+          %{text: "H₂O", kind: :alias, is_primary: false},
+          %{text: "H₂O", kind: :historical, is_primary: false}
+        ]
+      })
+
+    {:ok, formula} = publish_meaning(english, "CHEMICAL FORMULA", "H₂O")
+
+    {:ok, hindi} =
+      Archive.create_language(%{
+        slug: "hindi",
+        code: "hi",
+        name: "Hindi",
+        direction: :ltr
+      })
+
+    {:ok, hindi_entry} = publish_meaning(hindi, "CHEMICAL FORMULA", "H₂O")
+    {:ok, archived} = publish_meaning(english, "ARCHIVED", "H₂O")
+
+    archived
+    |> Changeset.change(archived_at: DateTime.utc_now() |> DateTime.truncate(:second))
+    |> Repo.update!()
+
+    assert [formula_match, hindi_match, water_match] = Archive.exact_lookup("  H₂O  ")
+    assert formula_match.entry.id == formula.id
+    assert hindi_match.entry.id == hindi_entry.id
+    assert water_match.entry.id == water.id
+    assert Enum.all?([formula_match, hindi_match, water_match], &(&1.matched_form.text == "H₂O"))
+
+    assert [english_formula, english_water] = Archive.exact_lookup("H₂O", english)
+    assert english_formula.entry.id == formula.id
+    assert english_water.entry.id == water.id
+    assert english_formula.entry.language.id == english.id
+    assert english_formula.entry.concept.editorial_label == "CHEMICAL FORMULA"
+    assert length(english_water.entry.forms) == 3
+
+    assert Archive.exact_lookup("   ") == []
+  end
+
   test "rejects an incomplete form set before writing anything" do
     {:ok, language} = create_language()
 

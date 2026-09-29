@@ -10,6 +10,8 @@ defmodule Skad.Archive do
   alias Skad.Archive.Language
   alias Skad.Repo
 
+  @exact_lookup_limit 20
+
   def list_active_languages do
     Language
     |> where([language], language.active)
@@ -25,6 +27,43 @@ defmodule Skad.Archive do
     %Language{}
     |> Language.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def exact_lookup(query, language \\ nil) do
+    with normalized when is_binary(normalized) and normalized != "" <- normalize_text(query),
+         {:ok, language_id} <- lookup_language_id(language) do
+      matching_forms =
+        EntryForm
+        |> where([form], form.normalized_text == ^normalized)
+        |> maybe_filter_language(language_id)
+        |> group_by([form], form.entry_id)
+        |> select([form], %{
+          entry_id: form.entry_id,
+          primary_match: fragment("MAX(CASE WHEN ? THEN 1 ELSE 0 END)", form.is_primary)
+        })
+
+      forms_query =
+        from form in EntryForm,
+          order_by: [desc: form.is_primary, asc: form.id]
+
+      Entry
+      |> join(:inner, [entry], match in subquery(matching_forms), on: match.entry_id == entry.id)
+      |> join(:inner, [entry, _match], concept in assoc(entry, :concept))
+      |> where(
+        [entry, _match, concept],
+        is_nil(entry.archived_at) and is_nil(concept.archived_at)
+      )
+      |> order_by([entry, match], desc: match.primary_match, asc: entry.id)
+      |> limit(@exact_lookup_limit)
+      |> Repo.all()
+      |> Repo.preload([:language, :concept, forms: forms_query])
+      |> Enum.map(fn entry ->
+        matched_form = Enum.find(entry.forms, &(&1.normalized_text == normalized))
+        %{entry: entry, matched_form: matched_form}
+      end)
+    else
+      _invalid_query_or_language -> []
+    end
   end
 
   def publish_new_meaning(%Language{} = language, attrs) when is_map(attrs) do
@@ -200,6 +239,16 @@ defmodule Skad.Archive do
   end
 
   defp active_language(_language), do: {:error, :language_inactive}
+
+  defp lookup_language_id(nil), do: {:ok, nil}
+  defp lookup_language_id(%Language{id: id}) when is_integer(id), do: {:ok, id}
+  defp lookup_language_id(_language), do: :error
+
+  defp maybe_filter_language(query, nil), do: query
+
+  defp maybe_filter_language(query, language_id) do
+    where(query, [form], form.language_id == ^language_id)
+  end
 
   defp available_concept(%Entry{id: id}) when is_integer(id) do
     concept =
