@@ -10,7 +10,7 @@ defmodule Skad.Archive do
   alias Skad.Archive.Language
   alias Skad.Repo
 
-  @exact_lookup_limit 20
+  @lookup_limit 20
 
   def list_active_languages do
     Language
@@ -29,16 +29,26 @@ defmodule Skad.Archive do
     |> Repo.insert()
   end
 
-  def exact_lookup(query, language \\ nil) do
+  def exact_lookup(query, language \\ nil), do: lookup(query, language, :exact)
+
+  def prefix_lookup(query, language \\ nil), do: lookup(query, language, :prefix)
+
+  defp lookup(query, language, match) do
     with normalized when is_binary(normalized) and normalized != "" <- normalize_text(query),
          {:ok, language_id} <- lookup_language_id(language) do
       matching_forms =
         EntryForm
-        |> where([form], form.normalized_text == ^normalized)
+        |> match_forms(normalized, match)
         |> maybe_filter_language(language_id)
         |> group_by([form], form.entry_id)
         |> select([form], %{
           entry_id: form.entry_id,
+          exact_match:
+            fragment(
+              "MAX(CASE WHEN ? = ? THEN 1 ELSE 0 END)",
+              form.normalized_text,
+              ^normalized
+            ),
           primary_match: fragment("MAX(CASE WHEN ? THEN 1 ELSE 0 END)", form.is_primary)
         })
 
@@ -53,12 +63,17 @@ defmodule Skad.Archive do
         [entry, _match, concept],
         is_nil(entry.archived_at) and is_nil(concept.archived_at)
       )
-      |> order_by([entry, match], desc: match.primary_match, asc: entry.id)
-      |> limit(@exact_lookup_limit)
+      |> order_by(
+        [entry, match],
+        desc: match.exact_match,
+        desc: match.primary_match,
+        asc: entry.id
+      )
+      |> limit(@lookup_limit)
       |> Repo.all()
       |> Repo.preload([:language, :concept, forms: forms_query])
       |> Enum.map(fn entry ->
-        matched_form = Enum.find(entry.forms, &(&1.normalized_text == normalized))
+        matched_form = best_matching_form(entry.forms, normalized, match)
         %{entry: entry, matched_form: matched_form}
       end)
     else
@@ -249,6 +264,38 @@ defmodule Skad.Archive do
   defp maybe_filter_language(query, language_id) do
     where(query, [form], form.language_id == ^language_id)
   end
+
+  defp match_forms(query, normalized, :exact) do
+    where(query, [form], form.normalized_text == ^normalized)
+  end
+
+  defp match_forms(query, normalized, :prefix) do
+    escaped =
+      normalized
+      |> String.replace("[", "[[]")
+      |> String.replace("*", "[*]")
+      |> String.replace("?", "[?]")
+
+    where(query, [form], fragment("? GLOB ?", form.normalized_text, ^(escaped <> "*")))
+  end
+
+  defp best_matching_form(forms, normalized, match) do
+    forms
+    |> Enum.filter(&form_matches?(&1, normalized, match))
+    |> Enum.min_by(fn form ->
+      {
+        if(form.normalized_text == normalized, do: 0, else: 1),
+        if(form.is_primary, do: 0, else: 1),
+        String.length(form.normalized_text),
+        form.id
+      }
+    end)
+  end
+
+  defp form_matches?(form, normalized, :exact), do: form.normalized_text == normalized
+
+  defp form_matches?(form, normalized, :prefix),
+    do: String.starts_with?(form.normalized_text, normalized)
 
   defp available_concept(%Entry{id: id}) when is_integer(id) do
     concept =

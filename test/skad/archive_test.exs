@@ -109,6 +109,60 @@ defmodule Skad.ArchiveTest do
     assert Archive.exact_lookup("   ") == []
   end
 
+  test "looks up form prefixes with deterministic ranking" do
+    {:ok, english} = create_language()
+
+    {:ok, alias_match} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "CHANNEL"},
+        entry: %{definitions: [%{language: "english", text: "A channel."}]},
+        forms: [
+          %{text: "Channel", kind: :spelling, is_primary: true},
+          %{text: "Waterway", kind: :alias, is_primary: false}
+        ]
+      })
+
+    {:ok, waterfall} = publish_meaning(english, "WATERFALL", "Waterfall")
+
+    {:ok, water} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: "english", text: "A clear liquid."}]},
+        forms: [
+          %{text: "Water", kind: :spelling, is_primary: true},
+          %{text: "Waterline", kind: :alias, is_primary: false}
+        ]
+      })
+
+    assert Archive.exact_lookup("wat", english) == []
+
+    assert [waterfall_result, water_result, alias_result] = Archive.prefix_lookup("  WAT  ")
+
+    assert waterfall_result.entry.id == waterfall.id
+    assert water_result.entry.id == water.id
+    assert alias_result.entry.id == alias_match.id
+    assert alias_result.matched_form.text == "Waterway"
+
+    assert [exact_result, prefix_result, alternate_result] =
+             Archive.prefix_lookup("water", english)
+
+    assert exact_result.entry.id == water.id
+    assert exact_result.matched_form.text == "Water"
+    assert prefix_result.entry.id == waterfall.id
+    assert alternate_result.entry.id == alias_match.id
+
+    assert Enum.count([exact_result, prefix_result, alternate_result], &(&1.entry.id == water.id)) ==
+             1
+
+    {:ok, literal_glob} = publish_meaning(english, "LITERAL GLOB", "Star*word")
+    {:ok, _ordinary_prefix} = publish_meaning(english, "ORDINARY PREFIX", "Starship")
+
+    assert [%{entry: entry}] = Archive.prefix_lookup("star*", english)
+    assert entry.id == literal_glob.id
+
+    assert Archive.prefix_lookup("   ") == []
+  end
+
   test "rejects an incomplete form set before writing anything" do
     {:ok, language} = create_language()
 
