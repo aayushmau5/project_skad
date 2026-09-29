@@ -311,8 +311,10 @@ Connects exact spans of an example to the intended dictionary entries. This rela
 Initial rules:
 
 - Index example_id and entry_id.
+- Offsets are zero-based UTF-8 byte offsets with an exclusive end offset.
 - Require end_offset greater than start_offset.
-- Validate that offsets resolve to surface_text.
+- Derive surface_text from the example and validate that offsets fall on Unicode boundaries.
+- Require at least one focus link and reject overlapping confirmed spans.
 - Editing example text requires rematching and reconfirming its links.
 - Automatic matching produces suggestions; only confirmed matches become rows.
 

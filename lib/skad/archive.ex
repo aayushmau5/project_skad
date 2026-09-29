@@ -27,15 +27,13 @@ defmodule Skad.Archive do
     |> Repo.insert()
   end
 
-  def publish_new_meaning(%Language{active: false}, _attrs),
-    do: {:error, :language_inactive}
-
   def publish_new_meaning(%Language{} = language, attrs) when is_map(attrs) do
     concept_attrs = attr(attrs, :concept, %{})
     entry_attrs = attr(attrs, :entry, %{})
     forms_attrs = attr(attrs, :forms, [])
 
-    with :ok <- validate_forms(forms_attrs) do
+    with {:ok, language} <- active_language(language),
+         :ok <- validate_forms(forms_attrs) do
       Multi.new()
       |> Multi.insert(:concept, Concept.changeset(%Concept{}, concept_attrs))
       |> Multi.insert(:entry, fn %{concept: concept} ->
@@ -48,14 +46,62 @@ defmodule Skad.Archive do
         insert_forms(repo, entry, forms_attrs)
       end)
       |> Repo.transaction()
-      |> case do
-        {:ok, %{entry: entry}} -> {:ok, preload_public_entry(entry)}
-        {:error, _operation, reason, _changes} -> {:error, reason}
-      end
+      |> public_entry_result()
     end
   end
 
   def publish_new_meaning(_language, _attrs), do: {:error, :invalid_attributes}
+
+  def publish_equivalent(%Entry{} = source_entry, %Language{} = language, attrs)
+      when is_map(attrs) do
+    entry_attrs = attr(attrs, :entry, %{})
+    forms_attrs = attr(attrs, :forms, [])
+
+    with {:ok, language} <- active_language(language),
+         {:ok, concept} <- available_concept(source_entry),
+         :ok <- validate_forms(forms_attrs) do
+      Multi.new()
+      |> Multi.insert(
+        :entry,
+        Entry.changeset(
+          %Entry{language_id: language.id, concept_id: concept.id},
+          entry_attrs
+        )
+      )
+      |> Multi.run(:forms, fn repo, %{entry: entry} ->
+        insert_forms(repo, entry, forms_attrs)
+      end)
+      |> Repo.transaction()
+      |> public_entry_result()
+    end
+  end
+
+  def publish_equivalent(_source_entry, _language, _attrs),
+    do: {:error, :invalid_attributes}
+
+  def publish_usage_example(%Language{} = language, attrs) when is_map(attrs) do
+    example_attrs = attr(attrs, :example, %{})
+    links_attrs = attr(attrs, :links, [])
+
+    with {:ok, language} <- active_language(language),
+         :ok <- validate_link_set(links_attrs) do
+      example = %Example{
+        language_id: language.id,
+        normalized_text: example_attrs |> attr(:text) |> normalize_text()
+      }
+
+      Multi.new()
+      |> Multi.insert(:example, Example.changeset(example, example_attrs))
+      |> Multi.run(:links, fn repo, %{example: example} ->
+        insert_example_links(repo, example, links_attrs)
+      end)
+      |> Repo.transaction()
+      |> public_example_result()
+    end
+  end
+
+  def publish_usage_example(_language, _attrs),
+    do: {:error, :invalid_attributes}
 
   def get_public_entry(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
@@ -126,6 +172,178 @@ defmodule Skad.Archive do
       error -> error
     end
   end
+
+  defp public_entry_result({:ok, %{entry: entry}}),
+    do: {:ok, preload_public_entry(entry)}
+
+  defp public_entry_result({:error, _operation, reason, _changes}),
+    do: {:error, reason}
+
+  defp public_example_result({:ok, %{example: example}}) do
+    links_query = from link in ExampleLink, order_by: [asc: link.start_offset, asc: link.id]
+
+    {:ok,
+     Repo.preload(example,
+       language: [],
+       links: {links_query, [entry: [:language, :forms]]}
+     )}
+  end
+
+  defp public_example_result({:error, _operation, reason, _changes}),
+    do: {:error, reason}
+
+  defp active_language(%Language{id: id}) when is_integer(id) do
+    case Repo.get_by(Language, id: id, active: true) do
+      nil -> {:error, :language_inactive}
+      language -> {:ok, language}
+    end
+  end
+
+  defp active_language(_language), do: {:error, :language_inactive}
+
+  defp available_concept(%Entry{id: id}) when is_integer(id) do
+    concept =
+      Entry
+      |> join(:inner, [entry], concept in assoc(entry, :concept))
+      |> where(
+        [entry, concept],
+        entry.id == ^id and is_nil(entry.archived_at) and is_nil(concept.archived_at)
+      )
+      |> select([_entry, concept], concept)
+      |> Repo.one()
+
+    if concept, do: {:ok, concept}, else: {:error, :meaning_unavailable}
+  end
+
+  defp available_concept(_entry), do: {:error, :meaning_unavailable}
+
+  defp insert_example_links(repo, example, links_attrs) do
+    with {:ok, links} <- prepare_links(repo, example.text, links_attrs),
+         :ok <- validate_non_overlapping(links) do
+      links
+      |> Enum.reduce_while({:ok, []}, fn link, {:ok, inserted} ->
+        example_link = %ExampleLink{
+          example_id: example.id,
+          entry_id: link.entry.id
+        }
+
+        attrs = %{
+          start_offset: link.start_offset,
+          end_offset: link.end_offset,
+          surface_text: link.surface_text,
+          role: link.role
+        }
+
+        case repo.insert(ExampleLink.changeset(example_link, attrs)) do
+          {:ok, link} -> {:cont, {:ok, [link | inserted]}}
+          {:error, changeset} -> {:halt, {:error, changeset}}
+        end
+      end)
+      |> case do
+        {:ok, links} -> {:ok, Enum.reverse(links)}
+        error -> error
+      end
+    end
+  end
+
+  defp prepare_links(repo, text, links_attrs) do
+    links_attrs
+    |> Enum.reduce_while({:ok, []}, fn attrs, {:ok, links} ->
+      case prepare_link(repo, text, attrs) do
+        {:ok, link} -> {:cont, {:ok, [link | links]}}
+        error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, links} -> {:ok, Enum.reverse(links)}
+      error -> error
+    end
+  end
+
+  defp prepare_link(repo, text, attrs) do
+    with {:ok, entry} <- available_entry(repo, attr(attrs, :entry_public_id)),
+         {:ok, start_offset} <- cast_integer(attr(attrs, :start_offset)),
+         {:ok, end_offset} <- cast_integer(attr(attrs, :end_offset)),
+         {:ok, role} <- cast_link_role(attr(attrs, :role)),
+         {:ok, surface_text} <- slice_utf8(text, start_offset, end_offset) do
+      {:ok,
+       %{
+         entry: entry,
+         start_offset: start_offset,
+         end_offset: end_offset,
+         surface_text: surface_text,
+         role: role
+       }}
+    end
+  end
+
+  defp available_entry(repo, public_id) do
+    with {:ok, public_id} <- Ecto.UUID.cast(public_id),
+         %Entry{} = entry <-
+           Entry
+           |> join(:inner, [entry], concept in assoc(entry, :concept))
+           |> where(
+             [entry, concept],
+             entry.public_id == ^public_id and is_nil(entry.archived_at) and
+               is_nil(concept.archived_at)
+           )
+           |> repo.one() do
+      {:ok, entry}
+    else
+      _error -> {:error, :entry_unavailable}
+    end
+  end
+
+  defp validate_link_set(links) when is_list(links) do
+    cond do
+      links == [] -> {:error, :links_required}
+      not Enum.all?(links, &is_map/1) -> {:error, :invalid_links}
+      not Enum.any?(links, &focus_link?/1) -> {:error, :focus_link_required}
+      true -> :ok
+    end
+  end
+
+  defp validate_link_set(_links), do: {:error, :invalid_links}
+
+  defp focus_link?(attrs), do: attr(attrs, :role) in [:focus, "focus"]
+
+  defp validate_non_overlapping(links) do
+    overlapping? =
+      links
+      |> Enum.sort_by(&{&1.start_offset, &1.end_offset})
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.any?(fn [left, right] -> left.end_offset > right.start_offset end)
+
+    if overlapping?, do: {:error, :overlapping_links}, else: :ok
+  end
+
+  defp cast_integer(value) do
+    case Ecto.Type.cast(:integer, value) do
+      {:ok, integer} -> {:ok, integer}
+      :error -> {:error, :invalid_link_span}
+    end
+  end
+
+  defp cast_link_role(role) when role in [:focus, "focus"], do: {:ok, :focus}
+  defp cast_link_role(role) when role in [:reference, "reference"], do: {:ok, :reference}
+  defp cast_link_role(_role), do: {:error, :invalid_link_role}
+
+  defp slice_utf8(text, start_offset, end_offset)
+       when is_binary(text) and start_offset >= 0 and end_offset > start_offset and
+              end_offset <= byte_size(text) do
+    prefix = binary_part(text, 0, start_offset)
+    surface_text = binary_part(text, start_offset, end_offset - start_offset)
+    suffix = binary_part(text, end_offset, byte_size(text) - end_offset)
+
+    if Enum.all?([prefix, surface_text, suffix], &String.valid?/1) do
+      {:ok, surface_text}
+    else
+      {:error, :invalid_link_span}
+    end
+  end
+
+  defp slice_utf8(_text, _start_offset, _end_offset),
+    do: {:error, :invalid_link_span}
 
   defp validate_forms(forms) when is_list(forms) do
     cond do
