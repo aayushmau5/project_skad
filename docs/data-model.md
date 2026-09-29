@@ -142,7 +142,8 @@ Opening the English entry follows:
 - Keep submissions separate from canonical public records.
 - Treat FTS data as derived and rebuildable.
 
-The exact public_id representation remains open until migrations are written.
+V0 public_id values are application-generated UUID strings stored as SQLite TEXT
+(`:binary_id` in Ecto migrations). Integer IDs remain internal.
 
 ## 1. languages
 
