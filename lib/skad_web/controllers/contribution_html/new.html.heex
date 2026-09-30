@@ -1,0 +1,62 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section id="new-entry-contribution" class="auth-panel">
+    <h1>Suggest a word</h1>
+    <p>Your suggestion will be reviewed before it appears in the archive.</p>
+
+    <.form
+      for={@form}
+      action={~p"/contributions"}
+      id="new-entry-contribution-form"
+      class="auth-form"
+    >
+      <.input field={@form[:client_submission_id]} type="hidden" />
+      <.input
+        field={@form[:language_slug]}
+        type="select"
+        label="Language"
+        class="auth-input"
+        prompt="Choose a language"
+        options={Enum.map(@languages, &{&1.name, &1.slug})}
+        required
+      />
+      <.input
+        field={@form[:primary_form]}
+        type="text"
+        label="Word or expression"
+        class="auth-input"
+        required
+      />
+      <.input
+        field={@form[:definition]}
+        type="textarea"
+        label="Meaning"
+        class="auth-input"
+        rows="4"
+        required
+      />
+      <.input
+        field={@form[:part_of_speech]}
+        type="text"
+        label="Part of speech"
+        class="auth-input"
+      />
+      <.input
+        field={@form[:usage_note]}
+        type="textarea"
+        label="Usage note"
+        class="auth-input"
+        rows="3"
+      />
+      <.input
+        field={@form[:cultural_note]}
+        type="textarea"
+        label="Cultural context"
+        class="auth-input"
+        rows="3"
+      />
+      <button type="submit" id="new-entry-contribution-submit" class="auth-button">
+        Send suggestion
+      </button>
+    </.form>
+  </section>
+</Layouts.app>

@@ -7,8 +7,12 @@ defmodule Skad.Contributions do
   alias Skad.Contributions.Submission
   alias Skad.Repo
 
+  def change_new_entry(attrs \\ %{}) when is_map(attrs) do
+    NewEntrySubmission.changeset(%NewEntrySubmission{}, attrs)
+  end
+
   def submit_new_entry(attrs) when is_map(attrs) do
-    changeset = NewEntrySubmission.changeset(%NewEntrySubmission{}, attrs)
+    changeset = change_new_entry(attrs)
 
     if changeset.valid? do
       new_entry = Changeset.apply_changes(changeset)

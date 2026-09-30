@@ -22,6 +22,9 @@ defmodule SkadWeb.Router do
 
     get "/", PageController, :home
     get "/entries/:public_id", PageController, :entry
+    get "/contribute", ContributionController, :new
+    post "/contributions", ContributionController, :create
+    get "/contributions/:public_id", ContributionController, :show
   end
 
   scope "/moderator", SkadWeb do

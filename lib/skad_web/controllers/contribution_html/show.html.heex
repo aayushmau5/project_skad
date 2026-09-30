@@ -1,0 +1,15 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section id="contribution-receipt">
+    <h1>Suggestion received</h1>
+    <p>Your suggestion is waiting for moderator review.</p>
+
+    <dl>
+      <dt>Status</dt>
+      <dd id="contribution-status">{status_label(@receipt.status)}</dd>
+      <dt>Receipt</dt>
+      <dd><code id="contribution-receipt-id">{@receipt.public_id}</code></dd>
+    </dl>
+
+    <p><.link href={~p"/"}>Return to the archive</.link></p>
+  </section>
+</Layouts.app>
