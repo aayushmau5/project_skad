@@ -33,4 +33,19 @@ defmodule SkadWeb.PageHTML do
     |> Enum.map(& &1.example)
     |> Enum.uniq_by(& &1.id)
   end
+
+  def text_segments(text, spans) do
+    {segments, offset} =
+      Enum.reduce(spans, {[], 0}, fn span, {segments, offset} ->
+        before = binary_part(text, offset, span.start_offset - offset)
+        segments = if before == "", do: segments, else: [{:text, before} | segments]
+
+        {[{:match, span} | segments], span.end_offset}
+      end)
+
+    after_matches = binary_part(text, offset, byte_size(text) - offset)
+    segments = if after_matches == "", do: segments, else: [{:text, after_matches} | segments]
+
+    Enum.reverse(segments)
+  end
 end

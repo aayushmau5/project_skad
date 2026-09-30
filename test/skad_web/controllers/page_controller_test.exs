@@ -68,6 +68,14 @@ defmodule SkadWeb.PageControllerTest do
 
     assert LazyHTML.text(LazyHTML.query_by_id(document, "example-#{example.public_id}")) =~
              "Drink water."
+
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(
+               document,
+               "example-link-#{example.public_id}-#{hd(example.links).id}"
+             ),
+             "href"
+           ) == [~p"/entries/#{water.public_id}"]
   end
 
   test "returns not found for an unknown public entry", %{conn: conn} do

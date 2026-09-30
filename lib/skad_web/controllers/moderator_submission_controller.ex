@@ -62,7 +62,12 @@ defmodule SkadWeb.ModeratorSubmissionController do
   end
 
   defp decide(conn, submission, %{"decision" => "approve"} = params) do
-    case Contributions.approve_submission(conn.assigns.current_scope, submission, params["note"]) do
+    case Contributions.approve_submission(
+           conn.assigns.current_scope,
+           submission,
+           params["note"],
+           params["example_choices"] || %{}
+         ) do
       {:ok, %{entry: entry}} ->
         conn
         |> put_flash(:info, "Submission approved and published.")
@@ -111,13 +116,44 @@ defmodule SkadWeb.ModeratorSubmissionController do
       edit_changeset ||
         Contributions.change_submission_for_review(conn.assigns.current_scope, submission)
 
+    {example_suggestions, example_match_error} = example_suggestions(submission)
+
+    example_choices =
+      case params["example_choices"] do
+        choices when is_map(choices) -> choices
+        _other -> default_example_choices(example_suggestions)
+      end
+
     render(conn, :show,
       page_title: "Review submission",
       submission: submission,
       form: Phoenix.Component.to_form(params, as: :moderation),
       edit_form: Phoenix.Component.to_form(edit_changeset, as: :proposal),
-      languages: Archive.list_active_languages()
+      languages: Archive.list_active_languages(),
+      example_suggestions: example_suggestions,
+      example_choices: example_choices,
+      example_match_error: example_match_error
     )
+  end
+
+  defp example_suggestions(submission) do
+    case Contributions.suggest_example_links(submission) do
+      {:ok, suggestions} -> {suggestions, nil}
+      {:error, :example_too_long} -> {[], "Keep the example to 100 words or fewer."}
+      {:error, _reason} -> {[], "The example could not be matched."}
+    end
+  end
+
+  defp default_example_choices(suggestions) do
+    suggestions
+    |> Enum.with_index()
+    |> Map.new(fn
+      {%{role: :reference, candidates: [entry]}, index} ->
+        {Integer.to_string(index), entry.public_id}
+
+      {_suggestion, index} ->
+        {Integer.to_string(index), ""}
+    end)
   end
 
   defp decision_status("reviewing"), do: :reviewing
@@ -133,6 +169,9 @@ defmodule SkadWeb.ModeratorSubmissionController do
 
   defp error_message(:unsupported_payload), do: "This submission payload cannot be approved."
   defp error_message(:language_inactive), do: "This submission's language is not active."
+  defp error_message(:example_focus_missing), do: "The example must contain the proposed word."
+  defp error_message(:invalid_example_links), do: "Choose valid entries for the example links."
+  defp error_message(:example_too_long), do: "Keep the example to 100 words or fewer."
   defp error_message(:invalid_decision), do: "Choose a valid moderation decision."
   defp error_message(_reason), do: "The moderation decision could not be saved."
 end

@@ -22,6 +22,8 @@
         <dd>{payload_value(@submission, "usage_note") || "—"}</dd>
         <dt>Cultural context</dt>
         <dd>{payload_value(@submission, "cultural_note") || "—"}</dd>
+        <dt>Example</dt>
+        <dd id="submission-example">{payload_value(@submission, "example") || "—"}</dd>
         <dt>Received</dt>
         <dd>{format_time(@submission.received_at)}</dd>
         <dt>Receipt</dt>
@@ -48,6 +50,8 @@
         <dd>{original_payload_value(@submission, "usage_note") || "—"}</dd>
         <dt>Cultural context</dt>
         <dd>{original_payload_value(@submission, "cultural_note") || "—"}</dd>
+        <dt>Example</dt>
+        <dd>{original_payload_value(@submission, "example") || "—"}</dd>
       </dl>
     </details>
 
@@ -107,8 +111,70 @@
           class="auth-input"
           rows="3"
         />
+        <.input
+          field={@edit_form[:example]}
+          type="textarea"
+          label="Example sentence"
+          class="auth-input"
+          rows="3"
+        />
         <button type="submit" id="save-proposal" class="auth-button">Save changes</button>
       </.form>
+    </section>
+
+    <section
+      :if={
+        payload_value(@submission, "example") &&
+          @submission.status in [:pending, :reviewing]
+      }
+      id="submission-example-links"
+      class="entry-section"
+    >
+      <h2>Example links</h2>
+      <p
+        phx-no-format
+        id="submission-example-preview"
+        lang={payload_value(@submission, "language_slug")}
+      ><%= for segment <- example_segments(payload_value(@submission, "example"), @example_suggestions) do %><%= case segment do %><% {:text, text} -> %>{text}<% {:match, suggestion} -> %><mark id={"example-match-#{suggestion.start_offset}"}>{suggestion.surface_text}</mark><% end %><% end %></p>
+
+      <p :if={@example_match_error} id="example-match-error" role="alert">
+        {@example_match_error}
+      </p>
+      <p
+        :if={
+          is_nil(@example_match_error) &&
+            not Enum.any?(@example_suggestions, &(&1.role == :focus))
+        }
+        id="example-focus-missing"
+        role="alert"
+      >
+        The example must contain the proposed word. Edit the sentence before approving.
+      </p>
+
+      <ol :if={@example_suggestions != []} id="example-suggestions" class="result-list">
+        <li
+          :for={{suggestion, index} <- Enum.with_index(@example_suggestions)}
+          id={"example-suggestion-#{index}"}
+          class="result-card"
+        >
+          <%= if suggestion.role == :focus do %>
+            <strong>{suggestion.surface_text}</strong>
+            <span id={"example-focus-#{index}"}> — proposed entry</span>
+          <% else %>
+            <.input
+              type="select"
+              id={"example-choice-#{index}"}
+              name={"moderation[example_choices][#{index}]"}
+              label={"Link “#{suggestion.surface_text}” to"}
+              prompt="Do not link"
+              options={example_candidate_options(suggestion)}
+              value={Map.get(@example_choices, Integer.to_string(index), "")}
+              class="auth-input"
+              form="moderation-form"
+            />
+          <% end %>
+        </li>
+      </ol>
     </section>
 
     <section id="submission-review-history" class="entry-section">
@@ -167,6 +233,13 @@
           name="moderation[decision]"
           value="approve"
           class="auth-button"
+          disabled={
+            not example_approvable?(
+              @submission,
+              @example_suggestions,
+              @example_match_error
+            )
+          }
         >
           Approve and publish
         </button>

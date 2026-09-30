@@ -88,6 +88,24 @@ defmodule Skad.Contributions do
   def effective_payload(%Submission{reviewed_payload: payload}) when is_map(payload), do: payload
   def effective_payload(%Submission{payload: payload}), do: payload
 
+  def suggest_example_links(%Submission{} = submission) do
+    payload = effective_payload(submission)
+
+    case payload["example"] do
+      nil ->
+        {:ok, []}
+
+      text when is_binary(text) ->
+        case Archive.get_language_by_slug(payload["language_slug"]) do
+          %{active: true} = language ->
+            Archive.suggest_example_links(language, text, payload["primary_form"])
+
+          _missing_or_inactive ->
+            {:error, :language_inactive}
+        end
+    end
+  end
+
   def change_submission_for_review(scope, submission, attrs \\ %{})
 
   def change_submission_for_review(
@@ -178,24 +196,28 @@ defmodule Skad.Contributions do
 
   def moderate_submission(_scope, %Submission{}, _status, _note), do: {:error, :unauthorized}
 
-  def approve_submission(scope, submission, note \\ nil)
+  def approve_submission(scope, submission, note \\ nil, example_choices \\ %{})
 
   def approve_submission(
         %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
         %Submission{id: id},
-        note
+        note,
+        example_choices
       )
       when is_integer(id) do
     note = normalize_review_note(note)
 
     with %Submission{} = submission <- Repo.get(Submission, id),
          :ok <- approvable?(submission),
+         payload = effective_payload(submission),
          {:ok, language, archive_attrs} <-
-           submission |> effective_payload() |> new_entry_archive_attrs(),
+           new_entry_archive_attrs(payload),
+         {:ok, example_plan} <- example_plan(language, payload, example_choices),
          {:ok, multi} <-
            approval_multi(submission, moderator, note)
            |> Archive.new_meaning_multi(language, archive_attrs) do
       multi
+      |> add_example_multi(language, example_plan)
       |> Multi.insert(:revision, fn changes ->
         %Revision{
           target_type: "entry",
@@ -206,7 +228,7 @@ defmodule Skad.Contributions do
           submission_id: submission.id
         }
         |> Revision.changeset(%{
-          after_state: entry_snapshot(changes, language),
+          after_state: entry_snapshot(changes, language, example_plan),
           reason: note
         })
       end)
@@ -218,7 +240,8 @@ defmodule Skad.Contributions do
     end
   end
 
-  def approve_submission(_scope, %Submission{}, _note), do: {:error, :unauthorized}
+  def approve_submission(_scope, %Submission{}, _note, _example_choices),
+    do: {:error, :unauthorized}
 
   defp insert_new_entry(new_entry, payload, command_changeset) do
     case Archive.get_language_by_slug(new_entry.language_slug) do
@@ -388,8 +411,84 @@ defmodule Skad.Contributions do
     end)
   end
 
-  defp entry_snapshot(changes, language) do
-    %{
+  defp example_plan(_language, %{"example" => nil}, _choices), do: {:ok, nil}
+
+  defp example_plan(language, payload, choices) do
+    with text when is_binary(text) <- payload["example"],
+         primary_form when is_binary(primary_form) <- payload["primary_form"],
+         {:ok, suggestions} <- Archive.suggest_example_links(language, text, primary_form),
+         true <- Enum.any?(suggestions, &(&1.role == :focus)) || {:error, :example_focus_missing},
+         {:ok, links} <- confirmed_example_links(suggestions, choices) do
+      {:ok, %{example: %{text: text, translations: []}, links: links}}
+    else
+      nil -> {:ok, nil}
+      {:error, reason} -> {:error, reason}
+      _invalid_payload -> {:error, :unsupported_payload}
+    end
+  end
+
+  defp confirmed_example_links(suggestions, choices) when is_map(choices) do
+    suggestions
+    |> Enum.with_index()
+    |> Enum.reduce_while({:ok, []}, fn {suggestion, index}, {:ok, links} ->
+      link = %{
+        start_offset: suggestion.start_offset,
+        end_offset: suggestion.end_offset,
+        role: suggestion.role
+      }
+
+      case suggestion.role do
+        :focus ->
+          {:cont, {:ok, [Map.put(link, :entry_public_id, :new_entry) | links]}}
+
+        :reference ->
+          choice = Map.get(choices, Integer.to_string(index), Map.get(choices, index))
+
+          cond do
+            choice in [nil, ""] ->
+              {:cont, {:ok, links}}
+
+            entry = Enum.find(suggestion.candidates, &(&1.public_id == choice)) ->
+              {:cont, {:ok, [Map.put(link, :entry_public_id, entry.public_id) | links]}}
+
+            true ->
+              {:halt, {:error, :invalid_example_links}}
+          end
+      end
+    end)
+    |> case do
+      {:ok, links} -> {:ok, Enum.reverse(links)}
+      error -> error
+    end
+  end
+
+  defp confirmed_example_links(_suggestions, _choices), do: {:error, :invalid_example_links}
+
+  defp add_example_multi(multi, _language, nil), do: multi
+
+  defp add_example_multi(multi, language, example_plan) do
+    Multi.merge(multi, fn %{entry: entry} ->
+      links =
+        Enum.map(example_plan.links, fn
+          %{entry_public_id: :new_entry} = link ->
+            %{link | entry_public_id: entry.public_id}
+
+          link ->
+            link
+        end)
+
+      case Archive.usage_example_multi(Multi.new(), language, %{
+             example: example_plan.example,
+             links: links
+           }) do
+        {:ok, example_multi} -> example_multi
+        {:error, reason} -> Multi.error(Multi.new(), :example, reason)
+      end
+    end)
+  end
+
+  defp entry_snapshot(changes, language, example_plan) do
+    snapshot = %{
       "public_id" => changes.entry.public_id,
       "concept_public_id" => changes.concept.public_id,
       "language_slug" => language.slug,
@@ -409,6 +508,28 @@ defmodule Skad.Contributions do
       "usage_note" => changes.entry.usage_note,
       "cultural_note" => changes.entry.cultural_note
     }
+
+    if example_plan do
+      Map.put(snapshot, "example", %{
+        "public_id" => changes.example.public_id,
+        "text" => changes.example.text,
+        "links" =>
+          Enum.map(example_plan.links, fn link ->
+            %{
+              "entry_public_id" =>
+                if(link.entry_public_id == :new_entry,
+                  do: changes.entry.public_id,
+                  else: link.entry_public_id
+                ),
+              "start_offset" => link.start_offset,
+              "end_offset" => link.end_offset,
+              "role" => Atom.to_string(link.role)
+            }
+          end)
+      })
+    else
+      snapshot
+    end
   end
 
   defp review_event(status, moderator, reviewed_at, note) do

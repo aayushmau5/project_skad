@@ -167,6 +167,68 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     assert Enum.count(LazyHTML.query_by_id(document, "entry-page")) == 1
   end
 
+  test "reviews example segments and publishes clickable dictionary links", %{conn: conn} do
+    {:ok, language} =
+      Archive.create_language(%{
+        slug: "english",
+        code: "en",
+        name: "English",
+        direction: :ltr
+      })
+
+    {:ok, water} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: "english", text: "A clear liquid."}]},
+        forms: [%{text: "water", kind: :spelling, is_primary: true}]
+      })
+
+    {:ok, receipt} =
+      Contributions.submit_new_entry(%{
+        client_submission_id: Ecto.UUID.generate(),
+        language_slug: language.slug,
+        primary_form: "Drink",
+        definition: "To swallow a liquid.",
+        example: "Drink water."
+      })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    conn = log_in(conn)
+    detail_path = ~p"/moderator/submissions/#{submission.public_id}"
+    conn = get(conn, detail_path)
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "submission-example-links")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "example-focus-0")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "example-choice-1")) == 1
+
+    conn =
+      conn
+      |> recycle()
+      |> patch(detail_path, %{
+        "moderation" => %{
+          "decision" => "approve",
+          "example_choices" => %{"1" => water.public_id}
+        }
+      })
+
+    entry_path = redirected_to(conn)
+
+    document =
+      conn
+      |> recycle()
+      |> get(entry_path)
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(
+             LazyHTML.query(
+               document,
+               "#entry-examples a[href='/entries/#{water.public_id}']"
+             )
+           ) == 1
+  end
+
   defp create_submission do
     {:ok, language} =
       Archive.create_language(%{

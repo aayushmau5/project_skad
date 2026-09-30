@@ -451,6 +451,27 @@ defmodule Skad.ArchiveTest do
     assert Enum.map(water_match.candidates, & &1.id) == [water.id]
   end
 
+  test "prioritizes a proposed focus form over overlapping archive matches" do
+    {:ok, language} = create_language()
+    {:ok, cold_water} = publish_meaning(language, "COLD WATER", "cold water")
+    {:ok, drink} = publish_meaning(language, "DRINK", "drink")
+
+    assert {:ok, [first_water, verb, second_water]} =
+             Archive.suggest_example_links(language, "Cold water, then drink water.", "water")
+
+    assert first_water.surface_text == "water"
+    assert first_water.role == :focus
+    assert first_water.candidates == []
+    assert verb.surface_text == "drink"
+    assert verb.role == :reference
+    assert Enum.map(verb.candidates, & &1.id) == [drink.id]
+    assert second_water.role == :focus
+
+    refute Enum.any?([first_water, verb, second_water], fn suggestion ->
+             Enum.any?(suggestion.candidates, &(&1.id == cold_water.id))
+           end)
+  end
+
   test "does not return archived public entries" do
     {:ok, language} = create_language()
 

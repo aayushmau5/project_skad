@@ -23,7 +23,8 @@ defmodule Skad.ContributionsTest do
                definition: "  A clear liquid.  ",
                part_of_speech: " noun ",
                usage_note: " ",
-               cultural_note: " Used in ceremonies. "
+               cultural_note: " Used in ceremonies. ",
+               example: " Use water daily. "
              })
 
     assert Map.keys(receipt) |> Enum.sort() == [:public_id, :received_at, :status]
@@ -39,7 +40,8 @@ defmodule Skad.ContributionsTest do
              "definition" => "A clear liquid.",
              "part_of_speech" => "noun",
              "usage_note" => nil,
-             "cultural_note" => "Used in ceremonies."
+             "cultural_note" => "Used in ceremonies.",
+             "example" => "Use water daily."
            }
   end
 
@@ -273,6 +275,67 @@ defmodule Skad.ContributionsTest do
 
     assert Repo.aggregate(Entry, :count) == 1
     assert Repo.aggregate(Revision, :count) == 1
+  end
+
+  test "publishes a submitted example with confirmed focus and reference links" do
+    language = create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    {:ok, water} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: "A clear liquid."}]},
+        forms: [%{text: "water", kind: :spelling, is_primary: true}]
+      })
+
+    assert {:ok, receipt} =
+             Contributions.submit_new_entry(%{
+               client_submission_id: Ecto.UUID.generate(),
+               language_slug: language.slug,
+               primary_form: "Drink",
+               definition: "To swallow a liquid.",
+               example: "Water is clear."
+             })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+
+    assert {:error, :example_focus_missing} =
+             Contributions.approve_submission(scope, submission)
+
+    assert Repo.get!(Submission, submission.id).status == :pending
+
+    assert {:ok, submission} =
+             Contributions.update_submission_for_review(scope, submission, %{
+               example: "Drink water."
+             })
+
+    assert {:ok, [focus, reference]} = Contributions.suggest_example_links(submission)
+    assert focus.role == :focus
+    assert reference.role == :reference
+
+    assert {:ok, %{entry: entry}} =
+             Contributions.approve_submission(scope, submission, nil, %{
+               "1" => water.public_id
+             })
+
+    assert [focus_link] = entry.example_links
+    assert focus_link.role == :focus
+    assert focus_link.surface_text == "Drink"
+    assert focus_link.example.text == "Drink water."
+
+    assert Enum.map(focus_link.example.links, &{&1.role, &1.entry.public_id}) == [
+             {:focus, entry.public_id},
+             {:reference, water.public_id}
+           ]
+
+    revision = Repo.get_by!(Revision, target_public_id: entry.public_id)
+    assert revision.after_state["example"]["text"] == "Drink water."
+
+    assert Enum.map(revision.after_state["example"]["links"], & &1["role"]) == [
+             "focus",
+             "reference"
+           ]
   end
 
   test "rolls back the approval claim when canonical validation fails" do

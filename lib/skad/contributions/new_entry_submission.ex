@@ -12,6 +12,7 @@ defmodule Skad.Contributions.NewEntrySubmission do
     field :part_of_speech, :string, redact: true
     field :usage_note, :string, redact: true
     field :cultural_note, :string, redact: true
+    field :example, :string, redact: true
   end
 
   def changeset(submission, attrs) do
@@ -23,7 +24,8 @@ defmodule Skad.Contributions.NewEntrySubmission do
       :definition,
       :part_of_speech,
       :usage_note,
-      :cultural_note
+      :cultural_note,
+      :example
     ])
     |> normalize_text_fields()
     |> validate_required([
@@ -38,6 +40,7 @@ defmodule Skad.Contributions.NewEntrySubmission do
     |> validate_length(:part_of_speech, max: 100)
     |> validate_length(:usage_note, max: 5_000)
     |> validate_length(:cultural_note, max: 5_000)
+    |> validate_length(:example, max: 5_000)
   end
 
   def to_payload(%__MODULE__{} = submission) do
@@ -47,7 +50,8 @@ defmodule Skad.Contributions.NewEntrySubmission do
       "definition" => submission.definition,
       "part_of_speech" => submission.part_of_speech,
       "usage_note" => submission.usage_note,
-      "cultural_note" => submission.cultural_note
+      "cultural_note" => submission.cultural_note,
+      "example" => submission.example
     }
   end
 
@@ -59,7 +63,8 @@ defmodule Skad.Contributions.NewEntrySubmission do
         :definition,
         :part_of_speech,
         :usage_note,
-        :cultural_note
+        :cultural_note,
+        :example
       ],
       changeset,
       fn field, changeset -> update_change(changeset, field, &normalize_text/1) end

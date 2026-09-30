@@ -11,7 +11,9 @@ defmodule Skad.Archive.ExampleMatcher do
   @max_tokens 100
   @word ~r/[\p{L}\p{N}\p{M}]+(?:['’ʼ-][\p{L}\p{N}\p{M}]+)*/u
 
-  def suggest(%Language{id: language_id}, text) do
+  def suggest(%Language{} = language, text), do: suggest(language, text, nil)
+
+  def suggest(%Language{id: language_id}, text, focus_form) do
     tokens = Regex.scan(@word, text, return: :index) |> Enum.map(&hd/1)
 
     if length(tokens) > @max_tokens do
@@ -19,18 +21,31 @@ defmodule Skad.Archive.ExampleMatcher do
     else
       candidates = candidates(text, tokens)
       matches = matching_entries(language_id, candidates)
+      focus_normalized = if is_binary(focus_form), do: normalize_text(focus_form)
 
-      suggestions =
+      focus_suggestions =
+        for candidate <- candidates,
+            focus_normalized not in [nil, ""],
+            candidate.normalized_text == focus_normalized do
+          candidate
+          |> Map.put(:role, :focus)
+          |> Map.put(:candidates, [])
+        end
+
+      reference_suggestions =
         candidates
         |> Enum.flat_map(fn candidate ->
           case Map.get(matches, candidate.normalized_text, []) do
             [] -> []
-            entries -> [Map.put(candidate, :candidates, entries)]
+            entries -> [candidate |> Map.put(:role, :reference) |> Map.put(:candidates, entries)]
           end
         end)
+
+      suggestions =
+        (focus_suggestions ++ reference_suggestions)
         |> Enum.sort_by(fn candidate ->
-          {-candidate.token_count, -(candidate.end_offset - candidate.start_offset),
-           candidate.start_offset}
+          {if(candidate.role == :focus, do: 0, else: 1), -candidate.token_count,
+           -(candidate.end_offset - candidate.start_offset), candidate.start_offset}
         end)
         |> Enum.reduce([], fn candidate, selected ->
           if Enum.any?(selected, &overlap?(&1, candidate)),
@@ -43,6 +58,7 @@ defmodule Skad.Archive.ExampleMatcher do
             start_offset: suggestion.start_offset,
             end_offset: suggestion.end_offset,
             surface_text: suggestion.surface_text,
+            role: suggestion.role,
             candidates: suggestion.candidates,
             ambiguous?: length(suggestion.candidates) > 1
           }

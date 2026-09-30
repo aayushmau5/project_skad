@@ -59,7 +59,7 @@
     <section :if={examples(@entry) != []} id="entry-examples" class="entry-section">
       <h2>Examples</h2>
       <article :for={example <- examples(@entry)} id={"example-#{example.public_id}"}>
-        <p lang={example.language.code || example.language.slug}>{example.text}</p>
+        <p phx-no-format lang={example.language.code || example.language.slug}><%= for segment <- text_segments(example.text, example.links) do %><%= case segment do %><% {:text, text} -> %>{text}<% {:match, link} -> %><.link id={"example-link-#{example.public_id}-#{link.id}"} href={~p"/entries/#{link.entry.public_id}"}>{link.surface_text}</.link><% end %><% end %></p>
         <p :for={translation <- example.translations} lang={translation.language}>
           {translation.text}
         </p>

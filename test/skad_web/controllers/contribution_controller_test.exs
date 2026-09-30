@@ -13,6 +13,7 @@ defmodule SkadWeb.ContributionControllerTest do
 
     assert Enum.count(form) == 1
     assert Enum.count(LazyHTML.query(form, "option[value=english]")) == 1
+    assert Enum.count(LazyHTML.query(form, "#contribution_example")) == 1
 
     [client_submission_id] =
       form
@@ -30,13 +31,15 @@ defmodule SkadWeb.ContributionControllerTest do
       "client_submission_id" => client_submission_id,
       "language_slug" => "english",
       "primary_form" => "Water",
-      "definition" => "Private proposed meaning"
+      "definition" => "Private proposed meaning",
+      "example" => "Drink water."
     }
 
     conn = post(conn, ~p"/contributions", %{"contribution" => params})
     receipt_path = redirected_to(conn)
     assert String.starts_with?(receipt_path, "/contributions/")
     assert Repo.aggregate(Submission, :count) == 1
+    assert Repo.one!(Submission).payload["example"] == "Drink water."
 
     conn = get(recycle(conn), receipt_path)
     document = conn |> html_response(200) |> LazyHTML.from_document()

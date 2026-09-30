@@ -168,6 +168,19 @@ defmodule Skad.Archive do
     do: {:error, :invalid_attributes}
 
   def publish_usage_example(%Language{} = language, attrs) when is_map(attrs) do
+    with {:ok, multi} <- usage_example_multi(Multi.new(), language, attrs) do
+      multi
+      |> Repo.transaction()
+      |> public_example_result()
+    end
+  end
+
+  def publish_usage_example(_language, _attrs),
+    do: {:error, :invalid_attributes}
+
+  @doc false
+  def usage_example_multi(%Multi{} = multi, %Language{} = language, attrs)
+      when is_map(attrs) do
     example_attrs = attr(attrs, :example, %{})
     links_attrs = attr(attrs, :links, [])
 
@@ -178,21 +191,20 @@ defmodule Skad.Archive do
         normalized_text: example_attrs |> attr(:text) |> normalize_text()
       }
 
-      Multi.new()
-      |> Multi.insert(:example, Example.changeset(example, example_attrs))
-      |> Multi.run(:links, fn repo, %{example: example} ->
-        insert_example_links(repo, example, links_attrs)
-      end)
-      |> Multi.run(:search_index, fn repo, %{links: links} ->
-        entry_ids = for link <- links, link.role == :focus, do: link.entry_id
-        Search.refresh(repo, entry_ids)
-      end)
-      |> Repo.transaction()
-      |> public_example_result()
+      {:ok,
+       multi
+       |> Multi.insert(:example, Example.changeset(example, example_attrs))
+       |> Multi.run(:example_links, fn repo, %{example: example} ->
+         insert_example_links(repo, example, links_attrs)
+       end)
+       |> Multi.run(:example_search_index, fn repo, %{example_links: links} ->
+         entry_ids = for link <- links, link.role == :focus, do: link.entry_id
+         Search.refresh(repo, entry_ids)
+       end)}
     end
   end
 
-  def publish_usage_example(_language, _attrs),
+  def usage_example_multi(_multi, _language, _attrs),
     do: {:error, :invalid_attributes}
 
   def suggest_example_links(%Language{} = language, text) when is_binary(text) do
@@ -202,6 +214,16 @@ defmodule Skad.Archive do
   end
 
   def suggest_example_links(_language, _text), do: {:error, :invalid_attributes}
+
+  def suggest_example_links(%Language{} = language, text, focus_form)
+      when is_binary(text) and is_binary(focus_form) do
+    with {:ok, language} <- active_language(language) do
+      ExampleMatcher.suggest(language, text, focus_form)
+    end
+  end
+
+  def suggest_example_links(_language, _text, _focus_form),
+    do: {:error, :invalid_attributes}
 
   def get_public_entry(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
@@ -229,7 +251,7 @@ defmodule Skad.Archive do
     entry_example_links_query =
       from link in ExampleLink,
         join: example in assoc(link, :example),
-        where: is_nil(example.archived_at),
+        where: link.role == :focus and is_nil(example.archived_at),
         order_by: [asc: example.id, asc: link.start_offset]
 
     links_query =
