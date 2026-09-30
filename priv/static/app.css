@@ -15,10 +15,22 @@ a {
 }
 
 .site-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
   padding: 1rem max(1rem, calc((100% - 48rem) / 2));
   border-bottom: 1px solid #ddd;
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+.site-nav {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
 .site-header a {
@@ -61,7 +73,9 @@ a {
 
 .search-input,
 .search-select,
-.search-button {
+.search-button,
+.auth-input,
+.auth-button {
   width: 100%;
   min-height: 2.75rem;
   padding: 0.6rem 0.75rem;
@@ -71,7 +85,18 @@ a {
   font: inherit;
 }
 
-.search-button {
+.auth-panel {
+  max-width: 28rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.search-button,
+.auth-button {
   border-color: #202124;
   color: #fff;
   background: #202124;

@@ -8,7 +8,8 @@ defmodule SkadWeb.Endpoint do
     store: :cookie,
     key: "_skad_key",
     signing_salt: "C6pVXqMK",
-    same_site: "Lax"
+    same_site: "Lax",
+    secure: Application.compile_env(:skad, :secure_cookies, false)
   ]
 
   socket "/live", Phoenix.LiveView.Socket,

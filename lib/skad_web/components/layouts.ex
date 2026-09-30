@@ -37,6 +37,16 @@ defmodule SkadWeb.Layouts do
     ~H"""
     <header id="site-header" class="site-header">
       <a href={~p"/"}>Skad</a>
+      <nav class="site-nav" aria-label="Moderator account">
+        <%= if @current_scope do %>
+          <.link id="moderator-workspace-link" href={~p"/moderator"}>Workspace</.link>
+          <.link id="moderator-log-out" href={~p"/moderator/log-out"} method="delete">
+            Log out
+          </.link>
+        <% else %>
+          <.link id="moderator-login-link" href={~p"/moderator/log-in"}>Moderator log in</.link>
+        <% end %>
+      </nav>
     </header>
 
     <main id="main-content" class="site-main">

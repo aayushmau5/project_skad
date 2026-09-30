@@ -1,6 +1,8 @@
 defmodule SkadWeb.Router do
   use SkadWeb, :router
 
+  import SkadWeb.ModeratorAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule SkadWeb.Router do
     plug :put_root_layout, html: {SkadWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_scope
   end
 
   pipeline :api do
@@ -19,6 +22,25 @@ defmodule SkadWeb.Router do
 
     get "/", PageController, :home
     get "/entries/:public_id", PageController, :entry
+  end
+
+  scope "/moderator", SkadWeb do
+    pipe_through [:browser, :redirect_if_moderator_is_authenticated]
+
+    get "/log-in", ModeratorSessionController, :new
+    post "/log-in", ModeratorSessionController, :create
+  end
+
+  scope "/moderator", SkadWeb do
+    pipe_through [:browser, :require_authenticated_moderator]
+
+    get "/", ModeratorController, :home
+  end
+
+  scope "/moderator", SkadWeb do
+    pipe_through :browser
+
+    delete "/log-out", ModeratorSessionController, :delete
   end
 
   # Other scopes may use custom stacks.
