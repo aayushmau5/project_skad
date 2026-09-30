@@ -100,7 +100,7 @@ defmodule Skad.ContributionsStorageTest do
           kind: "new_entry",
           target_type: nil,
           target_public_id: nil,
-          payload: Jason.encode!(%{"version" => 1}),
+          payload: Jason.encode!(%{}),
           status: "pending",
           received_at: DateTime.utc_now(:second)
         },

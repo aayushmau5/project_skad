@@ -4,7 +4,10 @@ defmodule Skad.ContributionsTest do
   alias Skad.Accounts.ModeratorAccount
   alias Skad.Accounts.Scope
   alias Skad.Archive
+  alias Skad.Archive.Concept
+  alias Skad.Archive.Entry
   alias Skad.Contributions
+  alias Skad.Contributions.Revision
   alias Skad.Contributions.Submission
 
   test "stores a normalized new-entry proposal and returns a safe receipt" do
@@ -30,7 +33,6 @@ defmodule Skad.ContributionsTest do
     assert submission.client_submission_id == client_submission_id
 
     assert submission.payload == %{
-             "version" => 1,
              "language_slug" => "english",
              "primary_form" => "Water",
              "definition" => "A clear liquid.",
@@ -163,6 +165,90 @@ defmodule Skad.ContributionsTest do
              Contributions.moderate_submission(inactive_scope, submission, :reviewing)
   end
 
+  test "approves a new entry with its revision and search index in one transaction" do
+    language = create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    assert {:ok, receipt} =
+             Contributions.submit_new_entry(%{
+               client_submission_id: Ecto.UUID.generate(),
+               language_slug: language.slug,
+               primary_form: "Water",
+               definition: "A clear liquid.",
+               part_of_speech: "noun",
+               usage_note: "Used every day.",
+               cultural_note: "Used in ceremonies."
+             })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+
+    assert {:ok, %{entry: entry, submission: approved}} =
+             Contributions.approve_submission(scope, submission, "Verified")
+
+    assert approved.status == :approved
+    assert approved.review_note == "Verified"
+    assert approved.reviewed_by_account.id == moderator.id
+    assert List.last(approved.review_history)["status"] == "approved"
+
+    assert entry.language.id == language.id
+    assert entry.concept.editorial_label == "Water"
+    assert entry.part_of_speech == "noun"
+    assert entry.usage_note == "Used every day."
+    assert entry.cultural_note == "Used in ceremonies."
+
+    assert Enum.map(entry.definitions, &{&1.language, &1.text}) == [
+             {"english", "A clear liquid."}
+           ]
+
+    assert Enum.map(entry.forms, &{&1.text, &1.kind, &1.is_primary}) == [
+             {"Water", :spelling, true}
+           ]
+
+    revision = Repo.one!(Revision)
+    assert revision.target_type == "entry"
+    assert revision.target_public_id == entry.public_id
+    assert revision.action == :create
+    assert revision.actor_type == :moderator
+    assert revision.moderator_account_id == moderator.id
+    assert revision.submission_id == approved.id
+    assert revision.reason == "Verified"
+    assert revision.after_state["public_id"] == entry.public_id
+    refute Map.has_key?(revision.after_state, "id")
+
+    assert [%{entry: found}] = Archive.search("clear", language)
+    assert found.id == entry.id
+    assert Contributions.get_receipt(receipt.public_id).status == :approved
+
+    assert {:error, :invalid_transition} =
+             Contributions.approve_submission(scope, submission)
+
+    assert Repo.aggregate(Entry, :count) == 1
+    assert Repo.aggregate(Revision, :count) == 1
+  end
+
+  test "rolls back the approval claim when canonical validation fails" do
+    language = create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    assert {:ok, receipt} = Contributions.submit_new_entry(valid_attrs())
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    assert {:ok, reviewing} = Contributions.moderate_submission(scope, submission, :reviewing)
+
+    invalid_payload = Map.put(reviewing.payload, "definition", "")
+    reviewing = reviewing |> Ecto.Changeset.change(payload: invalid_payload) |> Repo.update!()
+
+    assert {:error, %Ecto.Changeset{valid?: false}} =
+             Contributions.approve_submission(scope, reviewing)
+
+    assert Repo.get!(Submission, reviewing.id).status == :reviewing
+    assert Repo.aggregate(Concept, :count) == 0
+    assert Repo.aggregate(Entry, :count) == 0
+    assert Repo.aggregate(Revision, :count) == 0
+    assert Archive.search("water", language) == []
+  end
+
   defp valid_attrs do
     %{
       client_submission_id: Ecto.UUID.generate(),
@@ -188,7 +274,7 @@ defmodule Skad.ContributionsTest do
     %Submission{kind: :new_entry, received_at: received_at}
     |> Submission.changeset(%{
       client_submission_id: Ecto.UUID.generate(),
-      payload: %{"version" => 1, "definition" => "private text"}
+      payload: %{"definition" => "private text"}
     })
     |> Repo.insert!()
   end

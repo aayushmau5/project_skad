@@ -12,7 +12,7 @@ defmodule Skad.ContributionsSchemasTest do
     assert submission.kind == :new_entry
     assert submission.status == :pending
     assert submission.review_history == []
-    assert submission.payload == %{"definition" => "private contribution text", "version" => 1}
+    assert submission.payload == %{"definition" => "private contribution text"}
     refute inspect(submission) =~ "private contribution text"
     assert submission.received_at
   end
@@ -38,7 +38,7 @@ defmodule Skad.ContributionsSchemasTest do
              submission
              |> Submission.changeset(%{
                client_submission_id: Ecto.UUID.generate(),
-               payload: %{"version" => 1}
+               payload: %{}
              })
              |> Repo.insert()
 
@@ -88,7 +88,7 @@ defmodule Skad.ContributionsSchemasTest do
     %Submission{kind: :new_entry}
     |> Submission.changeset(%{
       client_submission_id: client_submission_id,
-      payload: %{"definition" => "private contribution text", "version" => 1}
+      payload: %{"definition" => "private contribution text"}
     })
     |> Repo.insert()
   end

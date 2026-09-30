@@ -2,10 +2,12 @@ defmodule Skad.Contributions do
   import Ecto.Query
 
   alias Ecto.Changeset
+  alias Ecto.Multi
   alias Skad.Accounts.ModeratorAccount
   alias Skad.Accounts.Scope
   alias Skad.Archive
   alias Skad.Contributions.NewEntrySubmission
+  alias Skad.Contributions.Revision
   alias Skad.Contributions.Submission
   alias Skad.Repo
 
@@ -102,13 +104,7 @@ defmodule Skad.Contributions do
 
       true ->
         reviewed_at = DateTime.utc_now(:second)
-
-        event = %{
-          "status" => Atom.to_string(status),
-          "moderator_account_id" => moderator.id,
-          "reviewed_at" => DateTime.to_iso8601(reviewed_at),
-          "note" => note
-        }
+        event = review_event(status, moderator, reviewed_at, note)
 
         submission
         |> Submission.moderation_changeset(%{
@@ -124,6 +120,47 @@ defmodule Skad.Contributions do
   end
 
   def moderate_submission(_scope, %Submission{}, _status, _note), do: {:error, :unauthorized}
+
+  def approve_submission(scope, submission, note \\ nil)
+
+  def approve_submission(
+        %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
+        %Submission{id: id},
+        note
+      )
+      when is_integer(id) do
+    note = normalize_review_note(note)
+
+    with %Submission{} = submission <- Repo.get(Submission, id),
+         :ok <- approvable?(submission),
+         {:ok, language, archive_attrs} <- new_entry_archive_attrs(submission.payload),
+         {:ok, multi} <-
+           approval_multi(submission, moderator, note)
+           |> Archive.new_meaning_multi(language, archive_attrs) do
+      multi
+      |> Multi.insert(:revision, fn changes ->
+        %Revision{
+          target_type: "entry",
+          target_public_id: changes.entry.public_id,
+          action: :create,
+          actor_type: :moderator,
+          moderator_account_id: moderator.id,
+          submission_id: submission.id
+        }
+        |> Revision.changeset(%{
+          after_state: entry_snapshot(changes, language),
+          reason: note
+        })
+      end)
+      |> Repo.transaction()
+      |> approval_result()
+    else
+      nil -> {:error, :submission_not_found}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def approve_submission(_scope, %Submission{}, _note), do: {:error, :unauthorized}
 
   defp insert_new_entry(new_entry, payload, command_changeset) do
     case Archive.get_language_by_slug(new_entry.language_slug) do
@@ -178,6 +215,113 @@ defmodule Skad.Contributions do
   end
 
   defp normalize_review_note(_note), do: nil
+
+  defp approvable?(%Submission{status: status, kind: :new_entry})
+       when status in [:pending, :reviewing],
+       do: :ok
+
+  defp approvable?(%Submission{status: status}) when status in [:pending, :reviewing],
+    do: {:error, :unsupported_submission_kind}
+
+  defp approvable?(%Submission{}), do: {:error, :invalid_transition}
+
+  defp new_entry_archive_attrs(
+         %{
+           "language_slug" => language_slug,
+           "primary_form" => primary_form,
+           "definition" => definition
+         } = payload
+       )
+       when is_binary(language_slug) and is_binary(primary_form) and is_binary(definition) do
+    case Archive.get_language_by_slug(language_slug) do
+      %{active: true} = language ->
+        {:ok, language,
+         %{
+           concept: %{editorial_label: primary_form},
+           entry: %{
+             definitions: [%{language: language_slug, text: definition}],
+             part_of_speech: payload["part_of_speech"],
+             usage_note: payload["usage_note"],
+             cultural_note: payload["cultural_note"]
+           },
+           forms: [%{text: primary_form, kind: :spelling, is_primary: true}]
+         }}
+
+      _missing_or_inactive ->
+        {:error, :language_inactive}
+    end
+  end
+
+  defp new_entry_archive_attrs(_payload), do: {:error, :unsupported_payload}
+
+  defp approval_multi(submission, moderator, note) do
+    reviewed_at = DateTime.utc_now(:second)
+    event = review_event(:approved, moderator, reviewed_at, note)
+
+    approval_query =
+      from stored_submission in Submission,
+        where:
+          stored_submission.id == ^submission.id and
+            stored_submission.status == ^submission.status
+
+    Multi.new()
+    |> Multi.update_all(:approval_claim, approval_query,
+      set: [
+        status: :approved,
+        review_history: submission.review_history ++ [event],
+        reviewed_by_account_id: moderator.id,
+        reviewed_at: reviewed_at,
+        review_note: note
+      ]
+    )
+    |> Multi.run(:submission, fn repo, %{approval_claim: {count, _rows}} ->
+      if count == 1,
+        do: {:ok, repo.get!(Submission, submission.id)},
+        else: {:error, :invalid_transition}
+    end)
+  end
+
+  defp entry_snapshot(changes, language) do
+    %{
+      "public_id" => changes.entry.public_id,
+      "concept_public_id" => changes.concept.public_id,
+      "language_slug" => language.slug,
+      "definitions" =>
+        Enum.map(changes.entry.definitions, fn definition ->
+          %{"language" => definition.language, "text" => definition.text}
+        end),
+      "forms" =>
+        Enum.map(changes.forms, fn form ->
+          %{
+            "text" => form.text,
+            "kind" => Atom.to_string(form.kind),
+            "is_primary" => form.is_primary
+          }
+        end),
+      "part_of_speech" => changes.entry.part_of_speech,
+      "usage_note" => changes.entry.usage_note,
+      "cultural_note" => changes.entry.cultural_note
+    }
+  end
+
+  defp review_event(status, moderator, reviewed_at, note) do
+    %{
+      "status" => Atom.to_string(status),
+      "moderator_account_id" => moderator.id,
+      "reviewed_at" => DateTime.to_iso8601(reviewed_at),
+      "note" => note
+    }
+  end
+
+  defp approval_result({:ok, %{entry: entry, submission: submission}}) do
+    {:ok,
+     %{
+       entry: Archive.get_public_entry(entry.public_id),
+       submission: Repo.preload(submission, :reviewed_by_account)
+     }}
+  end
+
+  defp approval_result({:error, _operation, reason, _changes}), do: {:error, reason}
 
   defp preload_reviewed_by_account({:ok, submission}) do
     {:ok, Repo.preload(submission, :reviewed_by_account, force: true)}

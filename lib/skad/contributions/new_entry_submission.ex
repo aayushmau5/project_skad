@@ -42,7 +42,6 @@ defmodule Skad.Contributions.NewEntrySubmission do
 
   def to_payload(%__MODULE__{} = submission) do
     %{
-      "version" => 1,
       "language_slug" => submission.language_slug,
       "primary_form" => submission.primary_form,
       "definition" => submission.definition,

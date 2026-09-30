@@ -98,32 +98,43 @@ defmodule Skad.Archive do
   end
 
   def publish_new_meaning(%Language{} = language, attrs) when is_map(attrs) do
-    concept_attrs = attr(attrs, :concept, %{})
-    entry_attrs = attr(attrs, :entry, %{})
-    forms_attrs = attr(attrs, :forms, [])
-
-    with {:ok, language} <- active_language(language),
-         :ok <- validate_forms(forms_attrs) do
-      Multi.new()
-      |> Multi.insert(:concept, Concept.changeset(%Concept{}, concept_attrs))
-      |> Multi.insert(:entry, fn %{concept: concept} ->
-        Entry.changeset(
-          %Entry{language_id: language.id, concept_id: concept.id},
-          entry_attrs
-        )
-      end)
-      |> Multi.run(:forms, fn repo, %{entry: entry} ->
-        insert_forms(repo, entry, forms_attrs)
-      end)
-      |> Multi.run(:search_index, fn repo, %{entry: entry} ->
-        Search.refresh(repo, [entry.id])
-      end)
+    with {:ok, multi} <- new_meaning_multi(Multi.new(), language, attrs) do
+      multi
       |> Repo.transaction()
       |> public_entry_result()
     end
   end
 
   def publish_new_meaning(_language, _attrs), do: {:error, :invalid_attributes}
+
+  @doc false
+  def new_meaning_multi(%Multi{} = multi, %Language{} = language, attrs)
+      when is_map(attrs) do
+    concept_attrs = attr(attrs, :concept, %{})
+    entry_attrs = attr(attrs, :entry, %{})
+    forms_attrs = attr(attrs, :forms, [])
+
+    with {:ok, language} <- active_language(language),
+         :ok <- validate_forms(forms_attrs) do
+      {:ok,
+       multi
+       |> Multi.insert(:concept, Concept.changeset(%Concept{}, concept_attrs))
+       |> Multi.insert(:entry, fn %{concept: concept} ->
+         Entry.changeset(
+           %Entry{language_id: language.id, concept_id: concept.id},
+           entry_attrs
+         )
+       end)
+       |> Multi.run(:forms, fn repo, %{entry: entry} ->
+         insert_forms(repo, entry, forms_attrs)
+       end)
+       |> Multi.run(:search_index, fn repo, %{entry: entry} ->
+         Search.refresh(repo, [entry.id])
+       end)}
+    end
+  end
+
+  def new_meaning_multi(_multi, _language, _attrs), do: {:error, :invalid_attributes}
 
   def publish_equivalent(%Entry{} = source_entry, %Language{} = language, attrs)
       when is_map(attrs) do

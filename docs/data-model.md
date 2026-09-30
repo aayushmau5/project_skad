@@ -421,7 +421,7 @@ Keeps unreviewed material outside canonical public tables.
 | kind | TEXT | New entry, correction, example, audio, image, or addition |
 | target_type | TEXT, nullable | Existing record type |
 | target_public_id | TEXT, nullable | Existing record being changed |
-| payload | JSON | Original versioned proposal |
+| payload | JSON | Original proposal |
 | status | TEXT | Pending, reviewing, clarification needed, approved, rejected, or withdrawn |
 | review_history | JSON | Small chronological list of review decisions and messages |
 | reviewed_by_account_id | INTEGER, nullable | Current/final moderator |
