@@ -36,3 +36,6 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# Keep password-auth tests fast while exercising the real bcrypt implementation.
+config :bcrypt_elixir, :log_rounds, 1

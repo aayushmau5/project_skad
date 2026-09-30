@@ -448,7 +448,7 @@ Provides authentication for editors. Contributors do not need accounts initially
 | Column | Type | Purpose |
 | --- | --- | --- |
 | id | INTEGER | Internal primary key |
-| login | TEXT | Unique normalized email or username |
+| email | TEXT | Unique normalized moderator email |
 | password_hash | TEXT | Password verifier; never a password |
 | display_name | TEXT | Moderator attribution |
 | active | BOOLEAN | Disables access without deleting history |
