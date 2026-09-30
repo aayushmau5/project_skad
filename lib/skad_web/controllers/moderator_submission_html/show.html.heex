@@ -1,0 +1,185 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <article id="moderator-submission-detail">
+    <p><.link href={~p"/moderator/submissions"}>Back to submission queue</.link></p>
+
+    <header class="entry-header">
+      <h1>{payload_value(@submission, "primary_form") || "Submission"}</h1>
+      <p class="result-meta" id="submission-status">{status_label(@submission.status)}</p>
+    </header>
+
+    <section id="submission-payload" class="entry-section">
+      <h2>{if @submission.reviewed_payload, do: "Reviewed proposal", else: "Proposal"}</h2>
+      <dl>
+        <dt>Kind</dt>
+        <dd>{status_label(@submission.kind)}</dd>
+        <dt>Language</dt>
+        <dd id="submission-language">{payload_value(@submission, "language_slug")}</dd>
+        <dt>Meaning</dt>
+        <dd id="submission-definition">{payload_value(@submission, "definition")}</dd>
+        <dt>Part of speech</dt>
+        <dd>{payload_value(@submission, "part_of_speech") || "—"}</dd>
+        <dt>Usage note</dt>
+        <dd>{payload_value(@submission, "usage_note") || "—"}</dd>
+        <dt>Cultural context</dt>
+        <dd>{payload_value(@submission, "cultural_note") || "—"}</dd>
+        <dt>Received</dt>
+        <dd>{format_time(@submission.received_at)}</dd>
+        <dt>Receipt</dt>
+        <dd><code>{@submission.public_id}</code></dd>
+      </dl>
+    </section>
+
+    <details
+      :if={@submission.reviewed_payload}
+      id="original-submission-payload"
+      class="entry-section"
+    >
+      <summary>Original contributor proposal</summary>
+      <dl>
+        <dt>Word or expression</dt>
+        <dd>{original_payload_value(@submission, "primary_form")}</dd>
+        <dt>Language</dt>
+        <dd>{original_payload_value(@submission, "language_slug")}</dd>
+        <dt>Meaning</dt>
+        <dd>{original_payload_value(@submission, "definition")}</dd>
+        <dt>Part of speech</dt>
+        <dd>{original_payload_value(@submission, "part_of_speech") || "—"}</dd>
+        <dt>Usage note</dt>
+        <dd>{original_payload_value(@submission, "usage_note") || "—"}</dd>
+        <dt>Cultural context</dt>
+        <dd>{original_payload_value(@submission, "cultural_note") || "—"}</dd>
+      </dl>
+    </details>
+
+    <section
+      :if={@submission.status in [:pending, :reviewing]}
+      id="submission-edit"
+      class="entry-section auth-panel"
+    >
+      <h2>Edit proposal</h2>
+      <.form
+        for={@edit_form}
+        action={~p"/moderator/submissions/#{@submission.public_id}/proposal"}
+        method="patch"
+        id="proposal-edit-form"
+        class="auth-form"
+      >
+        <.input
+          field={@edit_form[:language_slug]}
+          type="select"
+          label="Language"
+          class="auth-input"
+          options={Enum.map(@languages, &{&1.name, &1.slug})}
+          required
+        />
+        <.input
+          field={@edit_form[:primary_form]}
+          type="text"
+          label="Word or expression"
+          class="auth-input"
+          required
+        />
+        <.input
+          field={@edit_form[:definition]}
+          type="textarea"
+          label="Meaning"
+          class="auth-input"
+          rows="4"
+          required
+        />
+        <.input
+          field={@edit_form[:part_of_speech]}
+          type="text"
+          label="Part of speech"
+          class="auth-input"
+        />
+        <.input
+          field={@edit_form[:usage_note]}
+          type="textarea"
+          label="Usage note"
+          class="auth-input"
+          rows="3"
+        />
+        <.input
+          field={@edit_form[:cultural_note]}
+          type="textarea"
+          label="Cultural context"
+          class="auth-input"
+          rows="3"
+        />
+        <button type="submit" id="save-proposal" class="auth-button">Save changes</button>
+      </.form>
+    </section>
+
+    <section id="submission-review-history" class="entry-section">
+      <h2>Review history</h2>
+      <p :if={@submission.review_history == []} id="empty-review-history">No decisions yet.</p>
+      <ol :if={@submission.review_history != []}>
+        <li
+          :for={{event, index} <- Enum.with_index(@submission.review_history)}
+          id={"review-event-#{index}"}
+        >
+          <strong>{status_label(event["status"] || event["action"])}</strong>
+          <span> · {event["reviewed_at"]}</span>
+          <p :if={event["note"]}>{event["note"]}</p>
+          <p :if={event["changed_fields"]}>
+            Changed: {Enum.join(event["changed_fields"], ", ")}
+          </p>
+        </li>
+      </ol>
+    </section>
+
+    <section
+      :if={@submission.status in [:pending, :reviewing]}
+      id="submission-moderation"
+      class="entry-section auth-panel"
+    >
+      <h2>Decision</h2>
+      <.form
+        for={@form}
+        action={~p"/moderator/submissions/#{@submission.public_id}"}
+        method="patch"
+        id="moderation-form"
+        class="auth-form"
+      >
+        <.input
+          field={@form[:note]}
+          type="textarea"
+          label="Moderator note"
+          class="auth-input"
+          rows="4"
+        />
+
+        <button
+          :if={@submission.status == :pending}
+          type="submit"
+          id="start-review"
+          name="moderation[decision]"
+          value="reviewing"
+          class="auth-button"
+        >
+          Start review
+        </button>
+        <button
+          :if={@submission.status in [:pending, :reviewing]}
+          type="submit"
+          id="approve-submission"
+          name="moderation[decision]"
+          value="approve"
+          class="auth-button"
+        >
+          Approve and publish
+        </button>
+        <button
+          type="submit"
+          id="reject-submission"
+          name="moderation[decision]"
+          value="rejected"
+          class="auth-button"
+        >
+          Reject
+        </button>
+      </.form>
+    </section>
+  </article>
+</Layouts.app>

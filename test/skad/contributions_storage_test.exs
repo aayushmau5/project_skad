@@ -61,6 +61,13 @@ defmodule Skad.ContributionsStorageTest do
     end
 
     assert_raise Exqlite.Error, fn ->
+      Repo.query!("UPDATE submissions SET reviewed_payload = ? WHERE id = ?", [
+        "not json",
+        submission_id
+      ])
+    end
+
+    assert_raise Exqlite.Error, fn ->
       Repo.query!("UPDATE submissions SET reviewed_by_account_id = ? WHERE id = ?", [
         -1,
         submission_id

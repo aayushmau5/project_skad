@@ -85,6 +85,63 @@ defmodule Skad.Contributions do
 
   def get_submission_for_review(_scope, _public_id), do: nil
 
+  def effective_payload(%Submission{reviewed_payload: payload}) when is_map(payload), do: payload
+  def effective_payload(%Submission{payload: payload}), do: payload
+
+  def change_submission_for_review(scope, submission, attrs \\ %{})
+
+  def change_submission_for_review(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Submission{kind: :new_entry} = submission,
+        attrs
+      )
+      when is_map(attrs) do
+    submission
+    |> effective_payload()
+    |> Map.put("client_submission_id", submission.client_submission_id)
+    |> Map.merge(stringify_keys(attrs))
+    |> change_new_entry()
+  end
+
+  def change_submission_for_review(_scope, %Submission{}, _attrs),
+    do: {:error, :unauthorized}
+
+  def update_submission_for_review(
+        %Scope{moderator_account: %ModeratorAccount{active: true} = moderator} = scope,
+        %Submission{id: id},
+        attrs
+      )
+      when is_integer(id) and is_map(attrs) do
+    with %Submission{} = submission <- Repo.get(Submission, id),
+         :ok <- editable?(submission) do
+      changeset = change_submission_for_review(scope, submission, attrs)
+
+      if changeset.valid? do
+        reviewed = Changeset.apply_changes(changeset)
+
+        case Archive.get_language_by_slug(reviewed.language_slug) do
+          %{active: true} ->
+            save_submission_edits(
+              submission,
+              moderator,
+              NewEntrySubmission.to_payload(reviewed)
+            )
+
+          _missing_or_inactive ->
+            {:error, Changeset.add_error(changeset, :language_slug, "is not active")}
+        end
+      else
+        {:error, changeset}
+      end
+    else
+      nil -> {:error, :submission_not_found}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def update_submission_for_review(_scope, %Submission{}, _attrs),
+    do: {:error, :unauthorized}
+
   def moderate_submission(scope, submission, status, note \\ nil)
 
   def moderate_submission(
@@ -133,7 +190,8 @@ defmodule Skad.Contributions do
 
     with %Submission{} = submission <- Repo.get(Submission, id),
          :ok <- approvable?(submission),
-         {:ok, language, archive_attrs} <- new_entry_archive_attrs(submission.payload),
+         {:ok, language, archive_attrs} <-
+           submission |> effective_payload() |> new_entry_archive_attrs(),
          {:ok, multi} <-
            approval_multi(submission, moderator, note)
            |> Archive.new_meaning_multi(language, archive_attrs) do
@@ -224,6 +282,55 @@ defmodule Skad.Contributions do
     do: {:error, :unsupported_submission_kind}
 
   defp approvable?(%Submission{}), do: {:error, :invalid_transition}
+
+  defp editable?(%Submission{status: status, kind: :new_entry})
+       when status in [:pending, :reviewing],
+       do: :ok
+
+  defp editable?(%Submission{status: status}) when status in [:pending, :reviewing],
+    do: {:error, :unsupported_submission_kind}
+
+  defp editable?(%Submission{}), do: {:error, :invalid_transition}
+
+  defp save_submission_edits(submission, moderator, payload) do
+    if payload == effective_payload(submission) do
+      {:ok, Repo.preload(submission, :reviewed_by_account)}
+    else
+      reviewed_at = DateTime.utc_now(:second)
+
+      event = %{
+        "action" => "edited",
+        "moderator_account_id" => moderator.id,
+        "reviewed_at" => DateTime.to_iso8601(reviewed_at),
+        "changed_fields" => changed_fields(effective_payload(submission), payload)
+      }
+
+      submission
+      |> Submission.moderation_changeset(%{
+        status: :reviewing,
+        reviewed_payload: payload,
+        review_history: submission.review_history ++ [event],
+        reviewed_at: reviewed_at
+      })
+      |> Changeset.put_change(:reviewed_by_account_id, moderator.id)
+      |> Repo.update()
+      |> preload_reviewed_by_account()
+    end
+  end
+
+  defp changed_fields(original, reviewed) do
+    reviewed
+    |> Map.keys()
+    |> Enum.filter(&(Map.get(original, &1) != Map.get(reviewed, &1)))
+    |> Enum.sort()
+  end
+
+  defp stringify_keys(attrs) do
+    Map.new(attrs, fn
+      {key, value} when is_atom(key) -> {Atom.to_string(key), value}
+      pair -> pair
+    end)
+  end
 
   defp new_entry_archive_attrs(
          %{

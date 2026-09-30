@@ -1,6 +1,7 @@
 defmodule Skad.ContributionsTest do
   use Skad.DataCase
 
+  alias Ecto.Changeset
   alias Skad.Accounts.ModeratorAccount
   alias Skad.Accounts.Scope
   alias Skad.Archive
@@ -163,6 +164,53 @@ defmodule Skad.ContributionsTest do
 
     assert {:error, :unauthorized} =
              Contributions.moderate_submission(inactive_scope, submission, :reviewing)
+  end
+
+  test "keeps the original proposal when a moderator edits the reviewed payload" do
+    create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    assert {:ok, receipt} = Contributions.submit_new_entry(valid_attrs())
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+
+    changeset = Contributions.change_submission_for_review(scope, submission)
+    assert Changeset.get_field(changeset, :primary_form) == "Water"
+
+    assert {:error, invalid} =
+             Contributions.update_submission_for_review(scope, submission, %{definition: ""})
+
+    assert "can't be blank" in errors_on(invalid).definition
+
+    assert {:ok, edited} =
+             Contributions.update_submission_for_review(scope, submission, %{
+               primary_form: "Drinking water",
+               definition: "Water that is safe to drink.",
+               usage_note: "For people and animals."
+             })
+
+    assert edited.status == :reviewing
+    assert edited.payload["primary_form"] == "Water"
+    assert edited.payload["definition"] == "A clear liquid."
+    assert edited.reviewed_payload["primary_form"] == "Drinking water"
+    assert edited.reviewed_payload["definition"] == "Water that is safe to drink."
+    assert edited.reviewed_by_account.id == moderator.id
+
+    assert List.last(edited.review_history) == %{
+             "action" => "edited",
+             "moderator_account_id" => moderator.id,
+             "reviewed_at" => DateTime.to_iso8601(edited.reviewed_at),
+             "changed_fields" => ["definition", "primary_form", "usage_note"]
+           }
+
+    assert {:ok, %{entry: entry, submission: approved}} =
+             Contributions.approve_submission(scope, edited)
+
+    assert hd(entry.forms).text == "Drinking water"
+    assert hd(entry.definitions).text == "Water that is safe to drink."
+
+    assert {:error, :invalid_transition} =
+             Contributions.update_submission_for_review(scope, approved, %{definition: "Too late"})
   end
 
   test "approves a new entry with its revision and search index in one transaction" do

@@ -13,6 +13,7 @@ defmodule Skad.Contributions.Submission do
     field :target_type, :string
     field :target_public_id, Ecto.UUID
     field :payload, :map, redact: true
+    field :reviewed_payload, :map, redact: true
     field :status, Ecto.Enum, values: @statuses, default: :pending
     field :review_history, {:array, :map}, default: [], redact: true
     field :reviewed_at, :utc_datetime
@@ -39,8 +40,9 @@ defmodule Skad.Contributions.Submission do
 
   def moderation_changeset(submission, attrs) do
     submission
-    |> cast(attrs, [:status, :review_history, :reviewed_at, :review_note])
+    |> cast(attrs, [:status, :reviewed_payload, :review_history, :reviewed_at, :review_note])
     |> validate_required([:status, :review_history, :reviewed_at])
+    |> check_constraint(:reviewed_payload, name: :submissions_reviewed_payload_must_be_json)
     |> check_constraint(:review_history, name: :submissions_review_history_must_be_array)
     |> foreign_key_constraint(:reviewed_by_account_id)
   end

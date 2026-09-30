@@ -11,6 +11,7 @@ defmodule Skad.ContributionsSchemasTest do
     assert {:ok, _public_id} = Ecto.UUID.cast(submission.public_id)
     assert submission.kind == :new_entry
     assert submission.status == :pending
+    assert submission.reviewed_payload == nil
     assert submission.review_history == []
     assert submission.payload == %{"definition" => "private contribution text"}
     refute inspect(submission) =~ "private contribution text"

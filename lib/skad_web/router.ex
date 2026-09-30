@@ -38,6 +38,10 @@ defmodule SkadWeb.Router do
     pipe_through [:browser, :require_authenticated_moderator]
 
     get "/", ModeratorController, :home
+    get "/submissions", ModeratorSubmissionController, :index
+    get "/submissions/:public_id", ModeratorSubmissionController, :show
+    patch "/submissions/:public_id/proposal", ModeratorSubmissionController, :update_proposal
+    patch "/submissions/:public_id", ModeratorSubmissionController, :update
   end
 
   scope "/moderator", SkadWeb do

@@ -1,0 +1,29 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section id="moderator-submission-queue">
+    <h1>Submission queue</h1>
+    <p><.link href={~p"/moderator"}>Back to workspace</.link></p>
+
+    <p :if={@submissions == []} id="empty-submission-queue">No submissions need review.</p>
+
+    <ol :if={@submissions != []} class="result-list">
+      <li
+        :for={submission <- @submissions}
+        id={"submission-#{submission.public_id}"}
+        class="result-card"
+      >
+        <.link
+          id={"review-submission-#{submission.public_id}"}
+          href={~p"/moderator/submissions/#{submission.public_id}"}
+          class="result-link"
+        >
+          {payload_value(submission, "primary_form") || "Untitled submission"}
+        </.link>
+        <p class="result-meta">
+          {payload_value(submission, "language_slug")} · {status_label(submission.status)} · {format_time(
+            submission.received_at
+          )}
+        </p>
+      </li>
+    </ol>
+  </section>
+</Layouts.app>
