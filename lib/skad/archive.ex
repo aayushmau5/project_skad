@@ -7,6 +7,7 @@ defmodule Skad.Archive do
   alias Skad.Archive.EntryForm
   alias Skad.Archive.Example
   alias Skad.Archive.ExampleLink
+  alias Skad.Archive.ExampleMatcher
   alias Skad.Archive.Language
   alias Skad.Archive.Search
   alias Skad.Repo
@@ -193,6 +194,14 @@ defmodule Skad.Archive do
 
   def publish_usage_example(_language, _attrs),
     do: {:error, :invalid_attributes}
+
+  def suggest_example_links(%Language{} = language, text) when is_binary(text) do
+    with {:ok, language} <- active_language(language) do
+      ExampleMatcher.suggest(language, text)
+    end
+  end
+
+  def suggest_example_links(_language, _text), do: {:error, :invalid_attributes}
 
   def get_public_entry(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do

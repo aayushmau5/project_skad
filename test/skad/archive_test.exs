@@ -386,6 +386,71 @@ defmodule Skad.ArchiveTest do
     assert Repo.aggregate(ExampleLink, :count) == 0
   end
 
+  test "suggests longest non-overlapping example links in the same language" do
+    {:ok, hindi} =
+      Archive.create_language(%{
+        slug: "hindi",
+        code: "hi",
+        name: "Hindi",
+        direction: :ltr
+      })
+
+    {:ok, cold_water} = publish_meaning(hindi, "COLD WATER", "ठंडा पानी")
+    {:ok, _water} = publish_meaning(hindi, "WATER", "पानी")
+    {:ok, drink} = publish_meaning(hindi, "DRINK", "पियो")
+
+    {:ok, english} = create_language()
+    {:ok, _wrong_language} = publish_meaning(english, "OTHER", "पानी")
+
+    text = "ठंडा पानी पियो"
+
+    assert {:ok, [phrase, verb]} = Archive.suggest_example_links(hindi, text)
+
+    assert %{
+             start_offset: 0,
+             end_offset: phrase_end,
+             surface_text: "ठंडा पानी",
+             ambiguous?: false,
+             candidates: [phrase_entry]
+           } = phrase
+
+    assert phrase_end == byte_size("ठंडा पानी")
+    assert phrase_entry.id == cold_water.id
+
+    assert %{
+             start_offset: verb_start,
+             end_offset: verb_end,
+             surface_text: "पियो",
+             ambiguous?: false,
+             candidates: [verb_entry]
+           } = verb
+
+    assert verb_start == byte_size("ठंडा पानी ")
+    assert verb_end == byte_size(text)
+    assert verb_entry.id == drink.id
+  end
+
+  test "keeps ambiguous meanings as candidates and does not match inside words" do
+    {:ok, language} = create_language()
+    {:ok, river_bank} = publish_meaning(language, "RIVER BANK", "bank")
+    {:ok, financial_bank} = publish_meaning(language, "FINANCIAL BANK", "bank")
+    {:ok, water} = publish_meaning(language, "WATER", "water")
+    {:ok, waterfall} = publish_meaning(language, "WATERFALL", "waterfall")
+
+    assert {:ok, [bank, waterfall_match, water_match]} =
+             Archive.suggest_example_links(language, "Bank near waterfall; water.")
+
+    assert bank.surface_text == "Bank"
+    assert bank.ambiguous?
+    assert Enum.map(bank.candidates, & &1.id) == [river_bank.id, financial_bank.id]
+
+    assert waterfall_match.surface_text == "waterfall"
+    assert Enum.map(waterfall_match.candidates, & &1.id) == [waterfall.id]
+
+    assert water_match.surface_text == "water"
+    assert Enum.map(water_match.candidates, & &1.id) == [water.id]
+  end
+
   test "does not return archived public entries" do
     {:ok, language} = create_language()
 
