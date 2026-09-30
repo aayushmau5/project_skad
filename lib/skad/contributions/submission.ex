@@ -14,6 +14,12 @@ defmodule Skad.Contributions.Submission do
     field :target_public_id, Ecto.UUID
     field :payload, :map, redact: true
     field :status, Ecto.Enum, values: @statuses, default: :pending
+    field :review_history, {:array, :map}, default: [], redact: true
+    field :reviewed_at, :utc_datetime
+    field :review_note, :string, redact: true
+
+    belongs_to :reviewed_by_account, Skad.Accounts.ModeratorAccount
+    has_many :revisions, Skad.Contributions.Revision
 
     field :received_at, :utc_datetime, autogenerate: {DateTime, :utc_now, [:second]}
   end
@@ -29,5 +35,13 @@ defmodule Skad.Contributions.Submission do
       message: "must be present with target type"
     )
     |> check_constraint(:payload, name: :submissions_payload_must_be_json)
+  end
+
+  def moderation_changeset(submission, attrs) do
+    submission
+    |> cast(attrs, [:status, :review_history, :reviewed_at, :review_note])
+    |> validate_required([:status, :review_history, :reviewed_at])
+    |> check_constraint(:review_history, name: :submissions_review_history_must_be_array)
+    |> foreign_key_constraint(:reviewed_by_account_id)
   end
 end

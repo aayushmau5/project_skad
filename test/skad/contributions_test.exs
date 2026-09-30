@@ -1,6 +1,8 @@
 defmodule Skad.ContributionsTest do
   use Skad.DataCase
 
+  alias Skad.Accounts.ModeratorAccount
+  alias Skad.Accounts.Scope
   alias Skad.Archive
   alias Skad.Contributions
   alias Skad.Contributions.Submission
@@ -91,6 +93,76 @@ defmodule Skad.ContributionsTest do
     assert Contributions.get_receipt(Ecto.UUID.generate()) == nil
   end
 
+  test "lists open submissions and exposes private details only to an active moderator" do
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+    first = insert_submission(~U[2026-01-01 00:00:00Z])
+    second = insert_submission(~U[2026-01-02 00:00:00Z])
+
+    second
+    |> Ecto.Changeset.change(status: :rejected)
+    |> Repo.update!()
+
+    assert Enum.map(Contributions.list_submissions_for_review(scope), & &1.id) == [first.id]
+
+    assert Contributions.get_submission_for_review(scope, first.public_id).payload ==
+             first.payload
+
+    inactive_scope = Scope.for_moderator(%{moderator | active: false})
+    assert Contributions.list_submissions_for_review(inactive_scope) == []
+    assert Contributions.get_submission_for_review(inactive_scope, first.public_id) == nil
+    assert Contributions.get_submission_for_review(scope, "not-a-uuid") == nil
+  end
+
+  test "records valid review transitions and their moderator history" do
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+    submission = insert_submission()
+
+    assert {:ok, reviewing} =
+             Contributions.moderate_submission(scope, submission, :reviewing)
+
+    assert reviewing.status == :reviewing
+    assert reviewing.reviewed_by_account.id == moderator.id
+
+    assert [%{"status" => "reviewing", "note" => nil}] =
+             Enum.map(reviewing.review_history, &Map.take(&1, ["status", "note"]))
+
+    assert {:error, :review_note_required} =
+             Contributions.moderate_submission(scope, reviewing, :clarification_needed, " ")
+
+    assert {:ok, clarification} =
+             Contributions.moderate_submission(
+               scope,
+               reviewing,
+               :clarification_needed,
+               "  Which variety?  "
+             )
+
+    assert clarification.review_note == "Which variety?"
+
+    assert {:ok, resumed} =
+             Contributions.moderate_submission(scope, clarification, :reviewing)
+
+    assert {:ok, rejected} =
+             Contributions.moderate_submission(scope, resumed, :rejected, "Cannot verify")
+
+    assert Enum.map(rejected.review_history, & &1["status"]) == [
+             "reviewing",
+             "clarification_needed",
+             "reviewing",
+             "rejected"
+           ]
+
+    assert {:error, :invalid_transition} =
+             Contributions.moderate_submission(scope, rejected, :reviewing)
+
+    inactive_scope = Scope.for_moderator(%{moderator | active: false})
+
+    assert {:error, :unauthorized} =
+             Contributions.moderate_submission(inactive_scope, submission, :reviewing)
+  end
+
   defp valid_attrs do
     %{
       client_submission_id: Ecto.UUID.generate(),
@@ -110,5 +182,23 @@ defmodule Skad.ContributionsTest do
       })
 
     language
+  end
+
+  defp insert_submission(received_at \\ DateTime.utc_now(:second)) do
+    %Submission{kind: :new_entry, received_at: received_at}
+    |> Submission.changeset(%{
+      client_submission_id: Ecto.UUID.generate(),
+      payload: %{"version" => 1, "definition" => "private text"}
+    })
+    |> Repo.insert!()
+  end
+
+  defp insert_moderator do
+    %ModeratorAccount{
+      email: "editor@example.com",
+      password_hash: "password-verifier",
+      display_name: "Editor"
+    }
+    |> Repo.insert!()
   end
 end

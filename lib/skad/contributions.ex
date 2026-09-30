@@ -2,10 +2,18 @@ defmodule Skad.Contributions do
   import Ecto.Query
 
   alias Ecto.Changeset
+  alias Skad.Accounts.ModeratorAccount
+  alias Skad.Accounts.Scope
   alias Skad.Archive
   alias Skad.Contributions.NewEntrySubmission
   alias Skad.Contributions.Submission
   alias Skad.Repo
+
+  @review_transitions %{
+    pending: [:reviewing, :clarification_needed, :rejected],
+    reviewing: [:clarification_needed, :rejected],
+    clarification_needed: [:reviewing, :rejected]
+  }
 
   def change_new_entry(attrs \\ %{}) when is_map(attrs) do
     NewEntrySubmission.changeset(%NewEntrySubmission{}, attrs)
@@ -43,6 +51,79 @@ defmodule Skad.Contributions do
       :error -> nil
     end
   end
+
+  def list_submissions_for_review(%Scope{
+        moderator_account: %ModeratorAccount{active: true}
+      }) do
+    Submission
+    |> where(
+      [submission],
+      submission.status in [:pending, :reviewing, :clarification_needed]
+    )
+    |> order_by([submission], asc: submission.received_at, asc: submission.id)
+    |> preload(:reviewed_by_account)
+    |> Repo.all()
+  end
+
+  def list_submissions_for_review(_scope), do: []
+
+  def get_submission_for_review(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        public_id
+      ) do
+    with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
+      Submission
+      |> where([submission], submission.public_id == ^public_id)
+      |> preload(:reviewed_by_account)
+      |> Repo.one()
+    else
+      :error -> nil
+    end
+  end
+
+  def get_submission_for_review(_scope, _public_id), do: nil
+
+  def moderate_submission(scope, submission, status, note \\ nil)
+
+  def moderate_submission(
+        %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
+        %Submission{} = submission,
+        status,
+        note
+      ) do
+    note = normalize_review_note(note)
+
+    cond do
+      status not in Map.get(@review_transitions, submission.status, []) ->
+        {:error, :invalid_transition}
+
+      status in [:clarification_needed, :rejected] and is_nil(note) ->
+        {:error, :review_note_required}
+
+      true ->
+        reviewed_at = DateTime.utc_now(:second)
+
+        event = %{
+          "status" => Atom.to_string(status),
+          "moderator_account_id" => moderator.id,
+          "reviewed_at" => DateTime.to_iso8601(reviewed_at),
+          "note" => note
+        }
+
+        submission
+        |> Submission.moderation_changeset(%{
+          status: status,
+          review_history: submission.review_history ++ [event],
+          reviewed_at: reviewed_at,
+          review_note: note
+        })
+        |> Changeset.put_change(:reviewed_by_account_id, moderator.id)
+        |> Repo.update()
+        |> preload_reviewed_by_account()
+    end
+  end
+
+  def moderate_submission(_scope, %Submission{}, _status, _note), do: {:error, :unauthorized}
 
   defp insert_new_entry(new_entry, payload, command_changeset) do
     case Archive.get_language_by_slug(new_entry.language_slug) do
@@ -88,4 +169,19 @@ defmodule Skad.Contributions do
       received_at: submission.received_at
     }
   end
+
+  defp normalize_review_note(note) when is_binary(note) do
+    case String.trim(note) do
+      "" -> nil
+      note -> note
+    end
+  end
+
+  defp normalize_review_note(_note), do: nil
+
+  defp preload_reviewed_by_account({:ok, submission}) do
+    {:ok, Repo.preload(submission, :reviewed_by_account, force: true)}
+  end
+
+  defp preload_reviewed_by_account(result), do: result
 end
