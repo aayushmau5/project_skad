@@ -7,4 +7,30 @@ defmodule SkadWeb.PageHTML do
   use SkadWeb, :html
 
   embed_templates "page_html/*"
+
+  def primary_form(entry), do: Enum.find(entry.forms, & &1.is_primary)
+
+  def primary_form_text(entry) do
+    case primary_form(entry) do
+      nil -> "Untitled entry"
+      form -> form.text
+    end
+  end
+
+  def first_definition(entry) do
+    case entry.definitions do
+      [definition | _] -> definition.text
+      [] -> nil
+    end
+  end
+
+  def equivalent_entries(entry) do
+    Enum.reject(entry.concept.entries, &(&1.id == entry.id))
+  end
+
+  def examples(entry) do
+    entry.example_links
+    |> Enum.map(& &1.example)
+    |> Enum.uniq_by(& &1.id)
+  end
 end

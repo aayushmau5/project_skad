@@ -1,0 +1,108 @@
+{
+  "languages": [
+    {
+      "slug": "english",
+      "code": "en",
+      "name": "English",
+      "direction": "ltr"
+    },
+    {
+      "slug": "hindi",
+      "code": "hi",
+      "name": "Hindi",
+      "direction": "ltr"
+    },
+    {
+      "slug": "hamskad",
+      "code": "",
+      "name": "Hamskad",
+      "direction": "ltr"
+    }
+  ],
+  "meanings": [
+    {
+      "concept": {
+        "editorial_label": "WATER"
+      },
+      "entries": [
+        {
+          "key": "water-en",
+          "language": "english",
+          "entry": {
+            "part_of_speech": "noun",
+            "definitions": [
+              {
+                "language": "english",
+                "text": "A clear liquid used for drinking."
+              }
+            ]
+          },
+          "forms": [
+            {
+              "text": "Water",
+              "kind": "spelling",
+              "is_primary": true
+            },
+            {
+              "text": "H₂O",
+              "kind": "alias",
+              "is_primary": false
+            }
+          ]
+        },
+        {
+          "key": "water-hi",
+          "language": "hindi",
+          "entry": {
+            "part_of_speech": "noun",
+            "definitions": [
+              {
+                "language": "hindi",
+                "text": "पीने के लिए उपयोग किया जाने वाला तरल।"
+              }
+            ]
+          },
+          "forms": [
+            {
+              "text": "पानी",
+              "kind": "spelling",
+              "is_primary": true
+            },
+            {
+              "text": "Paani",
+              "kind": "transliteration",
+              "is_primary": false
+            },
+            {
+              "text": "Pani",
+              "kind": "transliteration",
+              "is_primary": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "language": "english",
+      "example": {
+        "text": "Drink water.",
+        "translations": [
+          {
+            "language": "hindi",
+            "text": "पानी पियो।"
+          }
+        ]
+      },
+      "links": [
+        {
+          "entry": "water-en",
+          "start_offset": 6,
+          "end_offset": 11,
+          "role": "focus"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+<Layouts.app flash={@flash}>
+  <article
+    id="entry-page"
+    lang={@entry.language.code || @entry.language.slug}
+    dir={to_string(@entry.language.direction)}
+  >
+    <p><.link href={~p"/"}>Back to search</.link></p>
+
+    <header class="entry-header">
+      <h1 id="entry-title">{primary_form_text(@entry)}</h1>
+      <p class="result-meta">
+        {@entry.language.name}
+        <%= if @entry.part_of_speech do %>
+          · {@entry.part_of_speech}
+        <% end %>
+      </p>
+    </header>
+
+    <section id="entry-definitions" class="entry-section">
+      <h2>Meaning</h2>
+      <p :for={definition <- @entry.definitions} lang={definition.language}>
+        {definition.text}
+      </p>
+    </section>
+
+    <section id="entry-forms" class="entry-section">
+      <h2>Forms</h2>
+      <ul>
+        <li :for={form <- @entry.forms} id={"entry-form-#{form.id}"}>
+          {form.text} <small>({form.kind})</small>
+        </li>
+      </ul>
+    </section>
+
+    <section :if={equivalent_entries(@entry) != []} id="entry-equivalents" class="entry-section">
+      <h2>Other languages</h2>
+      <ul>
+        <li
+          :for={equivalent <- equivalent_entries(@entry)}
+          id={"equivalent-entry-#{equivalent.public_id}"}
+        >
+          <.link href={~p"/entries/#{equivalent.public_id}"}>
+            {primary_form_text(equivalent)} — {equivalent.language.name}
+          </.link>
+        </li>
+      </ul>
+    </section>
+
+    <section :if={@entry.usage_note} id="entry-usage-note" class="entry-section">
+      <h2>Usage</h2>
+      <p>{@entry.usage_note}</p>
+    </section>
+
+    <section :if={@entry.cultural_note} id="entry-cultural-note" class="entry-section">
+      <h2>Cultural context</h2>
+      <p>{@entry.cultural_note}</p>
+    </section>
+
+    <section :if={examples(@entry) != []} id="entry-examples" class="entry-section">
+      <h2>Examples</h2>
+      <article :for={example <- examples(@entry)} id={"example-#{example.public_id}"}>
+        <p lang={example.language.code || example.language.slug}>{example.text}</p>
+        <p :for={translation <- example.translations} lang={translation.language}>
+          {translation.text}
+        </p>
+      </article>
+    </section>
+  </article>
+</Layouts.app>
