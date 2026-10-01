@@ -13,6 +13,7 @@ defmodule Skad.Archive do
   alias Skad.Repo
 
   @lookup_limit 20
+  @concept_limit 20
 
   def list_active_languages do
     Language
@@ -29,6 +30,52 @@ defmodule Skad.Archive do
     %Language{}
     |> Language.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def change_concept(%Concept{} = concept, attrs \\ %{}) do
+    Concept.changeset(concept, attrs)
+  end
+
+  def get_concept(public_id) do
+    with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
+      Concept
+      |> where([concept], concept.public_id == ^public_id and is_nil(concept.archived_at))
+      |> Repo.one()
+      |> preload_concepts()
+    else
+      :error -> nil
+    end
+  end
+
+  def search_concepts(query) do
+    case normalize_text(query) do
+      query when is_binary(query) and query != "" ->
+        entry_concept_ids =
+          query
+          |> search()
+          |> Enum.map(& &1.entry.concept_id)
+          |> Enum.uniq()
+
+        Concept
+        |> where(
+          [concept],
+          is_nil(concept.archived_at) and
+            (concept.id in ^entry_concept_ids or
+               fragment("instr(lower(?), ?) > 0", concept.editorial_label, ^query) or
+               fragment(
+                 "instr(lower(coalesce(?, '')), ?) > 0",
+                 concept.editorial_note,
+                 ^query
+               ))
+        )
+        |> order_by([concept], asc: concept.editorial_label, asc: concept.id)
+        |> limit(@concept_limit)
+        |> Repo.all()
+        |> preload_concepts()
+
+      _empty_query ->
+        []
+    end
   end
 
   def exact_lookup(query, language \\ nil), do: lookup(query, language, :exact)
@@ -139,32 +186,49 @@ defmodule Skad.Archive do
 
   def publish_equivalent(%Entry{} = source_entry, %Language{} = language, attrs)
       when is_map(attrs) do
-    entry_attrs = attr(attrs, :entry, %{})
-    forms_attrs = attr(attrs, :forms, [])
-
-    with {:ok, language} <- active_language(language),
-         {:ok, concept} <- available_concept(source_entry),
-         :ok <- validate_forms(forms_attrs) do
-      Multi.new()
-      |> Multi.insert(
-        :entry,
-        Entry.changeset(
-          %Entry{language_id: language.id, concept_id: concept.id},
-          entry_attrs
-        )
-      )
-      |> Multi.run(:forms, fn repo, %{entry: entry} ->
-        insert_forms(repo, entry, forms_attrs)
-      end)
-      |> Multi.run(:search_index, fn repo, %{entry: entry} ->
-        Search.refresh(repo, [entry.id])
-      end)
-      |> Repo.transaction()
-      |> public_entry_result()
+    with {:ok, concept} <- available_concept(source_entry),
+         {:ok, multi} <- existing_meaning_multi(Multi.new(), concept, language, attrs) do
+      multi |> Repo.transaction() |> public_entry_result()
     end
   end
 
   def publish_equivalent(_source_entry, _language, _attrs),
+    do: {:error, :invalid_attributes}
+
+  @doc false
+  def existing_meaning_multi(
+        %Multi{} = multi,
+        %Concept{} = concept,
+        %Language{} = language,
+        attrs
+      )
+      when is_map(attrs) do
+    entry_attrs = attr(attrs, :entry, %{})
+    forms_attrs = attr(attrs, :forms, [])
+
+    with {:ok, language} <- active_language(language),
+         {:ok, concept} <- available_concept(concept),
+         :ok <- validate_forms(forms_attrs) do
+      {:ok,
+       multi
+       |> Multi.put(:concept, concept)
+       |> Multi.insert(
+         :entry,
+         Entry.changeset(
+           %Entry{language_id: language.id, concept_id: concept.id},
+           entry_attrs
+         )
+       )
+       |> Multi.run(:forms, fn repo, %{entry: entry} ->
+         insert_forms(repo, entry, forms_attrs)
+       end)
+       |> Multi.run(:search_index, fn repo, %{entry: entry} ->
+         Search.refresh(repo, [entry.id])
+       end)}
+    end
+  end
+
+  def existing_meaning_multi(_multi, _concept, _language, _attrs),
     do: {:error, :invalid_attributes}
 
   def publish_usage_example(%Language{} = language, attrs) when is_map(attrs) do
@@ -275,6 +339,17 @@ defmodule Skad.Archive do
     )
   end
 
+  defp preload_concepts(nil), do: nil
+
+  defp preload_concepts(concepts) do
+    forms_query = from form in EntryForm, order_by: [desc: form.is_primary, asc: form.id]
+    entries_query = from entry in Entry, where: is_nil(entry.archived_at), order_by: entry.id
+
+    Repo.preload(concepts,
+      entries: {entries_query, [:language, forms: forms_query]}
+    )
+  end
+
   defp insert_forms(repo, entry, forms_attrs) do
     forms_attrs
     |> Enum.reduce_while({:ok, []}, fn attrs, {:ok, forms} ->
@@ -379,7 +454,19 @@ defmodule Skad.Archive do
     if concept, do: {:ok, concept}, else: {:error, :meaning_unavailable}
   end
 
-  defp available_concept(_entry), do: {:error, :meaning_unavailable}
+  defp available_concept(%Concept{id: id}) when is_integer(id) do
+    concept =
+      Concept
+      |> where([concept], concept.id == ^id and is_nil(concept.archived_at))
+      |> Repo.one()
+
+    case concept do
+      nil -> {:error, :meaning_unavailable}
+      concept -> {:ok, concept}
+    end
+  end
+
+  defp available_concept(_entry_or_concept), do: {:error, :meaning_unavailable}
 
   defp insert_example_links(repo, example, links_attrs) do
     with {:ok, links} <- prepare_links(repo, example.text, links_attrs),

@@ -22,15 +22,26 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
-### 10b. Media schema
+### 10c. Media context
 
-Add the Ecto schema, associations, changeset validation, and focused tests for
-the implemented `media` table. This step does not include a context API,
-object storage, uploads, background work, or user interfaces.
+Add the narrow context API needed to create, inspect, and update media metadata.
+This step does not include object storage, uploads, background work, or user
+interfaces.
 
-It is complete when media persists through its archive associations, invalid
-type-specific metadata and publication states are rejected before insertion,
-and the full existing test suite remains green.
+It is complete when the application has one authorization-neutral API for the
+valid media lifecycle transitions supported by the existing table and schema,
+with focused tests and no speculative storage abstraction.
+
+The moderator concept correction is complete: moderators can create and edit a
+concept with a private editorial note, search concepts by their metadata or
+entries, and attach an approved new entry to an existing concept. Concept image
+attachment remains deferred until the upload and storage path exists.
+
+### Deferred public archive refinement
+
+When one exact written form belongs to entries in different concepts, show the
+entries together as distinct meanings of that word. Keep each definition and
+entry link separate, and do not merge their concepts automatically.
 
 ## Rough map of later layers
 

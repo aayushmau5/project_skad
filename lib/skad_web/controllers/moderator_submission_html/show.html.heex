@@ -177,6 +177,34 @@
       </ol>
     </section>
 
+    <section
+      :if={@submission.status in [:pending, :reviewing]}
+      id="submission-concept"
+      class="entry-section auth-panel"
+    >
+      <h2>Concept</h2>
+      <.form
+        for={@concept_search_form}
+        action={~p"/moderator/submissions/#{@submission.public_id}"}
+        method="get"
+        id="submission-concept-search-form"
+        class="auth-form"
+      >
+        <.input
+          field={@concept_search_form[:query]}
+          type="search"
+          label="Find an existing concept by concept or entry"
+          class="auth-input"
+        />
+        <button type="submit" id="search-submission-concepts" class="auth-button">
+          Search concepts
+        </button>
+      </.form>
+      <p>
+        Select a result during approval, or leave the selection blank to create a new concept.
+      </p>
+    </section>
+
     <section id="submission-review-history" class="entry-section">
       <h2>Review history</h2>
       <p :if={@submission.review_history == []} id="empty-review-history">No decisions yet.</p>
@@ -208,6 +236,29 @@
         id="moderation-form"
         class="auth-form"
       >
+        <.input field={@form[:concept_query]} type="hidden" />
+        <.input
+          field={@form[:concept_public_id]}
+          type="select"
+          id="submission-concept-choice"
+          label="Existing concept"
+          prompt="Create a new concept"
+          options={concept_candidate_options(@concept_candidates)}
+          class="auth-input"
+        />
+        <.input
+          field={@form[:concept_editorial_label]}
+          type="text"
+          label="New concept label (used only when creating)"
+          class="auth-input"
+        />
+        <.input
+          field={@form[:concept_editorial_note]}
+          type="textarea"
+          label="New concept private note (used only when creating)"
+          class="auth-input"
+          rows="3"
+        />
         <.input
           field={@form[:note]}
           type="textarea"

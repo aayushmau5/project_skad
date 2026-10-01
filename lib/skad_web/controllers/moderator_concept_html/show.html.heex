@@ -1,0 +1,47 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <article id="moderator-concept-detail">
+    <p><.link href={~p"/moderator/concepts"}>Back to concepts</.link></p>
+
+    <header class="entry-header">
+      <h1 id="concept-label">{@concept.editorial_label}</h1>
+      <p id="concept-note">{@concept.editorial_note || "No editorial note."}</p>
+    </header>
+
+    <section id="concept-entries" class="entry-section">
+      <h2>Entries</h2>
+      <p :if={@concept.entries == []}>No entries use this concept yet.</p>
+      <ul :if={@concept.entries != []}>
+        <li :for={entry <- @concept.entries} id={"concept-entry-#{entry.public_id}"}>
+          <.link href={~p"/entries/#{entry.public_id}"}>{entry_label(entry)}</.link>
+        </li>
+      </ul>
+    </section>
+
+    <section id="edit-concept" class="entry-section auth-panel">
+      <h2>Edit concept</h2>
+      <.form
+        for={@form}
+        action={~p"/moderator/concepts/#{@concept.public_id}"}
+        method="patch"
+        id="edit-concept-form"
+        class="auth-form"
+      >
+        <.input
+          field={@form[:editorial_label]}
+          type="text"
+          label="Editorial label"
+          class="auth-input"
+          required
+        />
+        <.input
+          field={@form[:editorial_note]}
+          type="textarea"
+          label="Private editorial note"
+          class="auth-input"
+          rows="4"
+        />
+        <button type="submit" id="update-concept" class="auth-button">Save concept</button>
+      </.form>
+    </section>
+  </article>
+</Layouts.app>

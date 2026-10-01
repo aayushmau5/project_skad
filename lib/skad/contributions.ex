@@ -6,6 +6,7 @@ defmodule Skad.Contributions do
   alias Skad.Accounts.ModeratorAccount
   alias Skad.Accounts.Scope
   alias Skad.Archive
+  alias Skad.Archive.Concept
   alias Skad.Contributions.NewEntrySubmission
   alias Skad.Contributions.Revision
   alias Skad.Contributions.Submission
@@ -16,6 +17,53 @@ defmodule Skad.Contributions do
     reviewing: [:clarification_needed, :rejected],
     clarification_needed: [:reviewing, :rejected]
   }
+
+  def change_concept(scope, concept, attrs \\ %{})
+
+  def change_concept(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Concept{} = concept,
+        attrs
+      ) do
+    Archive.change_concept(concept, attrs)
+  end
+
+  def change_concept(_scope, %Concept{}, _attrs), do: {:error, :unauthorized}
+
+  def create_concept(
+        %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
+        attrs
+      )
+      when is_map(attrs) do
+    Multi.new()
+    |> Multi.insert(:concept, Archive.change_concept(%Concept{}, attrs))
+    |> Multi.insert(:revision, fn %{concept: concept} ->
+      concept_revision(concept, :create, nil, moderator)
+    end)
+    |> Repo.transaction()
+    |> concept_result()
+  end
+
+  def create_concept(_scope, _attrs), do: {:error, :unauthorized}
+
+  def update_concept(
+        %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
+        %Concept{id: id},
+        attrs
+      )
+      when is_integer(id) and is_map(attrs) do
+    concept =
+      Concept
+      |> where([concept], concept.id == ^id and is_nil(concept.archived_at))
+      |> Repo.one()
+
+    case concept do
+      nil -> {:error, :concept_not_found}
+      concept -> update_stored_concept(concept, attrs, moderator)
+    end
+  end
+
+  def update_concept(_scope, %Concept{}, _attrs), do: {:error, :unauthorized}
 
   def change_new_entry(attrs \\ %{}) when is_map(attrs) do
     NewEntrySubmission.changeset(%NewEntrySubmission{}, attrs)
@@ -196,13 +244,20 @@ defmodule Skad.Contributions do
 
   def moderate_submission(_scope, %Submission{}, _status, _note), do: {:error, :unauthorized}
 
-  def approve_submission(scope, submission, note \\ nil, example_choices \\ %{})
+  def approve_submission(
+        scope,
+        submission,
+        note \\ nil,
+        example_choices \\ %{},
+        concept_params \\ %{}
+      )
 
   def approve_submission(
         %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
         %Submission{id: id},
         note,
-        example_choices
+        example_choices,
+        concept_params
       )
       when is_integer(id) do
     note = normalize_review_note(note)
@@ -212,10 +267,11 @@ defmodule Skad.Contributions do
          payload = effective_payload(submission),
          {:ok, language, archive_attrs} <-
            new_entry_archive_attrs(payload),
+         {:ok, concept, archive_attrs} <- concept_choice(concept_params, archive_attrs),
          {:ok, example_plan} <- example_plan(language, payload, example_choices),
          {:ok, multi} <-
            approval_multi(submission, moderator, note)
-           |> Archive.new_meaning_multi(language, archive_attrs) do
+           |> meaning_multi(concept, language, archive_attrs) do
       multi
       |> add_example_multi(language, example_plan)
       |> Multi.insert(:revision, fn changes ->
@@ -240,8 +296,44 @@ defmodule Skad.Contributions do
     end
   end
 
-  def approve_submission(_scope, %Submission{}, _note, _example_choices),
+  def approve_submission(_scope, %Submission{}, _note, _example_choices, _concept_params),
     do: {:error, :unauthorized}
+
+  defp concept_choice(concept_params, archive_attrs) when is_map(concept_params) do
+    case concept_param(concept_params, :public_id) do
+      public_id when public_id in [nil, ""] ->
+        default_attrs = Map.fetch!(archive_attrs, :concept)
+
+        concept_attrs = %{
+          editorial_label:
+            concept_param(concept_params, :editorial_label, default_attrs.editorial_label),
+          editorial_note: concept_param(concept_params, :editorial_note)
+        }
+
+        {:ok, nil, Map.put(archive_attrs, :concept, concept_attrs)}
+
+      public_id when is_binary(public_id) ->
+        case Archive.get_concept(String.trim(public_id)) do
+          nil -> {:error, :concept_not_found}
+          concept -> {:ok, concept, archive_attrs}
+        end
+
+      _invalid_public_id ->
+        {:error, :concept_not_found}
+    end
+  end
+
+  defp concept_choice(_concept_params, _archive_attrs), do: {:error, :concept_not_found}
+
+  defp concept_param(params, key, default \\ nil) do
+    Map.get(params, key) || Map.get(params, Atom.to_string(key)) || default
+  end
+
+  defp meaning_multi(multi, nil, language, archive_attrs),
+    do: Archive.new_meaning_multi(multi, language, archive_attrs)
+
+  defp meaning_multi(multi, %Concept{} = concept, language, archive_attrs),
+    do: Archive.existing_meaning_multi(multi, concept, language, archive_attrs)
 
   defp insert_new_entry(new_entry, payload, command_changeset) do
     case Archive.get_language_by_slug(new_entry.language_slug) do
@@ -532,6 +624,40 @@ defmodule Skad.Contributions do
     end
   end
 
+  defp update_stored_concept(concept, attrs, moderator) do
+    before_state = concept_snapshot(concept)
+
+    Multi.new()
+    |> Multi.update(:concept, Archive.change_concept(concept, attrs))
+    |> Multi.insert(:revision, fn %{concept: updated_concept} ->
+      concept_revision(updated_concept, :update, before_state, moderator)
+    end)
+    |> Repo.transaction()
+    |> concept_result()
+  end
+
+  defp concept_revision(concept, action, before_state, moderator) do
+    %Revision{
+      target_type: "concept",
+      target_public_id: concept.public_id,
+      action: action,
+      actor_type: :moderator,
+      moderator_account_id: moderator.id
+    }
+    |> Revision.changeset(%{
+      before_state: before_state,
+      after_state: concept_snapshot(concept)
+    })
+  end
+
+  defp concept_snapshot(concept) do
+    %{
+      "public_id" => concept.public_id,
+      "editorial_label" => concept.editorial_label,
+      "editorial_note" => concept.editorial_note
+    }
+  end
+
   defp review_event(status, moderator, reviewed_at, note) do
     %{
       "status" => Atom.to_string(status),
@@ -550,6 +676,9 @@ defmodule Skad.Contributions do
   end
 
   defp approval_result({:error, _operation, reason, _changes}), do: {:error, reason}
+
+  defp concept_result({:ok, %{concept: concept}}), do: {:ok, concept}
+  defp concept_result({:error, _operation, reason, _changes}), do: {:error, reason}
 
   defp preload_reviewed_by_account({:ok, submission}) do
     {:ok, Repo.preload(submission, :reviewed_by_account, force: true)}

@@ -1,0 +1,58 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section id="moderator-concepts">
+    <p><.link href={~p"/moderator"}>Back to moderator workspace</.link></p>
+    <h1>Concepts</h1>
+
+    <.form
+      for={@search_form}
+      action={~p"/moderator/concepts"}
+      method="get"
+      id="concept-search-form"
+      class="search-form"
+    >
+      <.input
+        field={@search_form[:query]}
+        type="search"
+        label="Search concepts or entries"
+        class="search-input"
+      />
+      <button type="submit" id="search-concepts" class="search-button">Search</button>
+    </.form>
+
+    <ul :if={@concepts != []} id="concept-search-results" class="result-list">
+      <li :for={concept <- @concepts} id={"concept-#{concept.public_id}"} class="result-card">
+        <.link href={~p"/moderator/concepts/#{concept.public_id}"} class="result-link">
+          {concept.editorial_label}
+        </.link>
+        <p :if={concept.editorial_note}>{concept.editorial_note}</p>
+        <p class="result-meta">{length(concept.entries)} entries</p>
+      </li>
+    </ul>
+
+    <section id="new-concept" class="entry-section auth-panel">
+      <h2>Create concept</h2>
+      <.form
+        for={@concept_form}
+        action={~p"/moderator/concepts"}
+        id="new-concept-form"
+        class="auth-form"
+      >
+        <.input
+          field={@concept_form[:editorial_label]}
+          type="text"
+          label="Editorial label"
+          class="auth-input"
+          required
+        />
+        <.input
+          field={@concept_form[:editorial_note]}
+          type="textarea"
+          label="Private editorial note"
+          class="auth-input"
+          rows="4"
+        />
+        <button type="submit" id="create-concept" class="auth-button">Create concept</button>
+      </.form>
+    </section>
+  </section>
+</Layouts.app>

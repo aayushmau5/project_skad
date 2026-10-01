@@ -15,7 +15,23 @@ defmodule Skad.Archive.Concept do
   def changeset(concept, attrs) do
     concept
     |> cast(attrs, [:editorial_label, :editorial_note])
+    |> update_change(:editorial_label, &normalize_required_text/1)
+    |> update_change(:editorial_note, &normalize_optional_text/1)
     |> validate_required([:editorial_label])
+    |> validate_length(:editorial_label, max: 255)
+    |> validate_length(:editorial_note, max: 5_000)
     |> unique_constraint(:public_id)
   end
+
+  defp normalize_required_text(text) when is_binary(text), do: String.trim(text)
+  defp normalize_required_text(text), do: text
+
+  defp normalize_optional_text(text) when is_binary(text) do
+    case String.trim(text) do
+      "" -> nil
+      text -> text
+    end
+  end
+
+  defp normalize_optional_text(text), do: text
 end

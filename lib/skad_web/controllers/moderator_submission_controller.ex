@@ -11,10 +11,10 @@ defmodule SkadWeb.ModeratorSubmissionController do
     )
   end
 
-  def show(conn, %{"public_id" => public_id}) do
+  def show(conn, %{"public_id" => public_id} = params) do
     case Contributions.get_submission_for_review(conn.assigns.current_scope, public_id) do
       nil -> send_resp(conn, :not_found, "Submission not found")
-      submission -> render_show(conn, submission)
+      submission -> render_show(conn, submission, %{}, nil, concept_query(params))
     end
   end
 
@@ -66,7 +66,12 @@ defmodule SkadWeb.ModeratorSubmissionController do
            conn.assigns.current_scope,
            submission,
            params["note"],
-           params["example_choices"] || %{}
+           params["example_choices"] || %{},
+           %{
+             public_id: params["concept_public_id"],
+             editorial_label: params["concept_editorial_label"],
+             editorial_note: params["concept_editorial_note"]
+           }
          ) do
       {:ok, %{entry: entry}} ->
         conn
@@ -111,10 +116,27 @@ defmodule SkadWeb.ModeratorSubmissionController do
     |> render_show(submission, params)
   end
 
-  defp render_show(conn, submission, params \\ %{}, edit_changeset \\ nil) do
+  defp render_show(
+         conn,
+         submission,
+         params \\ %{},
+         edit_changeset \\ nil,
+         concept_query \\ nil
+       ) do
     edit_changeset =
       edit_changeset ||
         Contributions.change_submission_for_review(conn.assigns.current_scope, submission)
+
+    concept_query = concept_query || params["concept_query"] || ""
+    concept_candidates = concept_candidates(concept_query, params["concept_public_id"])
+
+    moderation_params =
+      params
+      |> Map.put_new(
+        "concept_editorial_label",
+        Contributions.effective_payload(submission)["primary_form"]
+      )
+      |> Map.put_new("concept_query", concept_query)
 
     {example_suggestions, example_match_error} = example_suggestions(submission)
 
@@ -127,13 +149,30 @@ defmodule SkadWeb.ModeratorSubmissionController do
     render(conn, :show,
       page_title: "Review submission",
       submission: submission,
-      form: Phoenix.Component.to_form(params, as: :moderation),
+      form: Phoenix.Component.to_form(moderation_params, as: :moderation),
       edit_form: Phoenix.Component.to_form(edit_changeset, as: :proposal),
+      concept_search_form:
+        Phoenix.Component.to_form(%{"query" => concept_query}, as: :concept_search),
+      concept_candidates: concept_candidates,
       languages: Archive.list_active_languages(),
       example_suggestions: example_suggestions,
       example_choices: example_choices,
       example_match_error: example_match_error
     )
+  end
+
+  defp concept_query(%{"concept_search" => %{"query" => query}}) when is_binary(query),
+    do: query
+
+  defp concept_query(_params), do: ""
+
+  defp concept_candidates(query, selected_public_id) do
+    selected = if selected_public_id, do: Archive.get_concept(selected_public_id)
+
+    query
+    |> Archive.search_concepts()
+    |> then(fn concepts -> if selected, do: [selected | concepts], else: concepts end)
+    |> Enum.uniq_by(& &1.id)
   end
 
   defp example_suggestions(submission) do
@@ -169,6 +208,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
 
   defp error_message(:unsupported_payload), do: "This submission payload cannot be approved."
   defp error_message(:language_inactive), do: "This submission's language is not active."
+  defp error_message(:concept_not_found), do: "Choose an available concept or create a new one."
   defp error_message(:example_focus_missing), do: "The example must contain the proposed word."
   defp error_message(:invalid_example_links), do: "Choose valid entries for the example links."
   defp error_message(:example_too_long), do: "Keep the example to 100 words or fewer."

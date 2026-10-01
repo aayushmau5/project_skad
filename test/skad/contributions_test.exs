@@ -215,6 +215,126 @@ defmodule Skad.ContributionsTest do
              Contributions.update_submission_for_review(scope, approved, %{definition: "Too late"})
   end
 
+  test "lets moderators create and edit concepts with revision history" do
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    assert {:ok, concept} =
+             Contributions.create_concept(scope, %{
+               editorial_label: "  WATER  ",
+               editorial_note: "  Shared by water entries.  "
+             })
+
+    assert concept.editorial_label == "WATER"
+    assert concept.editorial_note == "Shared by water entries."
+
+    assert {:ok, updated} =
+             Contributions.update_concept(scope, concept, %{
+               editorial_label: "WATER / पानी",
+               editorial_note: " "
+             })
+
+    assert updated.editorial_label == "WATER / पानी"
+    assert updated.editorial_note == nil
+
+    assert [created, edited] = Repo.all(from revision in Revision, order_by: revision.id)
+    assert created.target_type == "concept"
+    assert created.target_public_id == concept.public_id
+    assert created.action == :create
+    assert created.before_state == nil
+    assert created.after_state["editorial_label"] == "WATER"
+    assert edited.action == :update
+    assert edited.before_state["editorial_note"] == "Shared by water entries."
+    assert edited.after_state["editorial_label"] == "WATER / पानी"
+
+    inactive_scope = Scope.for_moderator(%{moderator | active: false})
+
+    assert {:error, :unauthorized} =
+             Contributions.create_concept(inactive_scope, %{editorial_label: "RAIN"})
+
+    assert {:error, :unauthorized} =
+             Contributions.update_concept(inactive_scope, updated, %{editorial_label: "RAIN"})
+
+    updated
+    |> Changeset.change(archived_at: DateTime.utc_now(:second))
+    |> Repo.update!()
+
+    assert {:error, :concept_not_found} =
+             Contributions.update_concept(scope, updated, %{editorial_label: "RAIN"})
+
+    assert Repo.aggregate(Concept, :count) == 1
+    assert Repo.aggregate(Revision, :count) == 2
+  end
+
+  test "approves a submitted expression into an existing concept" do
+    english = create_language()
+
+    {:ok, water} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: "english", text: "A clear liquid."}]},
+        forms: [%{text: "water", kind: :spelling, is_primary: true}]
+      })
+
+    {:ok, hindi} =
+      Archive.create_language(%{
+        slug: "hindi",
+        code: "hi",
+        name: "Hindi",
+        direction: :ltr
+      })
+
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    {:ok, receipt} =
+      Contributions.submit_new_entry(%{
+        client_submission_id: Ecto.UUID.generate(),
+        language_slug: hindi.slug,
+        primary_form: "पानी",
+        definition: "पीने के लिए उपयोग किया जाने वाला तरल।"
+      })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+
+    assert {:ok, %{entry: hindi_entry}} =
+             Contributions.approve_submission(
+               scope,
+               submission,
+               nil,
+               %{},
+               %{public_id: water.concept.public_id}
+             )
+
+    assert hindi_entry.concept_id == water.concept_id
+    assert Repo.aggregate(Concept, :count) == 1
+
+    revision = Repo.get_by!(Revision, target_public_id: hindi_entry.public_id)
+    assert revision.after_state["concept_public_id"] == water.concept.public_id
+  end
+
+  test "rejects an unavailable concept without partially approving the submission" do
+    create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+    {:ok, receipt} = Contributions.submit_new_entry(valid_attrs())
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+
+    assert {:error, :concept_not_found} =
+             Contributions.approve_submission(
+               scope,
+               submission,
+               nil,
+               %{},
+               %{public_id: "not-a-uuid"}
+             )
+
+    assert Repo.get!(Submission, submission.id).status == :pending
+    assert Repo.aggregate(Concept, :count) == 0
+    assert Repo.aggregate(Entry, :count) == 0
+    assert Repo.aggregate(Revision, :count) == 0
+  end
+
   test "approves a new entry with its revision and search index in one transaction" do
     language = create_language()
     moderator = insert_moderator()

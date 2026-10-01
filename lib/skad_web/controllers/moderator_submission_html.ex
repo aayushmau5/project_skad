@@ -32,6 +32,22 @@ defmodule SkadWeb.ModeratorSubmissionHTML do
     end)
   end
 
+  def concept_candidate_options(concepts) do
+    Enum.map(concepts, fn concept ->
+      entries =
+        concept.entries
+        |> Enum.take(3)
+        |> Enum.map(&SkadWeb.PageHTML.primary_form_text/1)
+
+      label =
+        if entries == [],
+          do: concept.editorial_label,
+          else: "#{concept.editorial_label} — #{Enum.join(entries, ", ")}"
+
+      {label, concept.public_id}
+    end)
+  end
+
   def example_approvable?(submission, suggestions, error) do
     is_nil(payload_value(submission, "example")) or
       (is_nil(error) and Enum.any?(suggestions, &(&1.role == :focus)))

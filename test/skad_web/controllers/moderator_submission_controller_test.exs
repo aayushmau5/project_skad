@@ -42,6 +42,8 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     assert Enum.count(LazyHTML.query_by_id(document, "moderation-form")) == 1
     assert Enum.count(LazyHTML.query_by_id(document, "approve-submission")) == 1
     assert Enum.count(LazyHTML.query_by_id(document, "proposal-edit-form")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "submission-concept-search-form")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "submission-concept-choice")) == 1
     assert Enum.empty?(LazyHTML.query_by_id(document, "request-clarification"))
 
     missing_conn =
@@ -227,6 +229,70 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
                "#entry-examples a[href='/entries/#{water.public_id}']"
              )
            ) == 1
+  end
+
+  test "searches for a concept and publishes the submission into it", %{conn: conn} do
+    {:ok, english} =
+      Archive.create_language(%{
+        slug: "english",
+        code: "en",
+        name: "English",
+        direction: :ltr
+      })
+
+    {:ok, water} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: "english", text: "A clear liquid."}]},
+        forms: [%{text: "water", kind: :spelling, is_primary: true}]
+      })
+
+    {:ok, hindi} =
+      Archive.create_language(%{
+        slug: "hindi",
+        code: "hi",
+        name: "Hindi",
+        direction: :ltr
+      })
+
+    {:ok, receipt} =
+      Contributions.submit_new_entry(%{
+        client_submission_id: Ecto.UUID.generate(),
+        language_slug: hindi.slug,
+        primary_form: "पानी",
+        definition: "पीने के लिए उपयोग किया जाने वाला तरल।"
+      })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    conn = log_in(conn)
+    detail_path = ~p"/moderator/submissions/#{submission.public_id}"
+
+    conn = get(conn, detail_path, %{"concept_search" => %{"query" => "water"}})
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    option =
+      LazyHTML.query(
+        document,
+        "#submission-concept-choice option[value='#{water.concept.public_id}']"
+      )
+
+    assert Enum.count(option) == 1
+    assert LazyHTML.text(option) =~ "WATER"
+    assert LazyHTML.text(option) =~ "water"
+
+    conn =
+      conn
+      |> recycle()
+      |> patch(detail_path, %{
+        "moderation" => %{
+          "decision" => "approve",
+          "concept_public_id" => water.concept.public_id
+        }
+      })
+
+    assert String.starts_with?(redirected_to(conn), "/entries/")
+    published = Repo.get_by!(Skad.Archive.EntryForm, text: "पानी") |> Repo.preload(:entry)
+    assert published.entry.concept_id == water.concept_id
   end
 
   defp create_submission do

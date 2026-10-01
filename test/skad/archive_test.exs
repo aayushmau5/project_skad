@@ -228,6 +228,36 @@ defmodule Skad.ArchiveTest do
     assert Repo.aggregate(Concept, :count) == 1
   end
 
+  test "finds concepts by editorial metadata and their entries" do
+    {:ok, english} = create_language()
+    {:ok, water} = publish_meaning(english, "WATER", "water")
+
+    {:ok, standalone} =
+      %Concept{}
+      |> Archive.change_concept(%{
+        editorial_label: "HYDRATION",
+        editorial_note: "Used while reviewing drinking-related entries."
+      })
+      |> Repo.insert()
+
+    assert [found] = Archive.search_concepts("water")
+    assert found.id == water.concept_id
+    assert Enum.map(found.entries, & &1.id) == [water.id]
+
+    assert [found] = Archive.search_concepts("drinking-related")
+    assert found.id == standalone.id
+    assert found.entries == []
+    assert Archive.get_concept(standalone.public_id).id == standalone.id
+    assert Archive.search_concepts("   ") == []
+
+    standalone
+    |> Changeset.change(archived_at: DateTime.utc_now(:second))
+    |> Repo.update!()
+
+    assert Archive.get_concept(standalone.public_id) == nil
+    assert Archive.search_concepts("drinking-related") == []
+  end
+
   test "rejects unavailable languages and meanings without adding an entry" do
     {:ok, english} = create_language()
 
