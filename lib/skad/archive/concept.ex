@@ -9,6 +9,7 @@ defmodule Skad.Archive.Concept do
     field :archived_at, :utc_datetime
 
     has_many :entries, Skad.Archive.Entry
+    has_many :media, Skad.Media.Item
   end
 
   def changeset(concept, attrs) do

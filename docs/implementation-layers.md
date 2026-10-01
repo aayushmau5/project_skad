@@ -22,16 +22,15 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
-### 10a. Media database
+### 10b. Media schema
 
-Add the `media` table with its database constraints and indexes. This step does
-not include Ecto schemas, context APIs, object storage, uploads, background
-work, or user interfaces. People and structured consent records are deferred
-until the product needs them.
+Add the Ecto schema, associations, changeset validation, and focused tests for
+the implemented `media` table. This step does not include a context API,
+object storage, uploads, background work, or user interfaces.
 
-It is complete when several audio records can belong to one entry, invalid
-media metadata and lifecycle states are rejected, and the full existing test
-suite remains green.
+It is complete when media persists through its archive associations, invalid
+type-specific metadata and publication states are rejected before insertion,
+and the full existing test suite remains green.
 
 ## Rough map of later layers
 

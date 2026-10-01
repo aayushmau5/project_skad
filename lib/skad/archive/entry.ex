@@ -18,6 +18,7 @@ defmodule Skad.Archive.Entry do
     embeds_many :definitions, LocalizedText, on_replace: :delete
     has_many :forms, Skad.Archive.EntryForm
     has_many :example_links, Skad.Archive.ExampleLink
+    has_many :media, Skad.Media.Item
   end
 
   def changeset(entry, attrs) do
