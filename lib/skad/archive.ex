@@ -289,6 +289,73 @@ defmodule Skad.Archive do
   def suggest_example_links(_language, _text, _focus_form),
     do: {:error, :invalid_attributes}
 
+  @doc false
+  def correct_entry_multi(%Multi{} = multi, %Entry{public_id: public_id}, attrs)
+      when is_map(attrs) do
+    entry_attrs = attr(attrs, :entry, %{})
+    primary_form_text = attr(attrs, :primary_form)
+
+    {:ok,
+     multi
+     |> Multi.run(:entry_target, fn repo, _changes ->
+       with {:ok, entry} <- available_entry(repo, public_id) do
+         {:ok, repo.preload(entry, [:language, :concept, :forms])}
+       end
+     end)
+     |> Multi.update(:entry, fn %{entry_target: entry} ->
+       Entry.changeset(entry, entry_attrs)
+     end)
+     |> Multi.update(:primary_form, fn %{entry_target: entry} ->
+       primary_form = Enum.find(entry.forms, & &1.is_primary)
+
+       primary_form
+       |> EntryForm.changeset(%{
+         text: primary_form_text,
+         kind: primary_form.kind,
+         is_primary: true
+       })
+       |> Ecto.Changeset.put_change(:normalized_text, normalize_text(primary_form_text))
+     end)
+     |> Multi.run(:search_index, fn repo, %{entry: entry} ->
+       Search.refresh(repo, [entry.id])
+     end)}
+  end
+
+  def correct_entry_multi(_multi, _entry, _attrs), do: {:error, :invalid_attributes}
+
+  @doc false
+  def add_to_entry_multi(%Multi{} = multi, %Entry{public_id: public_id}, form_attrs)
+      when is_map(form_attrs) or is_nil(form_attrs) do
+    multi =
+      Multi.run(multi, :entry, fn repo, _changes ->
+        with {:ok, entry} <- available_entry(repo, public_id) do
+          {:ok, repo.preload(entry, [:language, :concept, :forms])}
+        end
+      end)
+
+    if form_attrs do
+      multi
+      |> Multi.insert(:form, fn %{entry: entry} ->
+        EntryForm.changeset(
+          %EntryForm{
+            entry_id: entry.id,
+            language_id: entry.language_id,
+            normalized_text: form_attrs |> attr(:text) |> normalize_text()
+          },
+          form_attrs
+        )
+      end)
+      |> Multi.run(:search_index, fn repo, %{entry: entry} ->
+        Search.refresh(repo, [entry.id])
+      end)
+      |> then(&{:ok, &1})
+    else
+      {:ok, multi}
+    end
+  end
+
+  def add_to_entry_multi(_multi, _entry, _form_attrs), do: {:error, :invalid_attributes}
+
   def get_public_entry(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
       Entry

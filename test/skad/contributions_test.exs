@@ -635,6 +635,96 @@ defmodule Skad.ContributionsTest do
     assert Archive.search("water", language) == []
   end
 
+  test "submits and atomically approves a correction to an existing entry" do
+    language = create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{
+          part_of_speech: "noun",
+          definitions: [%{language: language.slug, text: "An unclear liquid."}]
+        },
+        forms: [%{text: "Watre", kind: :spelling, is_primary: true}]
+      })
+
+    attrs = %{
+      client_submission_id: Ecto.UUID.generate(),
+      primary_form: "Water",
+      definition: "A clear liquid.",
+      part_of_speech: "noun",
+      usage_note: "Used for drinking."
+    }
+
+    assert {:ok, receipt} = Contributions.submit_entry_change(:correction, entry, attrs)
+    assert {:ok, ^receipt} = Contributions.submit_entry_change(:correction, entry, attrs)
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    assert submission.kind == :correction
+    assert submission.target_public_id == entry.public_id
+    assert Archive.get_public_entry(entry.public_id).forms |> hd() |> Map.fetch!(:text) == "Watre"
+
+    assert {:ok, %{entry: corrected, submission: approved}} =
+             Contributions.approve_submission(scope, submission, "Spelling verified")
+
+    assert approved.status == :approved
+    assert hd(corrected.forms).text == "Water"
+    assert hd(corrected.definitions).text == "A clear liquid."
+    assert corrected.usage_note == "Used for drinking."
+    assert [%{entry: found}] = Archive.exact_lookup("water", language)
+    assert found.id == entry.id
+    assert Archive.exact_lookup("watre", language) == []
+
+    revision = Repo.get_by!(Revision, submission_id: submission.id)
+    assert revision.action == :update
+    assert hd(revision.before_state["forms"])["text"] == "Watre"
+    assert hd(revision.after_state["forms"])["text"] == "Water"
+  end
+
+  test "submits and approves an alternate form and example addition" do
+    language = create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: "A clear liquid."}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    assert {:error, invalid} =
+             Contributions.submit_entry_change(:addition, entry, %{
+               client_submission_id: Ecto.UUID.generate()
+             })
+
+    assert "or an example is required" in errors_on(invalid).alternate_form
+
+    assert {:ok, receipt} =
+             Contributions.submit_entry_change(:addition, entry, %{
+               client_submission_id: Ecto.UUID.generate(),
+               alternate_form: "H₂O",
+               form_kind: :alias,
+               example: "Water is clear."
+             })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    assert {:ok, %{entry: updated}} = Contributions.approve_submission(scope, submission)
+
+    assert Enum.map(updated.forms, & &1.text) == ["Water", "H₂O"]
+    assert [focus_link] = updated.example_links
+    assert focus_link.example.text == "Water is clear."
+    assert [%{entry: found}] = Archive.exact_lookup("h₂o", language)
+    assert found.id == entry.id
+
+    revision = Repo.get_by!(Revision, submission_id: submission.id)
+    assert length(revision.before_state["forms"]) == 1
+    assert length(revision.after_state["forms"]) == 2
+    assert [%{"text" => "Water is clear."}] = revision.after_state["examples"]
+  end
+
   defp valid_attrs(client_submission_id \\ Ecto.UUID.generate()) do
     %{
       client_submission_id: client_submission_id,

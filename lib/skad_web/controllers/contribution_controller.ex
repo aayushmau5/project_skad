@@ -57,6 +57,22 @@ defmodule SkadWeb.ContributionController do
     end
   end
 
+  def correct(conn, %{"public_id" => public_id}) do
+    render_entry_change(conn, public_id, :correction)
+  end
+
+  def add(conn, %{"public_id" => public_id}) do
+    render_entry_change(conn, public_id, :addition)
+  end
+
+  def create_correction(conn, %{"public_id" => public_id} = params) do
+    create_entry_change(conn, public_id, :correction, Map.get(params, "contribution", %{}))
+  end
+
+  def create_addition(conn, %{"public_id" => public_id} = params) do
+    create_entry_change(conn, public_id, :addition, Map.get(params, "contribution", %{}))
+  end
+
   defp render_new(conn, changeset, media_public_ids \\ []) do
     media_items =
       media_public_ids
@@ -70,4 +86,61 @@ defmodule SkadWeb.ContributionController do
       media_items: media_items
     )
   end
+
+  defp render_entry_change(conn, public_id, kind, changeset \\ nil) do
+    case Archive.get_public_entry(public_id) do
+      nil ->
+        send_resp(conn, :not_found, "Entry not found")
+
+      entry ->
+        changeset =
+          changeset ||
+            Contributions.change_entry_change(kind, entry, %{
+              client_submission_id: Ecto.UUID.generate()
+            })
+
+        render(conn, :entry_change,
+          page_title: entry_change_title(kind),
+          entry: entry,
+          kind: kind,
+          form: Phoenix.Component.to_form(changeset, as: :contribution)
+        )
+    end
+  end
+
+  defp create_entry_change(conn, public_id, kind, params) do
+    case Archive.get_public_entry(public_id) do
+      nil ->
+        send_resp(conn, :not_found, "Entry not found")
+
+      entry ->
+        case Contributions.submit_entry_change(kind, entry, params) do
+          {:ok, receipt} ->
+            redirect(conn, to: ~p"/contributions/#{receipt.public_id}")
+
+          {:error, %Ecto.Changeset{} = changeset} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render_entry_change(public_id, kind, %{changeset | action: :insert})
+
+          {:error, :idempotency_conflict} ->
+            retry_params = Map.put(params, "client_submission_id", Ecto.UUID.generate())
+
+            conn
+            |> put_status(:conflict)
+            |> put_flash(
+              :error,
+              "This submission identifier was already used for different content."
+            )
+            |> render_entry_change(
+              public_id,
+              kind,
+              %{Contributions.change_entry_change(kind, entry, retry_params) | action: :insert}
+            )
+        end
+    end
+  end
+
+  defp entry_change_title(:correction), do: "Suggest a correction"
+  defp entry_change_title(:addition), do: "Add information"
 end

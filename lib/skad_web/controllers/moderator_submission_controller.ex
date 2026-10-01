@@ -195,6 +195,10 @@ defmodule SkadWeb.ModeratorSubmissionController do
 
     {example_suggestions, example_match_error} = example_suggestions(submission)
 
+    target_entry =
+      if submission.target_type == "entry",
+        do: Archive.get_public_entry(submission.target_public_id)
+
     example_choices =
       case params["example_choices"] do
         choices when is_map(choices) -> choices
@@ -204,6 +208,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
     render(conn, :show,
       page_title: "Review submission",
       submission: submission,
+      target_entry: target_entry,
       form: Phoenix.Component.to_form(moderation_params, as: :moderation),
       edit_form: Phoenix.Component.to_form(edit_changeset, as: :proposal),
       concept_search_form:
@@ -273,6 +278,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
     do: "The submission status changed. Reload and try again."
 
   defp error_message(:unsupported_payload), do: "This submission payload cannot be approved."
+  defp error_message(:target_not_found), do: "The target entry is no longer available."
   defp error_message(:language_inactive), do: "This submission's language is not active."
   defp error_message(:concept_not_found), do: "Choose an available concept or create a new one."
   defp error_message(:example_focus_missing), do: "The example must contain the proposed word."

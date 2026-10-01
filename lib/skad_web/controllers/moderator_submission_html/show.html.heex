@@ -15,13 +15,27 @@
         <dt>Language</dt>
         <dd id="submission-language">{payload_value(@submission, "language_slug")}</dd>
         <dt>Meaning</dt>
-        <dd id="submission-definition">{payload_value(@submission, "definition")}</dd>
-        <dt>Part of speech</dt>
-        <dd>{payload_value(@submission, "part_of_speech") || "—"}</dd>
-        <dt>Usage note</dt>
-        <dd>{payload_value(@submission, "usage_note") || "—"}</dd>
-        <dt>Cultural context</dt>
-        <dd>{payload_value(@submission, "cultural_note") || "—"}</dd>
+        <dd id="submission-definition">{payload_value(@submission, "definition") || "—"}</dd>
+        <dt :if={@submission.kind != :addition}>Part of speech</dt>
+        <dd :if={@submission.kind != :addition}>
+          {payload_value(@submission, "part_of_speech") || "—"}
+        </dd>
+        <dt :if={@submission.kind != :addition}>Usage note</dt>
+        <dd :if={@submission.kind != :addition}>
+          {payload_value(@submission, "usage_note") || "—"}
+        </dd>
+        <dt :if={@submission.kind != :addition}>Cultural context</dt>
+        <dd :if={@submission.kind != :addition}>
+          {payload_value(@submission, "cultural_note") || "—"}
+        </dd>
+        <dt :if={@submission.kind == :addition}>Alternate form</dt>
+        <dd :if={@submission.kind == :addition} id="submission-alternate-form">
+          {payload_value(@submission, "alternate_form") || "—"}
+        </dd>
+        <dt :if={@submission.kind == :addition}>Form type</dt>
+        <dd :if={@submission.kind == :addition}>
+          {payload_value(@submission, "form_kind") || "—"}
+        </dd>
         <dt>Example</dt>
         <dd id="submission-example">{payload_value(@submission, "example") || "—"}</dd>
         <dt>Received</dt>
@@ -29,6 +43,16 @@
         <dt>Receipt</dt>
         <dd><code>{@submission.public_id}</code></dd>
       </dl>
+    </section>
+
+    <section :if={@target_entry} id="submission-target" class="entry-section">
+      <h2>Current published entry</h2>
+      <p>
+        <.link href={~p"/entries/#{@target_entry.public_id}"}>
+          {SkadWeb.PageHTML.primary_form_text(@target_entry)}
+        </.link>
+      </p>
+      <p>{SkadWeb.PageHTML.first_definition(@target_entry)}</p>
     </section>
 
     <details
@@ -56,7 +80,10 @@
     </details>
 
     <section
-      :if={@media_items != [] or @submission.status in [:pending, :reviewing]}
+      :if={
+        @submission.kind == :new_entry and
+          (@media_items != [] or @submission.status in [:pending, :reviewing])
+      }
       id="submission-media"
       class="entry-section media-uploader"
       data-media-uploader
@@ -168,56 +195,86 @@
         id="proposal-edit-form"
         class="auth-form"
       >
-        <.input
-          field={@edit_form[:language_slug]}
-          type="select"
-          label="Language"
-          class="auth-input"
-          options={Enum.map(@languages, &{&1.name, &1.slug})}
-          required
-        />
-        <.input
-          field={@edit_form[:primary_form]}
-          type="text"
-          label="Word or expression"
-          class="auth-input"
-          required
-        />
-        <.input
-          field={@edit_form[:definition]}
-          type="textarea"
-          label="Meaning"
-          class="auth-input"
-          rows="4"
-          required
-        />
-        <.input
-          field={@edit_form[:part_of_speech]}
-          type="text"
-          label="Part of speech"
-          class="auth-input"
-        />
-        <.input
-          field={@edit_form[:usage_note]}
-          type="textarea"
-          label="Usage note"
-          class="auth-input"
-          rows="3"
-        />
-        <.input
-          field={@edit_form[:cultural_note]}
-          type="textarea"
-          label="Cultural context"
-          class="auth-input"
-          rows="3"
-        />
-        <.input
-          field={@edit_form[:example]}
-          type="textarea"
-          label="Example sentence"
-          class="auth-input"
-          rows="3"
-        />
+        <%= if @submission.kind == :addition do %>
+          <.input
+            field={@edit_form[:alternate_form]}
+            type="text"
+            label="Alternate form"
+            class="auth-input"
+          />
+          <.input
+            field={@edit_form[:form_kind]}
+            type="select"
+            label="Form type"
+            class="auth-input"
+            options={[
+              {"Alias", :alias},
+              {"Spelling", :spelling},
+              {"Transliteration", :transliteration},
+              {"Historical", :historical}
+            ]}
+          />
+          <.input
+            field={@edit_form[:example]}
+            type="textarea"
+            label="Example sentence"
+            class="auth-input"
+            rows="3"
+          />
+        <% else %>
+          <.input
+            :if={@submission.kind == :new_entry}
+            field={@edit_form[:language_slug]}
+            type="select"
+            label="Language"
+            class="auth-input"
+            options={Enum.map(@languages, &{&1.name, &1.slug})}
+            required
+          />
+          <.input
+            field={@edit_form[:primary_form]}
+            type="text"
+            label="Word or expression"
+            class="auth-input"
+            required
+          />
+          <.input
+            field={@edit_form[:definition]}
+            type="textarea"
+            label="Meaning"
+            class="auth-input"
+            rows="4"
+            required
+          />
+          <.input
+            field={@edit_form[:part_of_speech]}
+            type="text"
+            label="Part of speech"
+            class="auth-input"
+          />
+          <.input
+            field={@edit_form[:usage_note]}
+            type="textarea"
+            label="Usage note"
+            class="auth-input"
+            rows="3"
+          />
+          <.input
+            field={@edit_form[:cultural_note]}
+            type="textarea"
+            label="Cultural context"
+            class="auth-input"
+            rows="3"
+          />
+          <.input
+            :if={@submission.kind == :new_entry}
+            field={@edit_form[:example]}
+            type="textarea"
+            label="Example sentence"
+            class="auth-input"
+            rows="3"
+          />
+        <% end %>
         <button type="submit" id="save-proposal" class="auth-button">Save changes</button>
       </.form>
     </section>
@@ -259,7 +316,9 @@
         >
           <%= if suggestion.role == :focus do %>
             <strong>{suggestion.surface_text}</strong>
-            <span id={"example-focus-#{index}"}> — proposed entry</span>
+            <span id={"example-focus-#{index}"}>
+              — {if @submission.kind == :new_entry, do: "proposed entry", else: "target entry"}
+            </span>
           <% else %>
             <.input
               type="select"
@@ -278,7 +337,7 @@
     </section>
 
     <section
-      :if={@submission.status in [:pending, :reviewing]}
+      :if={@submission.kind == :new_entry and @submission.status in [:pending, :reviewing]}
       id="submission-concept"
       class="entry-section auth-panel"
     >
@@ -336,29 +395,31 @@
         id="moderation-form"
         class="auth-form"
       >
-        <.input field={@form[:concept_query]} type="hidden" />
-        <.input
-          field={@form[:concept_public_id]}
-          type="select"
-          id="submission-concept-choice"
-          label="Existing concept"
-          prompt="Create a new concept"
-          options={concept_candidate_options(@concept_candidates)}
-          class="auth-input"
-        />
-        <.input
-          field={@form[:concept_editorial_label]}
-          type="text"
-          label="New concept label (used only when creating)"
-          class="auth-input"
-        />
-        <.input
-          field={@form[:concept_editorial_note]}
-          type="textarea"
-          label="New concept private note (used only when creating)"
-          class="auth-input"
-          rows="3"
-        />
+        <%= if @submission.kind == :new_entry do %>
+          <.input field={@form[:concept_query]} type="hidden" />
+          <.input
+            field={@form[:concept_public_id]}
+            type="select"
+            id="submission-concept-choice"
+            label="Existing concept"
+            prompt="Create a new concept"
+            options={concept_candidate_options(@concept_candidates)}
+            class="auth-input"
+          />
+          <.input
+            field={@form[:concept_editorial_label]}
+            type="text"
+            label="New concept label (used only when creating)"
+            class="auth-input"
+          />
+          <.input
+            field={@form[:concept_editorial_note]}
+            type="textarea"
+            label="New concept private note (used only when creating)"
+            class="auth-input"
+            rows="3"
+          />
+        <% end %>
         <.input
           field={@form[:note]}
           type="textarea"

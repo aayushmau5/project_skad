@@ -92,6 +92,16 @@ defmodule SkadWeb.PageControllerTest do
              LazyHTML.query(document, "#entry-image-#{image.public_id} img"),
              "src"
            ) == [~p"/media/#{image.public_id}"]
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-correction"), "href") ==
+             [
+               ~p"/entries/#{water.public_id}/correct"
+             ]
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-addition"), "href") ==
+             [
+               ~p"/entries/#{water.public_id}/add"
+             ]
   end
 
   test "returns not found for an unknown public entry", %{conn: conn} do

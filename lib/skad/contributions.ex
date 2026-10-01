@@ -7,6 +7,7 @@ defmodule Skad.Contributions do
   alias Skad.Accounts.Scope
   alias Skad.Archive
   alias Skad.Archive.Concept
+  alias Skad.Contributions.EntryChangeSubmission
   alias Skad.Contributions.NewEntrySubmission
   alias Skad.Contributions.Revision
   alias Skad.Contributions.Submission
@@ -93,6 +94,46 @@ defmodule Skad.Contributions do
   end
 
   def submit_new_entry(_attrs, _media_public_ids), do: {:error, :invalid_attributes}
+
+  def change_entry_change(kind, entry, attrs \\ %{})
+
+  def change_entry_change(kind, %Skad.Archive.Entry{} = entry, attrs)
+      when kind in [:correction, :addition] and is_map(attrs) do
+    base =
+      EntryChangeSubmission.from_entry(
+        entry,
+        Map.get(attrs, :client_submission_id) || Map.get(attrs, "client_submission_id")
+      )
+
+    attrs =
+      attrs
+      |> stringify_keys()
+      |> Map.put("language_slug", entry.language.slug)
+      |> then(fn attrs ->
+        if kind == :addition, do: Map.put(attrs, "primary_form", base.primary_form), else: attrs
+      end)
+
+    EntryChangeSubmission.changeset(kind, base, attrs)
+  end
+
+  def submit_entry_change(kind, %Skad.Archive.Entry{} = entry, attrs)
+      when kind in [:correction, :addition] and is_map(attrs) do
+    changeset = change_entry_change(kind, entry, attrs)
+
+    if changeset.valid? do
+      change = Changeset.apply_changes(changeset)
+      payload = EntryChangeSubmission.to_payload(kind, change)
+
+      case Repo.get_by(Submission, client_submission_id: change.client_submission_id) do
+        nil -> insert_entry_change(kind, entry, change, payload, changeset)
+        submission -> entry_change_idempotent_result(submission, kind, entry, payload)
+      end
+    else
+      {:error, changeset}
+    end
+  end
+
+  def submit_entry_change(_kind, _entry, _attrs), do: {:error, :invalid_attributes}
 
   def get_receipt(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
@@ -231,6 +272,25 @@ defmodule Skad.Contributions do
     |> change_new_entry()
   end
 
+  def change_submission_for_review(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Submission{kind: kind, target_type: "entry"} = submission,
+        attrs
+      )
+      when kind in [:correction, :addition] and is_map(attrs) do
+    case Archive.get_public_entry(submission.target_public_id) do
+      %Skad.Archive.Entry{} = entry ->
+        submission
+        |> effective_payload()
+        |> Map.put("client_submission_id", submission.client_submission_id)
+        |> Map.merge(stringify_keys(attrs))
+        |> then(&change_entry_change(kind, entry, &1))
+
+      nil ->
+        {:error, :target_not_found}
+    end
+  end
+
   def change_submission_for_review(_scope, %Submission{}, _attrs),
     do: {:error, :unauthorized}
 
@@ -252,7 +312,7 @@ defmodule Skad.Contributions do
             save_submission_edits(
               submission,
               moderator,
-              NewEntrySubmission.to_payload(reviewed)
+              reviewed_payload(submission.kind, reviewed)
             )
 
           _missing_or_inactive ->
@@ -269,6 +329,11 @@ defmodule Skad.Contributions do
 
   def update_submission_for_review(_scope, %Submission{}, _attrs),
     do: {:error, :unauthorized}
+
+  defp reviewed_payload(:new_entry, reviewed), do: NewEntrySubmission.to_payload(reviewed)
+
+  defp reviewed_payload(kind, reviewed) when kind in [:correction, :addition],
+    do: EntryChangeSubmission.to_payload(kind, reviewed)
 
   def moderate_submission(scope, submission, status, note \\ nil)
 
@@ -316,7 +381,7 @@ defmodule Skad.Contributions do
 
   def approve_submission(
         %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
-        %Submission{id: id},
+        %Submission{kind: :new_entry, id: id},
         note,
         example_choices,
         concept_params
@@ -359,8 +424,92 @@ defmodule Skad.Contributions do
     end
   end
 
+  def approve_submission(
+        %Scope{moderator_account: %ModeratorAccount{active: true} = moderator},
+        %Submission{kind: kind, id: id},
+        note,
+        example_choices,
+        _concept_params
+      )
+      when kind in [:correction, :addition] and is_integer(id) do
+    note = normalize_review_note(note)
+
+    with %Submission{kind: ^kind} = submission <- Repo.get(Submission, id),
+         :ok <- approvable?(submission),
+         %Skad.Archive.Entry{} = entry <- Archive.get_public_entry(submission.target_public_id) do
+      approve_entry_change(submission, entry, moderator, note, example_choices)
+    else
+      nil -> {:error, :target_not_found}
+      {:error, reason} -> {:error, reason}
+      _changed_kind -> {:error, :invalid_transition}
+    end
+  end
+
   def approve_submission(_scope, %Submission{}, _note, _example_choices, _concept_params),
     do: {:error, :unauthorized}
+
+  defp approve_entry_change(
+         %Submission{kind: :correction} = submission,
+         entry,
+         moderator,
+         note,
+         _choices
+       ) do
+    payload = effective_payload(submission)
+    before_state = canonical_entry_snapshot(entry)
+
+    with {:ok, archive_attrs} <- correction_archive_attrs(payload),
+         {:ok, multi} <-
+           approval_multi(submission, moderator, note)
+           |> Archive.correct_entry_multi(entry, archive_attrs) do
+      multi
+      |> Multi.insert(:revision, fn changes ->
+        entry_revision(
+          changes.entry,
+          submission,
+          moderator,
+          note,
+          before_state,
+          corrected_entry_snapshot(before_state, changes)
+        )
+      end)
+      |> Repo.transaction()
+      |> approval_result()
+    end
+  end
+
+  defp approve_entry_change(
+         %Submission{kind: :addition} = submission,
+         entry,
+         moderator,
+         note,
+         choices
+       ) do
+    payload = effective_payload(submission)
+    before_state = canonical_entry_snapshot(entry)
+    form_attrs = addition_form_attrs(payload)
+
+    with {:ok, language} <- active_submission_language(payload),
+         {:ok, example_plan} <- example_plan(language, payload, choices, entry.public_id),
+         {:ok, multi} <-
+           approval_multi(submission, moderator, note)
+           |> Archive.add_to_entry_multi(entry, form_attrs) do
+      multi
+      |> add_example_multi(language, example_plan)
+      |> Multi.insert(:revision, fn changes ->
+        entry_revision(
+          changes.entry,
+          submission,
+          moderator,
+          note,
+          before_state,
+          added_entry_snapshot(before_state, changes, example_plan)
+        )
+      end)
+      |> Repo.transaction()
+      |> approval_result()
+    end
+  end
 
   defp concept_choice(concept_params, archive_attrs) when is_map(concept_params) do
     case concept_param(concept_params, :public_id) do
@@ -419,6 +568,60 @@ defmodule Skad.Contributions do
         {:error, Changeset.add_error(command_changeset, :language_slug, "is not active")}
     end
   end
+
+  defp insert_entry_change(kind, entry, change, payload, command_changeset) do
+    case Archive.get_public_entry(entry.public_id) do
+      %Skad.Archive.Entry{} = target ->
+        %Submission{
+          kind: kind,
+          target_type: "entry",
+          target_public_id: target.public_id
+        }
+        |> Submission.changeset(%{
+          client_submission_id: change.client_submission_id,
+          payload: payload
+        })
+        |> Repo.insert()
+        |> case do
+          {:ok, submission} ->
+            {:ok, receipt(submission)}
+
+          {:error, %Changeset{} = changeset} ->
+            if Keyword.has_key?(changeset.errors, :client_submission_id) do
+              submission =
+                Repo.get_by!(Submission,
+                  client_submission_id: Changeset.get_field(changeset, :client_submission_id)
+                )
+
+              entry_change_idempotent_result(submission, kind, target, payload)
+            else
+              {:error, changeset}
+            end
+        end
+
+      nil ->
+        {:error, Changeset.add_error(command_changeset, :primary_form, "entry is unavailable")}
+    end
+  end
+
+  defp entry_change_idempotent_result(
+         %Submission{
+           kind: kind,
+           target_type: "entry",
+           target_public_id: target_public_id,
+           payload: stored_payload
+         } = submission,
+         kind,
+         %{public_id: target_public_id},
+         payload
+       ) do
+    if stored_payload == payload,
+      do: {:ok, receipt(submission)},
+      else: {:error, :idempotency_conflict}
+  end
+
+  defp entry_change_idempotent_result(_submission, _kind, _entry, _payload),
+    do: {:error, :idempotency_conflict}
 
   defp inserted_result({:ok, %{submission: submission}}, _payload, _media_public_ids),
     do: {:ok, receipt(submission)}
@@ -487,8 +690,8 @@ defmodule Skad.Contributions do
 
   defp normalize_review_note(_note), do: nil
 
-  defp approvable?(%Submission{status: status, kind: :new_entry})
-       when status in [:pending, :reviewing],
+  defp approvable?(%Submission{status: status, kind: kind})
+       when status in [:pending, :reviewing] and kind in [:new_entry, :correction, :addition],
        do: :ok
 
   defp approvable?(%Submission{status: status}) when status in [:pending, :reviewing],
@@ -496,8 +699,8 @@ defmodule Skad.Contributions do
 
   defp approvable?(%Submission{}), do: {:error, :invalid_transition}
 
-  defp editable?(%Submission{status: status, kind: :new_entry})
-       when status in [:pending, :reviewing],
+  defp editable?(%Submission{status: status, kind: kind})
+       when status in [:pending, :reviewing] and kind in [:new_entry, :correction, :addition],
        do: :ok
 
   defp editable?(%Submission{status: status}) when status in [:pending, :reviewing],
@@ -544,6 +747,47 @@ defmodule Skad.Contributions do
       pair -> pair
     end)
   end
+
+  defp correction_archive_attrs(
+         %{
+           "language_slug" => language_slug,
+           "primary_form" => primary_form,
+           "definition" => definition
+         } = payload
+       )
+       when is_binary(language_slug) and is_binary(primary_form) and is_binary(definition) do
+    {:ok,
+     %{
+       primary_form: primary_form,
+       entry: %{
+         definitions: [%{language: language_slug, text: definition}],
+         part_of_speech: payload["part_of_speech"],
+         usage_note: payload["usage_note"],
+         cultural_note: payload["cultural_note"]
+       }
+     }}
+  end
+
+  defp correction_archive_attrs(_payload), do: {:error, :unsupported_payload}
+
+  defp addition_form_attrs(%{"alternate_form" => nil}), do: nil
+  defp addition_form_attrs(%{"alternate_form" => ""}), do: nil
+
+  defp addition_form_attrs(%{"alternate_form" => text, "form_kind" => kind})
+       when is_binary(text) and is_binary(kind) do
+    %{text: text, kind: kind, is_primary: false}
+  end
+
+  defp addition_form_attrs(_payload), do: nil
+
+  defp active_submission_language(%{"language_slug" => language_slug}) do
+    case Archive.get_language_by_slug(language_slug) do
+      %{active: true} = language -> {:ok, language}
+      _missing_or_inactive -> {:error, :language_inactive}
+    end
+  end
+
+  defp active_submission_language(_payload), do: {:error, :unsupported_payload}
 
   defp new_entry_archive_attrs(
          %{
@@ -601,14 +845,17 @@ defmodule Skad.Contributions do
     end)
   end
 
-  defp example_plan(_language, %{"example" => nil}, _choices), do: {:ok, nil}
+  defp example_plan(language, payload, choices, focus_entry_public_id \\ :new_entry)
 
-  defp example_plan(language, payload, choices) do
+  defp example_plan(_language, %{"example" => nil}, _choices, _focus_entry_public_id),
+    do: {:ok, nil}
+
+  defp example_plan(language, payload, choices, focus_entry_public_id) do
     with text when is_binary(text) <- payload["example"],
          primary_form when is_binary(primary_form) <- payload["primary_form"],
          {:ok, suggestions} <- Archive.suggest_example_links(language, text, primary_form),
          true <- Enum.any?(suggestions, &(&1.role == :focus)) || {:error, :example_focus_missing},
-         {:ok, links} <- confirmed_example_links(suggestions, choices) do
+         {:ok, links} <- confirmed_example_links(suggestions, choices, focus_entry_public_id) do
       {:ok, %{example: %{text: text, translations: []}, links: links}}
     else
       nil -> {:ok, nil}
@@ -617,7 +864,8 @@ defmodule Skad.Contributions do
     end
   end
 
-  defp confirmed_example_links(suggestions, choices) when is_map(choices) do
+  defp confirmed_example_links(suggestions, choices, focus_entry_public_id)
+       when is_map(choices) do
     suggestions
     |> Enum.with_index()
     |> Enum.reduce_while({:ok, []}, fn {suggestion, index}, {:ok, links} ->
@@ -629,7 +877,7 @@ defmodule Skad.Contributions do
 
       case suggestion.role do
         :focus ->
-          {:cont, {:ok, [Map.put(link, :entry_public_id, :new_entry) | links]}}
+          {:cont, {:ok, [Map.put(link, :entry_public_id, focus_entry_public_id) | links]}}
 
         :reference ->
           choice = Map.get(choices, Integer.to_string(index), Map.get(choices, index))
@@ -652,7 +900,8 @@ defmodule Skad.Contributions do
     end
   end
 
-  defp confirmed_example_links(_suggestions, _choices), do: {:error, :invalid_example_links}
+  defp confirmed_example_links(_suggestions, _choices, _focus_entry_public_id),
+    do: {:error, :invalid_example_links}
 
   defp add_example_multi(multi, _language, nil), do: multi
 
@@ -720,6 +969,87 @@ defmodule Skad.Contributions do
     else
       snapshot
     end
+  end
+
+  defp canonical_entry_snapshot(entry) do
+    %{
+      "public_id" => entry.public_id,
+      "concept_public_id" => entry.concept.public_id,
+      "language_slug" => entry.language.slug,
+      "definitions" =>
+        Enum.map(entry.definitions, fn definition ->
+          %{"language" => definition.language, "text" => definition.text}
+        end),
+      "forms" => Enum.map(entry.forms, &form_snapshot/1),
+      "part_of_speech" => entry.part_of_speech,
+      "usage_note" => entry.usage_note,
+      "cultural_note" => entry.cultural_note,
+      "examples" =>
+        entry.example_links
+        |> Enum.map(& &1.example)
+        |> Enum.uniq_by(& &1.id)
+        |> Enum.map(fn example ->
+          %{"public_id" => example.public_id, "text" => example.text}
+        end)
+    }
+  end
+
+  defp corrected_entry_snapshot(before_state, changes) do
+    before_state
+    |> Map.put(
+      "definitions",
+      Enum.map(changes.entry.definitions, fn definition ->
+        %{"language" => definition.language, "text" => definition.text}
+      end)
+    )
+    |> Map.put(
+      "forms",
+      Enum.map(before_state["forms"], fn form ->
+        if form["is_primary"], do: form_snapshot(changes.primary_form), else: form
+      end)
+    )
+    |> Map.put("part_of_speech", changes.entry.part_of_speech)
+    |> Map.put("usage_note", changes.entry.usage_note)
+    |> Map.put("cultural_note", changes.entry.cultural_note)
+  end
+
+  defp added_entry_snapshot(before_state, changes, example_plan) do
+    after_state =
+      case Map.get(changes, :form) do
+        nil -> before_state
+        form -> Map.update!(before_state, "forms", &(&1 ++ [form_snapshot(form)]))
+      end
+
+    if example_plan do
+      example = %{"public_id" => changes.example.public_id, "text" => changes.example.text}
+      Map.update!(after_state, "examples", &(&1 ++ [example]))
+    else
+      after_state
+    end
+  end
+
+  defp form_snapshot(form) do
+    %{
+      "text" => form.text,
+      "kind" => Atom.to_string(form.kind),
+      "is_primary" => form.is_primary
+    }
+  end
+
+  defp entry_revision(entry, submission, moderator, note, before_state, after_state) do
+    %Revision{
+      target_type: "entry",
+      target_public_id: entry.public_id,
+      action: :update,
+      actor_type: :moderator,
+      moderator_account_id: moderator.id,
+      submission_id: submission.id
+    }
+    |> Revision.changeset(%{
+      before_state: before_state,
+      after_state: after_state,
+      reason: note
+    })
   end
 
   defp update_stored_concept(concept, attrs, moderator) do

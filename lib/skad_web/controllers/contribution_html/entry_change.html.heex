@@ -1,0 +1,93 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section id="entry-change-contribution" class="auth-panel">
+    <p><.link href={~p"/entries/#{@entry.public_id}"}>Back to entry</.link></p>
+    <h1>{if @kind == :correction, do: "Suggest a correction", else: "Add information"}</h1>
+    <p>
+      For <strong>{primary_form_text(@entry)}</strong> in {@entry.language.name}. Your suggestion
+      will be reviewed before it appears in the archive.
+    </p>
+
+    <.form
+      for={@form}
+      action={
+        if(@kind == :correction,
+          do: ~p"/entries/#{@entry.public_id}/corrections",
+          else: ~p"/entries/#{@entry.public_id}/additions"
+        )
+      }
+      id="entry-change-contribution-form"
+      class="auth-form"
+    >
+      <.input field={@form[:client_submission_id]} type="hidden" />
+
+      <%= if @kind == :correction do %>
+        <.input
+          field={@form[:primary_form]}
+          type="text"
+          label="Word or expression"
+          class="auth-input"
+          required
+        />
+        <.input
+          field={@form[:definition]}
+          type="textarea"
+          label="Meaning"
+          class="auth-input"
+          rows="4"
+          required
+        />
+        <.input
+          field={@form[:part_of_speech]}
+          type="text"
+          label="Part of speech"
+          class="auth-input"
+        />
+        <.input
+          field={@form[:usage_note]}
+          type="textarea"
+          label="Usage note"
+          class="auth-input"
+          rows="3"
+        />
+        <.input
+          field={@form[:cultural_note]}
+          type="textarea"
+          label="Cultural context"
+          class="auth-input"
+          rows="3"
+        />
+      <% else %>
+        <.input
+          field={@form[:alternate_form]}
+          type="text"
+          label="Alternate form (optional)"
+          class="auth-input"
+        />
+        <.input
+          field={@form[:form_kind]}
+          type="select"
+          label="Alternate form type"
+          class="auth-input"
+          options={[
+            {"Alias", :alias},
+            {"Spelling", :spelling},
+            {"Transliteration", :transliteration},
+            {"Historical", :historical}
+          ]}
+        />
+        <.input
+          field={@form[:example]}
+          type="textarea"
+          label="Example sentence (optional)"
+          class="auth-input"
+          rows="3"
+        />
+        <p class="result-meta">Provide an alternate form, an example sentence, or both.</p>
+      <% end %>
+
+      <button type="submit" id="entry-change-contribution-submit" class="auth-button">
+        Send suggestion
+      </button>
+    </.form>
+  </section>
+</Layouts.app>

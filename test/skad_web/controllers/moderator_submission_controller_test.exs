@@ -350,6 +350,74 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     assert published.entry.concept_id == water.concept_id
   end
 
+  test "reviews and publishes a correction to its existing entry", %{conn: conn} do
+    entry = create_entry("Watre", "An unclear liquid.")
+
+    {:ok, receipt} =
+      Contributions.submit_entry_change(:correction, entry, %{
+        client_submission_id: Ecto.UUID.generate(),
+        primary_form: "Water",
+        definition: "A clear liquid.",
+        part_of_speech: "noun"
+      })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    conn = log_in(conn)
+    path = ~p"/moderator/submissions/#{submission.public_id}"
+    conn = get(conn, path)
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "submission-target")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(document, "submission-concept"))
+    assert Enum.empty?(LazyHTML.query_by_id(document, "submission-media"))
+
+    conn =
+      conn
+      |> recycle()
+      |> patch(path, %{"moderation" => %{"decision" => "approve", "note" => "Verified"}})
+
+    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+    corrected = Archive.get_public_entry(entry.public_id)
+    assert hd(corrected.forms).text == "Water"
+    assert hd(corrected.definitions).text == "A clear liquid."
+  end
+
+  test "reviews and publishes an addition to its existing entry", %{conn: conn} do
+    entry = create_entry("Water", "A clear liquid.")
+
+    {:ok, receipt} =
+      Contributions.submit_entry_change(:addition, entry, %{
+        client_submission_id: Ecto.UUID.generate(),
+        alternate_form: "H₂O",
+        form_kind: :alias
+      })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    conn = log_in(conn)
+    path = ~p"/moderator/submissions/#{submission.public_id}"
+    conn = get(conn, path)
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "submission-alternate-form"))
+           |> String.trim() ==
+             "H₂O"
+
+    assert Enum.count(LazyHTML.query(document, "#proposal_alternate_form")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(document, "submission-concept-choice"))
+
+    conn =
+      conn
+      |> recycle()
+      |> patch(path, %{"moderation" => %{"decision" => "approve"}})
+
+    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+
+    assert Enum.map(Archive.get_public_entry(entry.public_id).forms, & &1.text) == [
+             "Water",
+             "H₂O"
+           ]
+  end
+
   defp create_submission do
     {:ok, language} =
       Archive.create_language(%{
@@ -368,6 +436,25 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       })
 
     Repo.get_by!(Submission, public_id: receipt.public_id)
+  end
+
+  defp create_entry(form, definition) do
+    {:ok, language} =
+      Archive.create_language(%{
+        slug: "english",
+        code: "en",
+        name: "English",
+        direction: :ltr
+      })
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: definition}]},
+        forms: [%{text: form, kind: :spelling, is_primary: true}]
+      })
+
+    entry
   end
 
   defp log_in(conn) do

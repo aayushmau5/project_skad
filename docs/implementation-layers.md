@@ -44,8 +44,14 @@ Oban media queue with durable retries and visible failure reasons. Add that
 machinery when malformed uploads, processing latency, or production reliability
 requires it; it is intentionally not part of the current synchronous path.
 
-Cleanup of abandoned uploads, corrections, additions, standalone media
-submissions, and browser-resumable uploads also remain outside this layer.
+Cleanup of abandoned uploads, standalone media submissions, and
+browser-resumable uploads also remain outside this layer.
+
+Corrections and additions are complete for the current entry scope. Contributors
+can propose corrected canonical fields or add an alternate form and/or a
+same-language example. Moderators can edit and approve those proposals;
+approval updates the existing public entry and its search index atomically and
+records a before-and-after revision.
 
 The moderator concept correction is also complete: moderators can create and
 edit a concept with a private editorial note, search concepts by their metadata

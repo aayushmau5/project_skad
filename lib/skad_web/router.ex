@@ -22,6 +22,10 @@ defmodule SkadWeb.Router do
 
     get "/", PageController, :home
     get "/entries/:public_id", PageController, :entry
+    get "/entries/:public_id/correct", ContributionController, :correct
+    post "/entries/:public_id/corrections", ContributionController, :create_correction
+    get "/entries/:public_id/add", ContributionController, :add
+    post "/entries/:public_id/additions", ContributionController, :create_addition
     get "/contribute", ContributionController, :new
     post "/contributions", ContributionController, :create
     get "/contributions/:public_id", ContributionController, :show

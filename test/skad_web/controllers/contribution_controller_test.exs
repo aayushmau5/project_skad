@@ -122,6 +122,62 @@ defmodule SkadWeb.ContributionControllerTest do
     assert response(conn, 404) == "Contribution receipt not found"
   end
 
+  test "submits a correction for an existing entry", %{conn: conn} do
+    entry = create_entry()
+    path = ~p"/entries/#{entry.public_id}/correct"
+
+    document = conn |> get(path) |> html_response(200) |> LazyHTML.from_document()
+    form = LazyHTML.query_by_id(document, "entry-change-contribution-form")
+
+    assert Enum.count(form) == 1
+
+    assert LazyHTML.attribute(LazyHTML.query(form, "#contribution_primary_form"), "value") == [
+             "Water"
+           ]
+
+    conn =
+      post(recycle(conn), ~p"/entries/#{entry.public_id}/corrections", %{
+        "contribution" => %{
+          "client_submission_id" => Ecto.UUID.generate(),
+          "primary_form" => "Water",
+          "definition" => "A transparent liquid.",
+          "part_of_speech" => "noun"
+        }
+      })
+
+    assert String.starts_with?(redirected_to(conn), "/contributions/")
+    submission = Repo.one!(Submission)
+    assert submission.kind == :correction
+    assert submission.target_public_id == entry.public_id
+    assert submission.payload["definition"] == "A transparent liquid."
+  end
+
+  test "requires content when adding information to an entry", %{conn: conn} do
+    entry = create_entry()
+    path = ~p"/entries/#{entry.public_id}/add"
+
+    document = conn |> get(path) |> html_response(200) |> LazyHTML.from_document()
+    assert Enum.count(LazyHTML.query_by_id(document, "entry-change-contribution-form")) == 1
+    assert Enum.count(LazyHTML.query(document, "#contribution_alternate_form")) == 1
+    assert Enum.count(LazyHTML.query(document, "#contribution_example")) == 1
+
+    conn =
+      post(recycle(conn), ~p"/entries/#{entry.public_id}/additions", %{
+        "contribution" => %{
+          "client_submission_id" => Ecto.UUID.generate(),
+          "alternate_form" => "",
+          "example" => ""
+        }
+      })
+
+    document = conn |> html_response(422) |> LazyHTML.from_document()
+
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "entry-change-contribution-form")) =~
+             "or an example is required"
+
+    assert Repo.aggregate(Submission, :count) == 0
+  end
+
   defp create_language do
     Archive.create_language(%{
       slug: "english",
@@ -129,6 +185,19 @@ defmodule SkadWeb.ContributionControllerTest do
       name: "English",
       direction: :ltr
     })
+  end
+
+  defp create_entry do
+    {:ok, language} = create_language()
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: "A clear liquid."}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    entry
   end
 
   defp image_attrs do
