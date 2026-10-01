@@ -10,6 +10,15 @@ config :skad, Skad.Repo,
   pool_size: 5,
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :skad, :object_storage,
+  endpoint: "http://storage.test",
+  region: "us-east-1",
+  bucket: "skad-test",
+  access_key_id: "test-access-key",
+  secret_access_key: "test-secret-key",
+  path_style: true,
+  req_options: [plug: {Req.Test, Skad.Media.Storage}]
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :skad, SkadWeb.Endpoint,

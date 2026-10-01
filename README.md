@@ -73,6 +73,22 @@ Use an R2 API token limited to Object Read & Write access on the intended
 bucket. Do not expose these credentials to the browser; Phoenix will use them
 only to issue short-lived upload instructions.
 
+Because the browser uploads directly, configure the R2 bucket's CORS policy
+for the deployed application origin:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://your-skad-host.example"],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["Content-Type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+See Cloudflare's [R2 CORS documentation](https://developers.cloudflare.com/r2/buckets/cors/).
+
 ## Current stage
 
 The product direction, v0 architecture, and first data model are settled enough to begin implementation. The immediate focus is scaffolding the Phoenix project and nothing beyond it. [implementation-layers.md](docs/implementation-layers.md) holds a deliberately rough map of later layers; only the next layer should be planned in depth.

@@ -27,6 +27,7 @@ defmodule Skad.Media.Item do
 
     belongs_to :entry, Skad.Archive.Entry
     belongs_to :concept, Skad.Archive.Concept
+    belongs_to :submission, Skad.Contributions.Submission
   end
 
   def changeset(item, attrs) do
@@ -66,8 +67,11 @@ defmodule Skad.Media.Item do
     |> unique_constraint(:public_id)
     |> unique_constraint(:original_object_key)
     |> unique_constraint(:public_object_key)
+    |> unique_constraint(:submission_id, name: :media_one_active_audio_per_submission)
+    |> unique_constraint(:entry_id, name: :media_one_active_audio_per_entry)
     |> foreign_key_constraint(:entry_id)
     |> foreign_key_constraint(:concept_id)
+    |> foreign_key_constraint(:submission_id)
   end
 
   defp validate_kind_metadata(changeset) do

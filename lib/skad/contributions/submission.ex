@@ -20,6 +20,7 @@ defmodule Skad.Contributions.Submission do
     field :review_note, :string, redact: true
 
     belongs_to :reviewed_by_account, Skad.Accounts.ModeratorAccount
+    has_many :media, Skad.Media.Item
     has_many :revisions, Skad.Contributions.Revision
 
     field :received_at, :utc_datetime, autogenerate: {DateTime, :utc_now, [:second]}

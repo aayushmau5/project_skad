@@ -10,7 +10,11 @@ defmodule Skad.Contributions do
   alias Skad.Contributions.NewEntrySubmission
   alias Skad.Contributions.Revision
   alias Skad.Contributions.Submission
+  alias Skad.Media
+  alias Skad.Media.Item
   alias Skad.Repo
+
+  @submitted_media_key "media_public_ids"
 
   @review_transitions %{
     pending: [:reviewing, :clarification_needed, :rejected],
@@ -69,7 +73,10 @@ defmodule Skad.Contributions do
     NewEntrySubmission.changeset(%NewEntrySubmission{}, attrs)
   end
 
-  def submit_new_entry(attrs) when is_map(attrs) do
+  def submit_new_entry(attrs, media_public_ids \\ [])
+
+  def submit_new_entry(attrs, media_public_ids)
+      when is_map(attrs) and is_list(media_public_ids) do
     changeset = change_new_entry(attrs)
 
     if changeset.valid? do
@@ -77,15 +84,15 @@ defmodule Skad.Contributions do
       payload = NewEntrySubmission.to_payload(new_entry)
 
       case Repo.get_by(Submission, client_submission_id: new_entry.client_submission_id) do
-        nil -> insert_new_entry(new_entry, payload, changeset)
-        submission -> idempotent_result(submission, payload)
+        nil -> insert_new_entry(new_entry, payload, changeset, media_public_ids)
+        submission -> idempotent_result(submission, payload, media_public_ids)
       end
     else
       {:error, changeset}
     end
   end
 
-  def submit_new_entry(_attrs), do: {:error, :invalid_attributes}
+  def submit_new_entry(_attrs, _media_public_ids), do: {:error, :invalid_attributes}
 
   def get_receipt(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
@@ -133,8 +140,63 @@ defmodule Skad.Contributions do
 
   def get_submission_for_review(_scope, _public_id), do: nil
 
-  def effective_payload(%Submission{reviewed_payload: payload}) when is_map(payload), do: payload
-  def effective_payload(%Submission{payload: payload}), do: payload
+  def list_submission_media(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Submission{} = submission
+      ) do
+    Media.list_submission_items(submission)
+  end
+
+  def list_submission_media(_scope, %Submission{}), do: []
+
+  def attach_submission_media(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Submission{} = submission,
+        %Item{} = item
+      ) do
+    Media.attach_item_to_submission(submission, item)
+  end
+
+  def attach_submission_media(_scope, %Submission{}, %Item{}),
+    do: {:error, :unauthorized}
+
+  def replace_submission_audio(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Submission{} = submission,
+        %Item{} = item
+      ) do
+    Media.replace_submission_audio(submission, item)
+  end
+
+  def replace_submission_audio(_scope, %Submission{}, %Item{}),
+    do: {:error, :unauthorized}
+
+  def remove_submission_media(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Submission{} = submission,
+        %Item{} = item
+      ) do
+    Media.remove_submission_item(submission, item)
+  end
+
+  def remove_submission_media(_scope, %Submission{}, %Item{}),
+    do: {:error, :unauthorized}
+
+  def preview_submission_media(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        %Submission{} = submission,
+        %Item{} = item
+      ) do
+    Media.preview_submission_item(submission, item)
+  end
+
+  def preview_submission_media(_scope, %Submission{}, %Item{}),
+    do: {:error, :unauthorized}
+
+  def effective_payload(%Submission{reviewed_payload: payload}) when is_map(payload),
+    do: proposal_payload(payload)
+
+  def effective_payload(%Submission{payload: payload}), do: proposal_payload(payload)
 
   def suggest_example_links(%Submission{} = submission) do
     payload = effective_payload(submission)
@@ -273,6 +335,7 @@ defmodule Skad.Contributions do
            approval_multi(submission, moderator, note)
            |> meaning_multi(concept, language, archive_attrs) do
       multi
+      |> Media.publish_submission_items_multi(submission)
       |> add_example_multi(language, example_plan)
       |> Multi.insert(:revision, fn changes ->
         %Revision{
@@ -335,42 +398,77 @@ defmodule Skad.Contributions do
   defp meaning_multi(multi, %Concept{} = concept, language, archive_attrs),
     do: Archive.existing_meaning_multi(multi, concept, language, archive_attrs)
 
-  defp insert_new_entry(new_entry, payload, command_changeset) do
+  defp insert_new_entry(new_entry, payload, command_changeset, media_public_ids) do
     case Archive.get_language_by_slug(new_entry.language_slug) do
       %{active: true} ->
-        %Submission{kind: :new_entry}
-        |> Submission.changeset(%{
-          client_submission_id: new_entry.client_submission_id,
-          payload: payload
-        })
-        |> Repo.insert()
-        |> inserted_result(payload)
+        stored_payload = put_submitted_media(payload, media_public_ids)
+
+        Multi.new()
+        |> Multi.insert(
+          :submission,
+          Submission.changeset(%Submission{kind: :new_entry}, %{
+            client_submission_id: new_entry.client_submission_id,
+            payload: stored_payload
+          })
+        )
+        |> Media.claim_submission_items_multi(media_public_ids)
+        |> Repo.transaction()
+        |> inserted_result(payload, media_public_ids)
 
       _missing_or_inactive ->
         {:error, Changeset.add_error(command_changeset, :language_slug, "is not active")}
     end
   end
 
-  defp inserted_result({:ok, submission}, _payload), do: {:ok, receipt(submission)}
+  defp inserted_result({:ok, %{submission: submission}}, _payload, _media_public_ids),
+    do: {:ok, receipt(submission)}
 
-  defp inserted_result({:error, changeset}, payload) do
+  defp inserted_result(
+         {:error, :submission, %Changeset{} = changeset, _changes},
+         payload,
+         media_public_ids
+       ) do
     if Keyword.has_key?(changeset.errors, :client_submission_id) do
       submission =
         Repo.get_by!(Submission,
           client_submission_id: Changeset.get_field(changeset, :client_submission_id)
         )
 
-      idempotent_result(submission, payload)
+      idempotent_result(submission, payload, media_public_ids)
     else
       {:error, changeset}
     end
   end
 
-  defp idempotent_result(%Submission{kind: :new_entry, payload: payload} = submission, payload) do
-    {:ok, receipt(submission)}
+  defp inserted_result({:error, :media, reason, _changes}, _payload, _media_public_ids),
+    do: {:error, reason}
+
+  defp idempotent_result(
+         %Submission{kind: :new_entry, payload: stored_payload} = submission,
+         payload,
+         media_public_ids
+       ) do
+    stored_media_public_ids = Map.get(stored_payload, @submitted_media_key, [])
+    stored_payload = proposal_payload(stored_payload)
+
+    if stored_payload == payload and
+         Enum.sort(stored_media_public_ids) == Enum.sort(media_public_ids) do
+      {:ok, receipt(submission)}
+    else
+      {:error, :idempotency_conflict}
+    end
   end
 
-  defp idempotent_result(_submission, _payload), do: {:error, :idempotency_conflict}
+  defp idempotent_result(_submission, _payload, _media_public_ids),
+    do: {:error, :idempotency_conflict}
+
+  defp put_submitted_media(payload, []), do: payload
+
+  defp put_submitted_media(payload, media_public_ids) do
+    Map.put(payload, @submitted_media_key, Enum.sort(media_public_ids))
+  end
+
+  defp proposal_payload(payload), do: Map.delete(payload, @submitted_media_key)
 
   defp receipt(submission) do
     %{

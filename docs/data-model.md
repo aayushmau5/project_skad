@@ -43,6 +43,7 @@ It does not attempt to model every future linguistic, editorial, or community fe
 
     submissions ── reviewed by ── moderator_accounts
          |
+         ├──< media
          └── approved changes ──> revisions
 
 The ten tables are:
@@ -82,6 +83,7 @@ flowchart TB
   ENT --> LINK
   ENT --> MED
   CON --> MED
+  SUB --> MED
   ACC --> SUB
   SUB --> REV
   ACC --> REV
@@ -320,6 +322,7 @@ Describes an audio or image object stored outside SQLite. It combines the earlie
 | kind | TEXT | audio or image |
 | entry_id | INTEGER, nullable | Word/meaning this media describes |
 | concept_id | INTEGER, nullable | Concept this image illustrates |
+| submission_id | INTEGER, nullable | Pending contribution that currently owns this media |
 | original_object_key | TEXT | Preserved original in object storage |
 | public_object_key | TEXT, nullable | Public playback/display object |
 | mime_type | TEXT | Validated original type |
@@ -338,12 +341,14 @@ Describes an audio or image object stored outside SQLite. It combines the earlie
 Initial rules:
 
 - Unique object keys.
-- Index entry_id, concept_id, sha256, processing_state, and visibility.
+- Index entry_id, concept_id, submission_id, sha256, processing_state, and visibility.
 - Public media requires a public target and a ready public object.
 - Quarantined media may temporarily have no entry or concept.
+- A submission and a published entry each have at most one active audio row.
 
-An entry may have any number of media rows, so one word can have several
-pronunciation recordings.
+An entry may retain replaced or withdrawn audio rows as history, but exposes at
+most one active pronunciation recording. A concept may have several active
+images.
 
 ## 8. submissions
 
@@ -528,7 +533,7 @@ Before migrations are considered settled, this model must represent:
 2. One spelling with two meanings represented as two entries.
 3. Alternate spelling and transliteration search.
 4. One example with several clickable words and an ambiguous match.
-5. Several pronunciation recordings attached to one entry.
+5. One active pronunciation recording plus retained replacement history for an entry.
 6. One media withdrawal.
 7. One correction with before-and-after history.
 8. One spreadsheet import recorded in revision source metadata.

@@ -10,6 +10,8 @@ defmodule Skad.ContributionsTest do
   alias Skad.Contributions
   alias Skad.Contributions.Revision
   alias Skad.Contributions.Submission
+  alias Skad.Media
+  alias Skad.Media.Item
 
   test "stores a normalized new-entry proposal and returns a safe receipt" do
     create_language()
@@ -54,6 +56,55 @@ defmodule Skad.ContributionsTest do
 
     assert second_receipt == first_receipt
     assert Repo.aggregate(Submission, :count) == 1
+  end
+
+  test "claims completed anonymous media with the submission and preserves idempotency" do
+    create_language()
+    attrs = valid_attrs()
+    audio = insert_media(:audio)
+    image = insert_media(:image)
+    media_public_ids = [audio.public_id, image.public_id]
+
+    assert {:ok, first_receipt} =
+             Contributions.submit_new_entry(attrs, media_public_ids)
+
+    submission = Repo.get_by!(Submission, public_id: first_receipt.public_id)
+
+    assert Enum.map(Media.list_submission_items(submission), & &1.id) == [audio.id, image.id]
+    assert Repo.get!(Item, audio.id).submission_id == submission.id
+    assert Repo.get!(Item, image.id).submission_id == submission.id
+
+    scope = Scope.for_moderator(insert_moderator())
+    assert {:ok, unchanged} = Contributions.update_submission_for_review(scope, submission, %{})
+    assert unchanged.status == :pending
+    assert unchanged.review_history == []
+    assert unchanged.reviewed_payload == nil
+
+    assert {:ok, second_receipt} =
+             Contributions.submit_new_entry(attrs, Enum.reverse(media_public_ids))
+
+    assert second_receipt == first_receipt
+
+    assert {:error, :idempotency_conflict} =
+             Contributions.submit_new_entry(attrs, [audio.public_id])
+
+    assert Repo.aggregate(Submission, :count) == 1
+  end
+
+  test "rejects an invalid media batch without storing or claiming anything" do
+    create_language()
+    first_audio = insert_media(:audio)
+    second_audio = insert_media(:audio)
+
+    assert {:error, :invalid_media} =
+             Contributions.submit_new_entry(valid_attrs(), [
+               first_audio.public_id,
+               second_audio.public_id
+             ])
+
+    assert Repo.aggregate(Submission, :count) == 0
+    assert Repo.get!(Item, first_audio.id).submission_id == nil
+    assert Repo.get!(Item, second_audio.id).submission_id == nil
   end
 
   test "rejects reuse of an idempotency key for different content" do
@@ -117,6 +168,33 @@ defmodule Skad.ContributionsTest do
     assert Contributions.list_submissions_for_review(inactive_scope) == []
     assert Contributions.get_submission_for_review(inactive_scope, first.public_id) == nil
     assert Contributions.get_submission_for_review(scope, "not-a-uuid") == nil
+  end
+
+  test "authorizes moderator management and private previews of submission media" do
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+    inactive_scope = Scope.for_moderator(%{moderator | active: false})
+    submission = insert_submission()
+    image = insert_media(:image)
+
+    assert {:error, :unauthorized} =
+             Contributions.attach_submission_media(inactive_scope, submission, image)
+
+    assert {:ok, attached} = Contributions.attach_submission_media(scope, submission, image)
+    assert Enum.map(Contributions.list_submission_media(scope, submission), & &1.id) == [image.id]
+    assert Contributions.list_submission_media(inactive_scope, submission) == []
+
+    assert {:ok, preview} = Contributions.preview_submission_media(scope, submission, attached)
+    uri = URI.parse(preview.url)
+    assert uri.path == "/skad-test/#{image.original_object_key}"
+    assert uri.query =~ "X-Amz-Expires=300"
+
+    assert {:error, :unauthorized} =
+             Contributions.preview_submission_media(inactive_scope, submission, attached)
+
+    assert {:ok, removed} = Contributions.remove_submission_media(scope, submission, attached)
+    assert removed.visibility == :pending_deletion
+    assert Contributions.list_submission_media(scope, submission) == []
   end
 
   test "records valid review transitions and their moderator history" do
@@ -286,16 +364,23 @@ defmodule Skad.ContributionsTest do
 
     moderator = insert_moderator()
     scope = Scope.for_moderator(moderator)
+    audio = insert_media(:audio)
+    image = insert_media(:image)
 
     {:ok, receipt} =
-      Contributions.submit_new_entry(%{
-        client_submission_id: Ecto.UUID.generate(),
-        language_slug: hindi.slug,
-        primary_form: "पानी",
-        definition: "पीने के लिए उपयोग किया जाने वाला तरल।"
-      })
+      Contributions.submit_new_entry(
+        %{
+          client_submission_id: Ecto.UUID.generate(),
+          language_slug: hindi.slug,
+          primary_form: "पानी",
+          definition: "पीने के लिए उपयोग किया जाने वाला तरल।"
+        },
+        [audio.public_id, image.public_id]
+      )
 
     submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    audio = make_ready(audio)
+    image = make_ready(image)
 
     assert {:ok, %{entry: hindi_entry}} =
              Contributions.approve_submission(
@@ -308,6 +393,10 @@ defmodule Skad.ContributionsTest do
 
     assert hindi_entry.concept_id == water.concept_id
     assert Repo.aggregate(Concept, :count) == 1
+
+    assert Repo.get!(Item, audio.id).entry_id == hindi_entry.id
+    assert Repo.get!(Item, image.id).concept_id == water.concept_id
+    assert Enum.map(Media.list_public_concept_images(water.concept), & &1.id) == [image.id]
 
     revision = Repo.get_by!(Revision, target_public_id: hindi_entry.public_id)
     assert revision.after_state["concept_public_id"] == water.concept.public_id
@@ -397,6 +486,72 @@ defmodule Skad.ContributionsTest do
     assert Repo.aggregate(Revision, :count) == 1
   end
 
+  test "publishes ready submission audio to the entry and images to the concept" do
+    create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+    audio = insert_media(:audio)
+    image = insert_media(:image)
+    attrs = valid_attrs()
+
+    assert {:ok, receipt} =
+             Contributions.submit_new_entry(attrs, [audio.public_id, image.public_id])
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    audio = make_ready(audio)
+    image = make_ready(image)
+
+    assert {:ok, %{entry: entry}} = Contributions.approve_submission(scope, submission)
+
+    published_audio = Repo.get!(Item, audio.id)
+    assert published_audio.visibility == :public
+    assert published_audio.entry_id == entry.id
+    assert published_audio.concept_id == nil
+    assert published_audio.submission_id == nil
+
+    published_image = Repo.get!(Item, image.id)
+    assert published_image.visibility == :public
+    assert published_image.entry_id == nil
+    assert published_image.concept_id == entry.concept_id
+    assert published_image.submission_id == nil
+    assert Media.get_public_entry_audio(entry).id == audio.id
+    assert Enum.map(Media.list_public_concept_images(entry.concept), & &1.id) == [image.id]
+
+    assert {:ok, repeated_receipt} =
+             Contributions.submit_new_entry(attrs, [
+               audio.public_id,
+               image.public_id
+             ])
+
+    assert repeated_receipt == Contributions.get_receipt(receipt.public_id)
+  end
+
+  test "rolls back approval when attached media is not ready for publication" do
+    create_language()
+    moderator = insert_moderator()
+    scope = Scope.for_moderator(moderator)
+    audio = insert_media(:audio)
+
+    assert {:ok, receipt} =
+             Contributions.submit_new_entry(valid_attrs(), [audio.public_id])
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+
+    assert {:error, %Changeset{valid?: false} = changeset} =
+             Contributions.approve_submission(scope, submission)
+
+    assert "must be ready when media is public" in errors_on(changeset).processing_state
+    assert Repo.get!(Submission, submission.id).status == :pending
+    assert Repo.aggregate(Concept, :count) == 0
+    assert Repo.aggregate(Entry, :count) == 0
+    assert Repo.aggregate(Revision, :count) == 0
+
+    stored_audio = Repo.get!(Item, audio.id)
+    assert stored_audio.submission_id == submission.id
+    assert stored_audio.entry_id == nil
+    assert stored_audio.visibility == :quarantine
+  end
+
   test "publishes a submitted example with confirmed focus and reference links" do
     language = create_language()
     moderator = insert_moderator()
@@ -480,9 +635,9 @@ defmodule Skad.ContributionsTest do
     assert Archive.search("water", language) == []
   end
 
-  defp valid_attrs do
+  defp valid_attrs(client_submission_id \\ Ecto.UUID.generate()) do
     %{
-      client_submission_id: Ecto.UUID.generate(),
+      client_submission_id: client_submission_id,
       language_slug: "english",
       primary_form: "Water",
       definition: "A clear liquid."
@@ -517,5 +672,41 @@ defmodule Skad.ContributionsTest do
       display_name: "Editor"
     }
     |> Repo.insert!()
+  end
+
+  defp insert_media(:audio) do
+    {:ok, item} =
+      Media.create_item(%{
+        kind: :audio,
+        original_object_key: "private/audio/#{Ecto.UUID.generate()}.webm",
+        mime_type: "audio/webm",
+        byte_size: 8_192,
+        sha256: String.duplicate("a", 64)
+      })
+
+    item
+  end
+
+  defp insert_media(:image) do
+    {:ok, item} =
+      Media.create_item(%{
+        kind: :image,
+        original_object_key: "private/images/#{Ecto.UUID.generate()}.jpg",
+        mime_type: "image/jpeg",
+        byte_size: 16_384,
+        sha256: String.duplicate("b", 64)
+      })
+
+    item
+  end
+
+  defp make_ready(item) do
+    {:ok, item} =
+      Media.update_item(item, %{
+        processing_state: :ready,
+        public_object_key: "public/#{item.kind}/#{item.public_id}"
+      })
+
+    item
   end
 end

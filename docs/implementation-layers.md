@@ -22,27 +22,29 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
-### 10d. Object storage and uploads
+### 10e. Submission media context
 
-Add the first private object-storage integration and direct-upload flow. Start
-with server-owned object keys and one complete small-file upload path before
-adding multipart behavior.
+Complete the backend flow for media attached to a new-entry submission. A
+completed anonymous upload begins unowned and quarantined. Submission creation
+claims at most one audio item and five images atomically. While the submission
+is open, its active audio can be replaced and any attached item can be removed.
+Approval moves the audio to the new language-specific entry and the images to
+its concept in the same transaction as the archive publication.
 
-It is complete when a browser can request short-lived upload instructions,
-upload directly to the configured S3-compatible store, and idempotently report
-completion without Phoenix proxying the file bytes. Public media, renditions,
-background processing, and multipart uploads remain outside this step.
+It is complete when context tests prove idempotent claiming, ownership and
+count limits, moderator replacement/removal, correct final targets, and full
+rollback when any attached item is not ready. Browser recording, upload inputs,
+moderation UI, validation jobs, renditions, cleanup, corrections, additions,
+and standalone media submissions remain outside this layer.
 
-The Media context is complete for the current schema: it creates unattached or
-archive-targeted metadata, retrieves active items by public ID, updates metadata
-under the current schema invariants, and rejects archived items or targets.
-Publication and withdrawal transitions remain deferred until those workflows
-exist.
+The object-storage foundation is complete: Phoenix issues five-minute signed
+instructions for server-owned keys, supports JPEG, PNG, WebP, and common browser
+audio types, verifies stored size and signed content type, and records one
+quarantined media row without proxying file bytes.
 
 The moderator concept correction is complete: moderators can create and edit a
 concept with a private editorial note, search concepts by their metadata or
-entries, and attach an approved new entry to an existing concept. Concept image
-attachment remains deferred until the upload and storage path exists.
+entries, and attach an approved new entry to an existing concept.
 
 ### Deferred public archive refinement
 

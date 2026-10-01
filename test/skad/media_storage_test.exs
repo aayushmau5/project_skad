@@ -4,14 +4,44 @@ defmodule Skad.MediaStorageTest do
   alias Skad.Archive.Concept
   alias Skad.Archive.Entry
   alias Skad.Archive.Language
+  alias Skad.Contributions.Submission
 
-  test "stores multiple audio items for one entry" do
+  test "enforces one active audio item per entry while retaining withdrawn history" do
     entry_id = insert_entry()
     insert_media(entry_id: entry_id)
+
+    assert_raise Exqlite.Error, fn ->
+      insert_media(entry_id: entry_id)
+    end
+
+    Repo.query!(
+      "UPDATE media SET visibility = 'withdrawn' WHERE entry_id = ?",
+      [entry_id]
+    )
+
     insert_media(entry_id: entry_id)
 
     assert [[2]] =
              Repo.query!("SELECT count(*) FROM media WHERE entry_id = ?", [entry_id]).rows
+  end
+
+  test "enforces one active audio item per submission while retaining withdrawn history" do
+    submission_id = insert_submission()
+    insert_media(submission_id: submission_id)
+
+    assert_raise Exqlite.Error, fn ->
+      insert_media(submission_id: submission_id)
+    end
+
+    Repo.query!(
+      "UPDATE media SET visibility = 'withdrawn' WHERE submission_id = ?",
+      [submission_id]
+    )
+
+    insert_media(submission_id: submission_id)
+
+    assert [[2]] =
+             Repo.query!("SELECT count(*) FROM media WHERE submission_id = ?", [submission_id]).rows
   end
 
   test "enforces media type, metadata, lifecycle, and uniqueness constraints" do
@@ -45,6 +75,7 @@ defmodule Skad.MediaStorageTest do
           kind: "audio",
           entry_id: nil,
           concept_id: nil,
+          submission_id: nil,
           original_object_key: "private/originals/#{suffix}.wav",
           public_object_key: nil,
           mime_type: "audio/wav",
@@ -67,6 +98,7 @@ defmodule Skad.MediaStorageTest do
           kind,
           entry_id,
           concept_id,
+          submission_id,
           original_object_key,
           public_object_key,
           mime_type,
@@ -77,7 +109,7 @@ defmodule Skad.MediaStorageTest do
           height,
           processing_state,
           visibility
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING id
         """,
         [
@@ -85,6 +117,7 @@ defmodule Skad.MediaStorageTest do
           values.kind,
           values.entry_id,
           values.concept_id,
+          values.submission_id,
           values.original_object_key,
           values.public_object_key,
           values.mime_type,
@@ -99,6 +132,16 @@ defmodule Skad.MediaStorageTest do
       ).rows
 
     id
+  end
+
+  defp insert_submission do
+    %Submission{kind: :new_entry}
+    |> Submission.changeset(%{
+      client_submission_id: Ecto.UUID.generate(),
+      payload: %{"primary_form" => "water"}
+    })
+    |> Repo.insert!()
+    |> Map.fetch!(:id)
   end
 
   defp insert_entry do
