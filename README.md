@@ -33,6 +33,46 @@ V0 is centrally hosted and designed to remain useful on slow or interrupted conn
 
 These documents are the current source of truth. Avoid creating a new planning file when the information belongs in one of them.
 
+## Local object storage
+
+Local development uses RustFS as the S3-compatible store. RustFS provides a
+maintained local server with tested presigned PUT support.
+
+Start the store and create the private development bucket:
+
+```sh
+docker compose up -d
+docker compose ps -a
+```
+
+The S3 endpoint is `http://127.0.0.1:9000`; the console is available at
+`http://127.0.0.1:9001`. The local credentials are `SKADLOCAL` and
+`skad-local-development-secret`, and the bucket is `skad-private`. These
+loopback-only defaults can be overridden with `R2_ENDPOINT`, `R2_REGION`,
+`R2_BUCKET`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY`. RustFS uses the
+same application-facing variables as Cloudflare R2 so the upload code does not
+need a separate local configuration shape.
+
+Stop the service without deleting its named volume:
+
+```sh
+docker compose down
+```
+
+Production uses Cloudflare R2 through its S3-compatible API. Configure:
+
+```sh
+R2_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+R2_REGION=auto
+R2_BUCKET=<BUCKET_NAME>
+R2_ACCESS_KEY_ID=<ACCESS_KEY_ID>
+R2_SECRET_ACCESS_KEY=<SECRET_ACCESS_KEY>
+```
+
+Use an R2 API token limited to Object Read & Write access on the intended
+bucket. Do not expose these credentials to the browser; Phoenix will use them
+only to issue short-lived upload instructions.
+
 ## Current stage
 
 The product direction, v0 architecture, and first data model are settled enough to begin implementation. The immediate focus is scaffolding the Phoenix project and nothing beyond it. [implementation-layers.md](docs/implementation-layers.md) holds a deliberately rough map of later layers; only the next layer should be planned in depth.

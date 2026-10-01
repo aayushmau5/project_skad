@@ -53,11 +53,15 @@ SQLite through Ecto is the canonical database. WAL supports the read-heavy singl
 
 Move to Postgres only when several application nodes must write, measured write contention harms users, high availability becomes mandatory, or the representative workload misses its targets after query and index fixes.
 
-## PD-006 — Store media in S3-compatible object storage
+## PD-006 — Store media in Cloudflare R2
 
 - **Status:** Accepted
 
-SQLite stores stable object keys and metadata, not audio or image bytes. Private/quarantine and public media are separate. Browsers upload directly with short-lived signed instructions; large files use resumable multipart upload.
+Production media uses Cloudflare R2 through its S3-compatible API. Local
+development uses RustFS against the same application configuration shape.
+SQLite stores stable object keys and metadata, not audio or image bytes.
+Private/quarantine and public media are separate. Browsers upload directly with
+short-lived signed instructions; large files use resumable multipart upload.
 
 Preserve originals, validate actual type and checksum, create one public playback or display object when required, and publish only after moderation. V0 processes at most one media job at a time.
 

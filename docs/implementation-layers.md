@@ -22,15 +22,22 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
-### 10c. Media context
+### 10d. Object storage and uploads
 
-Add the narrow context API needed to create, inspect, and update media metadata.
-This step does not include object storage, uploads, background work, or user
-interfaces.
+Add the first private object-storage integration and direct-upload flow. Start
+with server-owned object keys and one complete small-file upload path before
+adding multipart behavior.
 
-It is complete when the application has one authorization-neutral API for the
-valid media lifecycle transitions supported by the existing table and schema,
-with focused tests and no speculative storage abstraction.
+It is complete when a browser can request short-lived upload instructions,
+upload directly to the configured S3-compatible store, and idempotently report
+completion without Phoenix proxying the file bytes. Public media, renditions,
+background processing, and multipart uploads remain outside this step.
+
+The Media context is complete for the current schema: it creates unattached or
+archive-targeted metadata, retrieves active items by public ID, updates metadata
+under the current schema invariants, and rejects archived items or targets.
+Publication and withdrawal transitions remain deferred until those workflows
+exist.
 
 The moderator concept correction is complete: moderators can create and edit a
 concept with a private editorial note, search concepts by their metadata or

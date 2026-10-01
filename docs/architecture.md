@@ -28,7 +28,7 @@ flowchart LR
     DB --- DIR
   end
 
-  OBJ["S3-compatible object storage<br/>private + public media"]
+  OBJ["Cloudflare R2 (S3 API)<br/>private + public media"]
   BACKUP["Remote database backups"]
 
   B -->|"small HTML/JSON requests"| C
@@ -48,7 +48,7 @@ There is one centrally hosted application and one writable SQLite database. Slow
 | Caddy | Terminate TLS, compress responses, and proxy to Phoenix |
 | Phoenix release | Serve pages and endpoints, authenticate moderators, enforce rules, coordinate transactions, sign object requests, run jobs, and expose health/metrics |
 | SQLite | Store canonical records, FTS5 search data, revisions, sessions, and durable Oban jobs |
-| Object storage | Store private originals and public media objects |
+| Cloudflare R2 | Store private originals and public media objects |
 | Backup storage | Hold replicated SQLite state and retained snapshots |
 
 ## OTP runtime

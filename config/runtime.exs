@@ -23,6 +23,14 @@ end
 config :skad, SkadWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :dev do
+  config :skad, :object_storage,
+    endpoint: System.get_env("R2_ENDPOINT", "http://127.0.0.1:9000"),
+    region: System.get_env("R2_REGION", "us-east-1"),
+    bucket: System.get_env("R2_BUCKET", "skad-private"),
+    access_key_id: System.get_env("R2_ACCESS_KEY_ID", "SKADLOCAL"),
+    secret_access_key: System.get_env("R2_SECRET_ACCESS_KEY", "skad-local-development-secret"),
+    path_style: true
+
   # Reload browser tabs when matching files change.
   config :skad, SkadWeb.Endpoint,
     live_reload: [
@@ -40,6 +48,14 @@ if config_env() == :dev do
 end
 
 if config_env() == :prod do
+  config :skad, :object_storage,
+    endpoint: System.fetch_env!("R2_ENDPOINT"),
+    region: System.get_env("R2_REGION", "auto"),
+    bucket: System.fetch_env!("R2_BUCKET"),
+    access_key_id: System.fetch_env!("R2_ACCESS_KEY_ID"),
+    secret_access_key: System.fetch_env!("R2_SECRET_ACCESS_KEY"),
+    path_style: false
+
   database_path =
     System.get_env("DATABASE_PATH") ||
       raise """
