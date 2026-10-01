@@ -22,12 +22,16 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
-### 1. Phoenix scaffold
+### 10a. Media database
 
-Create and verify the generated Phoenix project while preserving the existing
-documentation and historical mock. Do not add product behavior or customize
-unrelated parts of the application. Its exact scope and completion criteria
-must be agreed before implementation begins.
+Add the `media` table with its database constraints and indexes. This step does
+not include Ecto schemas, context APIs, object storage, uploads, background
+work, or user interfaces. People and structured consent records are deferred
+until the product needs them.
+
+It is complete when several audio records can belong to one entry, invalid
+media metadata and lifecycle states are rejected, and the full existing test
+suite remains green.
 
 ## Rough map of later layers
 
@@ -72,8 +76,10 @@ display.
 
 ### 10. Media
 
-Add people, consent, media metadata, object storage, publication, and
-withdrawal behavior.
+Add media persistence in narrow steps: database design, Ecto schemas, the Media
+context, then object storage, uploads, publication, and withdrawal behavior.
+Defer people and structured consent records until a supported workflow needs
+them.
 
 ### 11. Background work
 

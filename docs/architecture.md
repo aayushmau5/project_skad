@@ -75,7 +75,7 @@ Phoenix contexts are code boundaries, not separate applications or permanent pro
 | --- | --- |
 | `Archive` | Languages, concepts, entries, forms, examples, links, and server-side search |
 | `Contributions` | Submissions, moderation, revisions, and accepted-change transactions |
-| `Media` | Signed uploads, media metadata, validation, consent state, publication, and withdrawal |
+| `Media` | Signed uploads, media metadata, validation, publication, and withdrawal |
 | `Accounts` | Moderator identities, authentication, sessions, and authorization |
 
 Search remains inside `Archive`. Background workers live beside the context whose operation they perform. Contexts communicate through public functions and stable IDs, not by sharing private schemas or process state.
@@ -95,9 +95,9 @@ Oban performs work that may finish later, must retry, or must survive a restart:
 ### Media queue
 
 - Verify an uploaded object, checksum, actual type, size, and duration or dimensions.
-- Create a derived playback or display rendition when one is required.
+- Create the public playback or display object when one is required.
 - Publish approved media from the private area to the public area.
-- Remove public objects after consent withdrawal.
+- Remove public objects after media withdrawal.
 - Clean abandoned multipart uploads and expired quarantine objects.
 
 ### Maintenance queue
@@ -146,7 +146,7 @@ LiveView is appropriate for connected moderator workflows. Essential public read
 | Application restarts | Supervision restores services; durable jobs remain in SQLite |
 | PubSub message is missed | Reload durable state from SQLite |
 | Object storage is unavailable | Preserve database state and retry the idempotent job later |
-| Consent is withdrawn | Hide media transactionally first; delete public objects asynchronously |
+| Media is withdrawn | Hide it transactionally first; delete public objects asynchronously |
 | FTS index is damaged or stale | Rebuild it from canonical data |
 | Host is lost | Restore SQLite and reconnect stable object keys on a fresh host |
 
@@ -155,7 +155,7 @@ LiveView is appropriate for connected moderator workflows. Essential public read
 - Public and private media use separate object-storage areas.
 - The server chooses object keys and issues short-lived, narrowly scoped signed requests.
 - Only moderator accounts can publish canonical changes.
-- Consent evidence, private person details, quarantined keys, and submission payloads never enter public responses, exports, logs, PubSub messages, or job arguments.
+- Quarantined keys and submission payloads never enter public responses, exports, logs, PubSub messages, or job arguments.
 - Jobs carry stable record IDs and reload authoritative state when they execute.
 - Every external operation is idempotent because a job may run more than once.
 

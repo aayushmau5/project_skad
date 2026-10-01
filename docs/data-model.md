@@ -1,7 +1,7 @@
 # Project Skad v0 data model
 
 - **Status:** Accepted v0 schema
-- **Date:** 2026-09-28
+- **Date:** 2026-10-01
 - **Approach:** Keep the conceptual archive model, but implement only the smallest physical schema that supports the first complete product loop.
 - **Architecture:** [architecture.md](architecture.md)
 - **Decision log:** [product-decisions.md](product-decisions.md)
@@ -18,7 +18,7 @@ The schema must support:
 4. Make words inside examples clickable.
 5. Accept a contribution without publishing it immediately.
 6. Review and publish accepted contributions.
-7. Preserve consent and revision history.
+7. Preserve revision history and media attribution metadata.
 8. Keep exact lookup, autocomplete, full-text search, and entry-page queries fast at the PD-018 acceptance workload.
 
 It does not attempt to model every future linguistic, editorial, or community feature.
@@ -27,11 +27,11 @@ It does not attempt to model every future linguistic, editorial, or community fe
 
 | Storage | Responsibility |
 | --- | --- |
-| SQLite | Text, relationships, people, consent, submissions, revisions, and media metadata |
-| Object storage | Audio, images, consent evidence, and derived media files |
+| SQLite | Text, relationships, submissions, revisions, and media metadata |
+| Object storage | Audio, images, and derived media files |
 | Browser storage | Unsent drafts, pending uploads, and cached pages; v1 may add offline dictionary packs |
 
-## The twelve domain tables
+## The ten domain tables
 
     languages
         |
@@ -39,14 +39,13 @@ It does not attempt to model every future linguistic, editorial, or community fe
                 |
                 ├──< entry_forms
                 ├──< example_links >── examples
-                └──< media >── people
-                           └── consents
+                └──< media
 
     submissions ── reviewed by ── moderator_accounts
          |
          └── approved changes ──> revisions
 
-The twelve tables are:
+The ten tables are:
 
 1. **languages**
 2. **concepts**
@@ -54,12 +53,10 @@ The twelve tables are:
 4. **entry_forms**
 5. **examples**
 6. **example_links**
-7. **people**
-8. **consents**
-9. **media**
-10. **submissions**
-11. **moderator_accounts**
-12. **revisions**
+7. **media**
+8. **submissions**
+9. **moderator_accounts**
+10. **revisions**
 
 Phoenix authentication tokens, Oban jobs, SQLite internals, and the FTS5 virtual table are infrastructure tables rather than product-domain tables.
 
@@ -74,8 +71,6 @@ flowchart TB
   EX["examples<br/>Reusable sentence"]
   LINK["example_links<br/>Clickable span"]
   MED["media<br/>Audio/image metadata"]
-  PPL["people<br/>Contributor or speaker"]
-  CNS["consents<br/>Permitted media use"]
   SUB["submissions<br/>Unreviewed proposal"]
   ACC["moderator_accounts<br/>Reviewer login"]
   REV["revisions<br/>Accepted history"]
@@ -87,10 +82,6 @@ flowchart TB
   ENT --> LINK
   ENT --> MED
   CON --> MED
-  PPL --> MED
-  PPL --> CNS
-  CNS --> MED
-  PPL --> SUB
   ACC --> SUB
   SUB --> REV
   ACC --> REV
@@ -111,8 +102,6 @@ The mock WATER record demonstrates the central path:
 | examples | `4000 The child will drink water.` |
 | example_links | the `water` span points to entry `100`; the `drink` span points to its own entry |
 | media | `6000` describes a private original and public playback object for entry `100` |
-| people | `501` is the attributed speaker |
-| consents | `7000` permits public streaming but not downloadable media packs |
 
 Searching for either `पानी` or `paani` finds entry `101` through entry_forms. To find its English equivalent, the application follows entry `101` to concept `10`, finds entry `100`, and displays its primary form `water`. There is no pairwise translations table.
 
@@ -127,9 +116,7 @@ Opening the English entry follows:
     │   └── entries 101
     │       └── entry_forms 1010, 1011 → पानी / paani
     ├── example_links → examples 4000
-    └── media 6000
-        ├── people 501              → attributed speaker
-        └── consents 7000           → allowed use
+    └── media 6000                  → audio/image metadata and object keys
 
 ## Shared conventions
 
@@ -318,57 +305,11 @@ Initial rules:
 - Editing example text requires rematching and reconfirming its links.
 - Automatic matching produces suggestions; only confirmed matches become rows.
 
-## 7. people
+## 7. media
 
 ### Why it exists
 
-Represents a human once even when they are a contributor, speaker, collector, or consent giver. A person does not automatically have a login.
-
-### Draft columns
-
-| Column | Type | Purpose |
-| --- | --- | --- |
-| id | INTEGER | Internal primary key |
-| public_id | TEXT | Stable identifier when appropriate |
-| display_name | TEXT, nullable | Approved public attribution |
-| attribution_mode | TEXT | Named, community-only, anonymous, or private |
-| public_note | TEXT, nullable | Safe public context |
-| private_name | TEXT, nullable | Moderator-only identity where necessary |
-| email | TEXT, nullable | Private contact |
-| phone | TEXT, nullable | Private contact |
-| private_note | TEXT, nullable | Moderator-only context |
-| archived_at | TIMESTAMP, nullable | Does not erase linked history |
-
-Public serializers use an explicit allowlist and never expose private columns. If legal or operational needs require stronger separation, private details move to their own table under the promotion rules below.
-
-## 8. consents
-
-### Why it exists
-
-Publication rights and withdrawal are important enough to remain structured rather than being hidden in media JSON.
-
-### Draft columns
-
-| Column | Type | Purpose |
-| --- | --- | --- |
-| id | INTEGER | Internal primary key |
-| public_id | TEXT | Stable restricted identifier |
-| grantor_person_id | INTEGER, nullable | Person authorised to grant permission |
-| granted_at | TIMESTAMP | When consent was recorded |
-| allowed_publication | BOOLEAN | May appear publicly |
-| allowed_download | BOOLEAN | May enter downloadable media packs |
-| restrictions | TEXT, nullable | Human-readable restrictions |
-| evidence_object_key | TEXT, nullable | Private object-storage evidence |
-| withdrawn_at | TIMESTAMP, nullable | Withdrawal time |
-| private_note | TEXT, nullable | Moderator-only context |
-
-One consent row may initially be referenced by several media rows. Each media row points to at most one current consent. Add a many-to-many relationship only when a real case requires multiple grants for one item.
-
-## 9. media
-
-### Why it exists
-
-Describes an audio or image object stored outside SQLite. It combines the earlier media-asset, recording, image-attachment, and rendition tables.
+Describes an audio or image object stored outside SQLite. It combines the earlier media-asset, recording, and image-attachment tables.
 
 ### Draft columns
 
@@ -379,11 +320,8 @@ Describes an audio or image object stored outside SQLite. It combines the earlie
 | kind | TEXT | audio or image |
 | entry_id | INTEGER, nullable | Word/meaning this media describes |
 | concept_id | INTEGER, nullable | Concept this image illustrates |
-| speaker_person_id | INTEGER, nullable | Speaker for audio |
-| consent_id | INTEGER, nullable | Current applicable consent |
 | original_object_key | TEXT | Preserved original in object storage |
-| public_object_key | TEXT, nullable | Public playback/display rendition |
-| renditions | JSON | Additional derived sizes or formats |
+| public_object_key | TEXT, nullable | Public playback/display object |
 | mime_type | TEXT | Validated original type |
 | byte_size | INTEGER | Original size |
 | sha256 | TEXT | Integrity and duplicate detection |
@@ -400,11 +338,14 @@ Describes an audio or image object stored outside SQLite. It combines the earlie
 Initial rules:
 
 - Unique object keys.
-- Index entry_id, concept_id, speaker_person_id, sha256, processing_state, and visibility.
-- Public media requires a public target, a ready rendition, and valid publication consent.
+- Index entry_id, concept_id, sha256, processing_state, and visibility.
+- Public media requires a public target and a ready public object.
 - Quarantined media may temporarily have no entry or concept.
 
-## 10. submissions
+An entry may have any number of media rows, so one word can have several
+pronunciation recordings.
+
+## 8. submissions
 
 ### Why it exists
 
@@ -417,7 +358,6 @@ Keeps unreviewed material outside canonical public tables.
 | id | INTEGER | Internal primary key |
 | public_id | TEXT | Safe receipt identifier |
 | client_submission_id | TEXT | Offline idempotency key |
-| contributor_person_id | INTEGER, nullable | Contributor when retained |
 | kind | TEXT | New entry, correction, example, audio, image, or addition |
 | target_type | TEXT, nullable | Existing record type |
 | target_public_id | TEXT, nullable | Existing record being changed |
@@ -438,7 +378,7 @@ Initial rules:
 
 Approval changes canonical tables and creates revisions in one SQLite transaction. Object-storage work completes through an idempotent background job.
 
-## 11. moderator_accounts
+## 9. moderator_accounts
 
 ### Why it exists
 
@@ -457,7 +397,7 @@ Provides authentication for editors. Contributors do not need accounts initially
 
 Phoenix authentication will add its conventional token/session table.
 
-## 12. revisions
+## 10. revisions
 
 ### Why it exists
 
@@ -485,7 +425,7 @@ Initial rules:
 - Index (target_type, target_public_id, inserted_at).
 - Index submission_id.
 - Append-only in ordinary operation.
-- Never include passwords, private contacts, consent evidence, or temporary signed URLs in snapshots.
+- Never include passwords, quarantined object keys, or temporary signed URLs in snapshots.
 
 ## Search
 
@@ -537,9 +477,7 @@ Public pages, APIs, and exports may contain reviewed entries, examples, confirme
 
 They must not contain:
 
-- Private person fields.
 - Submission payloads or review messages.
-- Consent evidence or private restrictions.
 - Moderator credentials or sessions.
 - Quarantined object keys.
 - Temporary signed URLs.
@@ -548,8 +486,7 @@ They must not contain:
 ## Deletion and withdrawal
 
 - Published entries, concepts, examples, and media are archived rather than casually deleted.
-- Consent withdrawal immediately removes affected media from public queries; cached clients reconcile on their next successful refresh.
-- Anonymizing a person does not delete the linguistic material they contributed.
+- Media withdrawal immediately removes affected media from public queries; cached clients reconcile on their next successful refresh.
 - Object deletion occurs asynchronously after the retention policy allows it.
 - Submissions and quarantined uploads follow a separate retention policy that remains open.
 - Revisions remain append-only except when law or safety requires removal of private information.
@@ -561,7 +498,7 @@ The following happen inside one SQLite transaction:
 - Approve a submission, apply canonical changes, update submission status, and write revisions.
 - Create or edit entry forms and refresh the entry's FTS row.
 - Change an example and replace all confirmed links.
-- Archive media after consent withdrawal and create its revision.
+- Withdraw or archive media and create its revision.
 
 Object-storage operations are recorded as intended state and completed by retryable background jobs.
 
@@ -576,7 +513,7 @@ Object-storage operations are recorded as intended state and completed by retrya
 - entry_forms(entry_id), unique where is_primary is true.
 - examples(language_id).
 - example_links(example_id) and example_links(entry_id).
-- media(entry_id), media(concept_id), and media(speaker_person_id).
+- media(entry_id) and media(concept_id).
 - media(sha256), media(processing_state), and media(visibility).
 - submissions(status, received_at).
 - revisions(target_type, target_public_id, inserted_at).
@@ -591,8 +528,8 @@ Before migrations are considered settled, this model must represent:
 2. One spelling with two meanings represented as two entries.
 3. Alternate spelling and transliteration search.
 4. One example with several clickable words and an ambiguous match.
-5. One contributor uploading a different person's voice.
-6. One consent withdrawal.
+5. Several pronunciation recordings attached to one entry.
+6. One media withdrawal.
 7. One correction with before-and-after history.
 8. One spreadsheet import recorded in revision source metadata.
 9. One export and restore with stable public IDs.
@@ -604,13 +541,12 @@ V0 deliberately keeps several values inline or in validated JSON. Promote one on
 
 | Deferred structure | Current v0 representation | Promote when |
 | --- | --- | --- |
+| people and consents | Flat reviewed attribution text on media; anonymous submissions | Repeated contributors or speakers need stable identity, or a supported workflow needs structured grants and withdrawal records |
 | language_varieties, places | Reviewed labels on entries/media | Repeated labels need filters, stable identity, hierarchy, or location privacy |
 | lexemes and senses | One entry per language-specific meaning | Several meanings need a shared lexical identity or duplicate media/attribution becomes painful |
 | definitions | Validated JSON on entries | Definitions need independent review, attribution, ordering, history, or filters |
 | example_translations | Validated JSON on examples | Individual translations gain attribution, moderation, audio, or independent queries |
-| media_assets and renditions | One media row with rendition metadata | One original is reused, renditions need lifecycle tracking, or media types diverge materially |
-| media_consents | One current consent per media row | One object requires several grants or grants cover different uses |
-| person_private_details | Private allowlisted columns on people | Separate encryption, retention, or database access rules are required |
+| media_assets | One media row with original and public object keys | One original is reused or several public formats need independent lifecycle tracking |
 | submission_events | Current fields plus small review-history JSON | Reviews become collaborative, cyclical, reportable, or concurrently edited |
 | sources, provenance_records, import_batches | Structured metadata on revisions | Sources are reused, need public citations, or repeated imports need batch control |
 | collections and concept_relationships | Editorial queries and shared concepts | Curators need persistent ordered sets or tested broader/narrower/related navigation |

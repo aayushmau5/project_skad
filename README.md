@@ -1,6 +1,6 @@
 # Project Skad
 
-Project Skad is a living multilingual archive for the languages of Kinnaur. It is intended to preserve more than word-to-word translations: spellings, meanings, pronunciation, examples, cultural context, contributors, consent, and editorial history all belong to the record.
+Project Skad is a living multilingual archive for the languages of Kinnaur. It is intended to preserve more than word-to-word translations: spellings, meanings, pronunciation, examples, cultural context, and editorial history all belong to the record.
 
 ## V0 goal
 
@@ -46,4 +46,4 @@ They are useful references, but they do not define the product or architecture.
 
 ## Why build the core rather than extend DictPress?
 
-DictPress helped establish the desired single-binary deployment ergonomics, but Project Skad needs first-class multilingual concepts, reusable linked examples, contribution review, consent, media, and revision history. Keeping those concerns in one small Skad application is simpler than splitting the product between DictPress and companion services.
+DictPress helped establish the desired single-binary deployment ergonomics, but Project Skad needs first-class multilingual concepts, reusable linked examples, contribution review, media, and revision history. Keeping those concerns in one small Skad application is simpler than splitting the product between DictPress and companion services.

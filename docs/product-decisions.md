@@ -1,6 +1,6 @@
 # Project Skad product decisions
 
-- **Last consolidated:** 2026-09-28
+- **Last consolidated:** 2026-10-01
 - **Architecture:** [architecture.md](architecture.md)
 - **Data model:** [data-model.md](data-model.md)
 
@@ -12,7 +12,7 @@ Statuses are **Accepted**, **Proposed**, or **Superseded**. New evidence should 
 
 - **Status:** Accepted
 
-Project Skad is a multilingual archive of Kinnaur's languages, not only a translation dictionary. It preserves forms, sound, meaning, examples, cultural context, source, consent, and review history.
+Project Skad is a multilingual archive of Kinnaur's languages, not only a translation dictionary. It preserves forms, sound, meaning, examples, cultural context, source, and review history.
 
 The v0 product loop is:
 
@@ -59,7 +59,7 @@ Move to Postgres only when several application nodes must write, measured write 
 
 SQLite stores stable object keys and metadata, not audio or image bytes. Private/quarantine and public media are separate. Browsers upload directly with short-lived signed instructions; large files use resumable multipart upload.
 
-Preserve originals, validate actual type and checksum, create only required renditions, and publish only after moderation and consent checks. V0 processes at most one media job at a time.
+Preserve originals, validate actual type and checksum, create one public playback or display object when required, and publish only after moderation. V0 processes at most one media job at a time.
 
 ## PD-010 — Never lose an in-progress contribution
 
@@ -120,11 +120,11 @@ An example is stored once and may contain several confirmed text spans linked to
 
 On submission, deterministic matching normalizes the sentence, tries longer phrases first, and looks up indexed forms in the same language. Unambiguous matches become suggestions; ambiguous meanings require contributor or moderator choice. Reviewed links never change silently.
 
-## PD-016 — Use the compact twelve-table relational model
+## PD-016 — Use the compact ten-table relational model
 
-- **Status:** Accepted
+- **Status:** Accepted; revised 2026-10-01
 
-The v0 domain tables are languages, concepts, entries, entry_forms, examples, example_links, people, consents, media, submissions, moderator_accounts, and revisions.
+The v0 domain tables are languages, concepts, entries, entry_forms, examples, example_links, media, submissions, moderator_accounts, and revisions. People and structured consent records are deferred until a supported workflow needs stable participant identity or structured permission history.
 
 Unreviewed submissions remain outside canonical public data. Approval changes canonical rows and creates append-only revision history in one transaction. Privacy boundaries, constraints, indexes, and deferred promotion triggers are in [data-model.md](data-model.md).
 
@@ -174,7 +174,7 @@ V1 may add versioned, checksummed language packs in IndexedDB with atomic replac
 - Object-storage and VPS providers, regions, and data residency.
 - Launch interface languages.
 - Search-normalization and transliteration conventions per language.
-- Recording consent, contributor privacy, retention, and takedown policy.
+- Media permission, retention, and takedown policy.
 - Moderator ownership and the meaning of a verified entry.
 - Integration with the existing Zed Tells site.
 - Public licenses for text, recordings, images, and exports.
@@ -188,7 +188,7 @@ Before implementation choices are considered proven:
 2. Search every supported language and common spelling variants over a throttled connection.
 3. Retain a contribution across restart and disconnection, then submit it after reconnection.
 4. Interrupt and resume a direct recording upload.
-5. Moderate and publish the contribution with provenance, consent, revision, media processing, and transactional job insertion intact.
+5. Moderate and publish the contribution with provenance, revision, media processing, and transactional job insertion intact.
 6. Submit an example, resolve an ambiguous automatic link, and publish confirmed definitions.
 7. Meet PD-018 query-plan and latency targets on a 1-vCPU, 1 GB machine; observe the same workload on 512 MB.
 8. Build x86-64 and ARM64 packages.
