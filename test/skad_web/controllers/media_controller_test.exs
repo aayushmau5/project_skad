@@ -27,10 +27,20 @@ defmodule SkadWeb.MediaControllerTest do
       |> Plug.Conn.send_resp(200, "")
     end)
 
+    Req.Test.expect(Storage, fn conn ->
+      assert conn.method == "PUT"
+      assert conn.request_path =~ "/skad-test/public/audio/"
+      Plug.Conn.send_resp(conn, 200, "")
+    end)
+
     conn = post(recycle(conn), ~p"/media/uploads/complete", instructions["completion"])
     completed = json_response(conn, 200)
     assert completed["kind"] == "audio"
     assert {:ok, _public_id} = Ecto.UUID.cast(completed["public_id"])
+
+    item = Media.get_item(completed["public_id"])
+    assert item.processing_state == :ready
+    assert item.public_object_key =~ "public/audio/"
   end
 
   test "redirects only public media to a short-lived object URL", %{conn: conn} do

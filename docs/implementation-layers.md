@@ -22,24 +22,30 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
-### 10f. Media validation and processing
+### Review the completed media slice
 
-Validate completed uploads outside the request cycle and move safe objects from
-quarantine to their public storage key. Images need safe decoding and bounded
-dimensions; audio needs safe decoding and duration metadata. Failures must be
-visible to moderators and retryable without publishing an unverified object.
+Completed uploads have their stored size and declared content type checked,
+then receive a server-side copy under a public object key and are marked ready
+synchronously. They remain quarantined and inaccessible through public routes
+until moderator approval atomically attaches them to an entry or concept and
+changes their visibility.
 
-The preceding media slices are complete. Contributors can upload or record one
-pronunciation and upload up to five cultural images with a new-entry
-submission. Moderators can preview, replace, or remove submission media and can
-upload or remove concept images. Approval publishes ready audio with the entry
-and ready images with its concept atomically, and public entry pages render the
-published media through short-lived signed reads.
+Contributors can upload or record one pronunciation and upload up to five
+cultural images with a new-entry submission. Moderators can preview, replace,
+or remove submission media and can upload or remove concept images. Public
+entry pages render approved media through short-lived signed reads.
 
-New uploads deliberately remain quarantined and cannot be approved until this
-processing layer marks them ready. Renditions, cleanup of abandoned uploads,
-corrections, additions, standalone media submissions, and browser-resumable
-uploads remain outside this layer.
+### Deferred media hardening
+
+Before anonymous uploads are exposed publicly at meaningful volume, reconsider
+server-side checksum verification, actual-type detection, full image/audio
+decoding, dimension and duration limits, normalized public renditions, and an
+Oban media queue with durable retries and visible failure reasons. Add that
+machinery when malformed uploads, processing latency, or production reliability
+requires it; it is intentionally not part of the current synchronous path.
+
+Cleanup of abandoned uploads, corrections, additions, standalone media
+submissions, and browser-resumable uploads also remain outside this layer.
 
 The moderator concept correction is also complete: moderators can create and
 edit a concept with a private editorial note, search concepts by their metadata

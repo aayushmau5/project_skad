@@ -63,7 +63,11 @@ SQLite stores stable object keys and metadata, not audio or image bytes.
 Private/quarantine and public media are separate. Browsers upload directly with
 short-lived signed instructions; large files use resumable multipart upload.
 
-Preserve originals, validate actual type and checksum, create one public playback or display object when required, and publish only after moderation. V0 processes at most one media job at a time.
+Preserve originals, check stored size and declared content type, create the
+public object with a synchronous server-side copy, and make it reachable only
+after moderation. Actual-type and checksum verification, full decoding,
+renditions, and durable background retries are deferred until public anonymous
+upload volume or observed failures justify them.
 
 ## PD-010 — Never lose an in-progress contribution
 

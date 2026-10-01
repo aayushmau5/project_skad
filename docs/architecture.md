@@ -92,13 +92,17 @@ The web request performs work the user needs confirmed immediately:
 
 Oban performs work that may finish later, must retry, or must survive a restart:
 
-### Media queue
+### Future media queue
 
 - Verify an uploaded object, checksum, actual type, size, and duration or dimensions.
 - Create the public playback or display object when one is required.
 - Publish approved media from the private area to the public area.
 - Remove public objects after media withdrawal.
 - Clean abandoned multipart uploads and expired quarantine objects.
+
+This queue is deferred while media volume is low. The current path checks
+stored size and declared content type, performs a synchronous server-side copy,
+and relies on moderator preview before publication.
 
 ### Maintenance queue
 
@@ -114,9 +118,15 @@ Search, ordinary page rendering, saving a draft, and the canonical approval tran
 2. Phoenix validates metadata and returns server-chosen object keys plus short-lived signed upload instructions.
 3. Small objects use one direct signed upload. Large objects use the object store's native multipart upload so completed chunks survive a connection interruption.
 4. The browser reports completion to Phoenix; retries are idempotent.
-5. Phoenix records the completed upload and enqueues validation transactionally.
-6. The media job validates the private object and records `ready` or `failed`.
+5. Phoenix verifies stored size and declared content type, copies the object
+   server-side to its public key, and records it as quarantined and `ready`.
+6. Moderator approval attaches ready media to an entry or concept and makes it
+   publicly reachable.
 7. The local browser draft is removed only after server acknowledgement.
+
+Server-side checksum verification, actual-type detection, full decoding,
+duration and dimension limits, renditions, and durable media retries are future
+hardening for meaningful public anonymous-upload volume.
 
 The application server does not proxy media bytes. A failed connection leaves a visible resumable draft rather than an apparently successful submission.
 

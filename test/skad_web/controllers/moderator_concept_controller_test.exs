@@ -112,6 +112,12 @@ defmodule SkadWeb.ModeratorConceptControllerTest do
       |> Plug.Conn.send_resp(200, "")
     end)
 
+    Req.Test.expect(Storage, fn conn ->
+      assert conn.method == "PUT"
+      assert conn.request_path =~ "/skad-test/public/images/"
+      Plug.Conn.send_resp(conn, 200, "")
+    end)
+
     conn =
       conn
       |> recycle()
@@ -123,6 +129,7 @@ defmodule SkadWeb.ModeratorConceptControllerTest do
     %{"public_id" => media_public_id} = json_response(conn, 200)
     item = Repo.get_by!(Item, public_id: media_public_id)
     assert item.concept_id == concept.id
+    assert item.processing_state == :ready
 
     document =
       conn

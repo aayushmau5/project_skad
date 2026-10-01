@@ -381,7 +381,10 @@ Initial rules:
 - Index (status, received_at).
 - Submission payloads and review history are private.
 
-Approval changes canonical tables and creates revisions in one SQLite transaction. Object-storage work completes through an idempotent background job.
+Approval changes canonical tables and creates revisions in one SQLite
+transaction. The current upload-completion path prepares the public object with
+an idempotent server-side copy before approval; background processing remains a
+future hardening option.
 
 ## 9. moderator_accounts
 
@@ -505,7 +508,9 @@ The following happen inside one SQLite transaction:
 - Change an example and replace all confirmed links.
 - Withdraw or archive media and create its revision.
 
-Object-storage operations are recorded as intended state and completed by retryable background jobs.
+Long-running object-storage operations may later be recorded as intended state
+and completed by retryable background jobs. The current bounded upload path
+performs its server-side copy synchronously before canonical publication.
 
 ## Indexes to create initially
 

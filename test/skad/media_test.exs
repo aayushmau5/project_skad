@@ -110,19 +110,16 @@ defmodule Skad.MediaTest do
     attrs = valid_image_upload_attrs()
     assert {:ok, instructions} = Media.prepare_image_upload(concept, attrs)
 
-    Req.Test.expect(Storage, fn conn ->
-      assert conn.method == "HEAD"
-      assert String.starts_with?(conn.request_path, "/skad-test/private/images/")
-
-      conn
-      |> Plug.Conn.put_resp_header("content-length", Integer.to_string(attrs.byte_size))
-      |> Plug.Conn.put_resp_header("content-type", attrs.mime_type)
-      |> Plug.Conn.send_resp(200, "")
-    end)
+    expect_ready_copy(instructions.completion, attrs)
 
     assert {:ok, item} = Media.complete_image_upload(concept, instructions.completion)
     assert item.concept_id == concept.id
     assert item.original_object_key == instructions.completion.original_object_key
+
+    assert item.public_object_key ==
+             String.replace_prefix(item.original_object_key, "private/", "public/")
+
+    assert item.processing_state == :ready
     assert item.visibility == :quarantine
 
     assert {:ok, repeated_item} =
@@ -170,6 +167,15 @@ defmodule Skad.MediaTest do
     assert Repo.aggregate(Item, :count) == 0
   end
 
+  test "does not record an upload when the public copy fails" do
+    attrs = valid_image_upload_attrs()
+    assert {:ok, instructions} = Media.prepare_upload(Map.put(attrs, :kind, :image))
+    expect_ready_copy(instructions.completion, attrs, 503)
+
+    assert {:error, :storage_unavailable} = Media.complete_upload(instructions.completion)
+    assert Repo.aggregate(Item, :count) == 0
+  end
+
   test "rejects upload completion metadata that did not come from preparation" do
     assert {:ok, instructions} =
              Media.prepare_audio_upload(%{
@@ -202,12 +208,7 @@ defmodule Skad.MediaTest do
     assert instructions.completion.kind == :audio
     assert instructions.completion.mime_type == "audio/webm"
 
-    Req.Test.expect(Storage, fn conn ->
-      conn
-      |> Plug.Conn.put_resp_header("content-length", "8192")
-      |> Plug.Conn.put_resp_header("content-type", "audio/webm")
-      |> Plug.Conn.send_resp(200, "")
-    end)
+    expect_ready_copy(instructions.completion, %{byte_size: 8_192, mime_type: "audio/webm"})
 
     browser_completion =
       Map.new(instructions.completion, fn {key, value} -> {Atom.to_string(key), value} end)
@@ -217,6 +218,8 @@ defmodule Skad.MediaTest do
     assert item.entry_id == nil
     assert item.concept_id == nil
     assert item.submission_id == nil
+    assert item.processing_state == :ready
+    assert item.public_object_key =~ "/audio/"
 
     assert {:error, changeset} =
              Media.prepare_audio_upload(%{attrs | byte_size: 25 * 1024 * 1024 + 1})
@@ -291,6 +294,31 @@ defmodule Skad.MediaTest do
       sha256: String.duplicate("a", 64),
       attribution_text: "Community archive"
     }
+  end
+
+  defp expect_ready_copy(completion, attrs, copy_status \\ 200) do
+    Req.Test.expect(Storage, fn conn ->
+      assert conn.method == "HEAD"
+      assert conn.request_path == "/skad-test/#{completion.original_object_key}"
+
+      conn
+      |> Plug.Conn.put_resp_header("content-length", Integer.to_string(attrs.byte_size))
+      |> Plug.Conn.put_resp_header("content-type", attrs.mime_type)
+      |> Plug.Conn.send_resp(200, "")
+    end)
+
+    Req.Test.expect(Storage, fn conn ->
+      destination = String.replace_prefix(completion.original_object_key, "private/", "public/")
+
+      assert conn.method == "PUT"
+      assert conn.request_path == "/skad-test/#{destination}"
+
+      assert Plug.Conn.get_req_header(conn, "x-amz-copy-source") == [
+               "/skad-test/#{completion.original_object_key}"
+             ]
+
+      Plug.Conn.send_resp(conn, copy_status, "")
+    end)
   end
 
   defp insert_concept do

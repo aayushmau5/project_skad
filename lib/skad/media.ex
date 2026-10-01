@@ -166,18 +166,24 @@ defmodule Skad.Media do
   def complete_image_upload(_concept, _completion), do: {:error, :invalid_upload}
 
   defp complete_validated_upload(owner, completion) do
+    public_object_key =
+      String.replace_prefix(completion.original_object_key, "private/", "public/")
+
     with {:ok, owner} <- available_owner(owner),
          nil <- Repo.get_by(Item, original_object_key: completion.original_object_key),
          {:ok, object} <- Storage.head_object(completion.original_object_key),
-         :ok <- object_matches(object, completion) do
+         :ok <- object_matches(object, completion),
+         :ok <- Storage.copy_object(completion.original_object_key, public_object_key) do
       owner
       |> item_for_owner()
       |> change_item(%{
         kind: completion.kind,
         original_object_key: completion.original_object_key,
+        public_object_key: public_object_key,
         mime_type: completion.mime_type,
         byte_size: completion.byte_size,
         sha256: completion.sha256,
+        processing_state: :ready,
         variety_label: completion.variety_label,
         place_label: completion.place_label,
         attribution_text: completion.attribution_text

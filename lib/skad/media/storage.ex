@@ -45,14 +45,26 @@ defmodule Skad.Media.Storage do
   def head_object(object_key) do
     config = config()
 
-    options =
-      Keyword.merge(
-        [aws_sigv4: credentials(config), retry: false],
-        Keyword.get(config, :req_options, [])
-      )
-
-    case Req.head(object_url(config, object_key), options) do
+    case Req.head(object_url(config, object_key), request_options(config)) do
       {:ok, %Req.Response{status: 200} = response} -> object_metadata(response)
+      {:ok, %Req.Response{status: 404}} -> {:error, :object_not_found}
+      {:ok, %Req.Response{}} -> {:error, :storage_unavailable}
+      {:error, _exception} -> {:error, :storage_unavailable}
+    end
+  end
+
+  def copy_object(source_key, destination_key) do
+    config = config()
+
+    options =
+      config
+      |> request_options()
+      |> Keyword.put(:headers, [
+        {"x-amz-copy-source", "/#{Keyword.fetch!(config, :bucket)}/#{source_key}"}
+      ])
+
+    case Req.put(object_url(config, destination_key), options) do
+      {:ok, %Req.Response{status: 200}} -> :ok
       {:ok, %Req.Response{status: 404}} -> {:error, :object_not_found}
       {:ok, %Req.Response{}} -> {:error, :storage_unavailable}
       {:error, _exception} -> {:error, :storage_unavailable}
@@ -92,6 +104,13 @@ defmodule Skad.Media.Storage do
       region: Keyword.fetch!(config, :region),
       service: :s3
     ]
+  end
+
+  defp request_options(config) do
+    Keyword.merge(
+      [aws_sigv4: credentials(config), retry: false],
+      Keyword.get(config, :req_options, [])
+    )
   end
 
   defp config, do: Application.fetch_env!(:skad, :object_storage)
