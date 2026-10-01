@@ -2,6 +2,7 @@ defmodule SkadWeb.PageControllerTest do
   use SkadWeb.ConnCase
 
   alias Skad.Archive
+  alias Skad.Media
 
   test "searches the archive and opens an entry from the real database", %{conn: conn} do
     {:ok, english} = create_language("english", "en", "English")
@@ -42,6 +43,11 @@ defmodule SkadWeb.PageControllerTest do
         ]
       })
 
+    {:ok, audio} = Media.create_item(water, media_attrs(:audio))
+    {:ok, image} = Media.create_item(water.concept, media_attrs(:image))
+    publish_media(audio)
+    publish_media(image)
+
     conn = get(conn, ~p"/?q=clear+liquid&language=english")
     document = conn |> html_response(200) |> LazyHTML.from_document()
     result = LazyHTML.query_by_id(document, "search-result-#{water.public_id}")
@@ -76,6 +82,16 @@ defmodule SkadWeb.PageControllerTest do
              ),
              "href"
            ) == [~p"/entries/#{water.public_id}"]
+
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(document, "entry-audio-#{audio.public_id}"),
+             "src"
+           ) == [~p"/media/#{audio.public_id}"]
+
+    assert LazyHTML.attribute(
+             LazyHTML.query(document, "#entry-image-#{image.public_id} img"),
+             "src"
+           ) == [~p"/media/#{image.public_id}"]
   end
 
   test "returns not found for an unknown public entry", %{conn: conn} do
@@ -85,5 +101,33 @@ defmodule SkadWeb.PageControllerTest do
 
   defp create_language(slug, code, name) do
     Archive.create_language(%{slug: slug, code: code, name: name, direction: :ltr})
+  end
+
+  defp media_attrs(:audio) do
+    %{
+      kind: :audio,
+      original_object_key: "private/audio/#{Ecto.UUID.generate()}",
+      mime_type: "audio/webm",
+      byte_size: 8_192,
+      sha256: String.duplicate("a", 64)
+    }
+  end
+
+  defp media_attrs(:image) do
+    %{
+      kind: :image,
+      original_object_key: "private/images/#{Ecto.UUID.generate()}",
+      mime_type: "image/jpeg",
+      byte_size: 16_384,
+      sha256: String.duplicate("b", 64)
+    }
+  end
+
+  defp publish_media(item) do
+    Media.update_item(item, %{
+      processing_state: :ready,
+      visibility: :public,
+      public_object_key: "public/#{item.kind}/#{item.public_id}"
+    })
   end
 end

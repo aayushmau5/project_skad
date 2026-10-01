@@ -25,6 +25,9 @@ defmodule SkadWeb.Router do
     get "/contribute", ContributionController, :new
     post "/contributions", ContributionController, :create
     get "/contributions/:public_id", ContributionController, :show
+    post "/media/uploads", MediaController, :prepare_upload
+    post "/media/uploads/complete", MediaController, :complete_upload
+    get "/media/:public_id", MediaController, :show
   end
 
   scope "/moderator", SkadWeb do
@@ -42,8 +45,32 @@ defmodule SkadWeb.Router do
     post "/concepts", ModeratorConceptController, :create
     get "/concepts/:public_id", ModeratorConceptController, :show
     patch "/concepts/:public_id", ModeratorConceptController, :update
+    post "/concepts/:public_id/media/uploads", ModeratorConceptController, :prepare_media
+
+    post "/concepts/:public_id/media/uploads/complete",
+         ModeratorConceptController,
+         :complete_media
+
+    get "/concepts/:public_id/media/:media_public_id/preview",
+        ModeratorConceptController,
+        :preview_media
+
+    delete "/concepts/:public_id/media/:media_public_id",
+           ModeratorConceptController,
+           :remove_media
+
     get "/submissions", ModeratorSubmissionController, :index
     get "/submissions/:public_id", ModeratorSubmissionController, :show
+    post "/submissions/:public_id/media", ModeratorSubmissionController, :attach_media
+
+    get "/submissions/:public_id/media/:media_public_id/preview",
+        ModeratorSubmissionController,
+        :preview_media
+
+    delete "/submissions/:public_id/media/:media_public_id",
+           ModeratorSubmissionController,
+           :remove_media
+
     patch "/submissions/:public_id/proposal", ModeratorSubmissionController, :update_proposal
     patch "/submissions/:public_id", ModeratorSubmissionController, :update
   end

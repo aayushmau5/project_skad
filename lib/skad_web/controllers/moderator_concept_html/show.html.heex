@@ -17,6 +17,54 @@
       </ul>
     </section>
 
+    <section
+      id="concept-media"
+      class="entry-section media-uploader"
+      data-media-uploader
+      data-prepare-url={~p"/moderator/concepts/#{@concept.public_id}/media/uploads"}
+      data-complete-url={~p"/moderator/concepts/#{@concept.public_id}/media/uploads/complete"}
+      data-reload-after-upload="true"
+    >
+      <h2>Cultural images</h2>
+      <p :if={@media_items == []} id="concept-media-empty">No images attached.</p>
+      <ul id="concept-media-list" class="media-list" data-media-list>
+        <li
+          :for={item <- @media_items}
+          id={"concept-media-#{item.public_id}"}
+          class="media-card"
+          data-media-item
+          data-kind="image"
+        >
+          <img
+            src={~p"/moderator/concepts/#{@concept.public_id}/media/#{item.public_id}/preview"}
+            alt="Concept cultural context"
+            loading="lazy"
+          />
+          <p class="result-meta">{item.processing_state}</p>
+          <.link
+            href={~p"/moderator/concepts/#{@concept.public_id}/media/#{item.public_id}"}
+            method="delete"
+            id={"remove-concept-media-#{item.public_id}"}
+            class="link-button"
+          >
+            Remove
+          </.link>
+        </li>
+      </ul>
+      <.input
+        type="file"
+        name="concept_image_uploads"
+        id="concept-image-uploads"
+        value={nil}
+        label="Add cultural images"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        class="auth-input"
+        data-image-input
+      />
+      <p id="concept-media-status" class="result-meta" role="status" data-upload-status></p>
+    </section>
+
     <section id="edit-concept" class="entry-section auth-panel">
       <h2>Edit concept</h2>
       <.form

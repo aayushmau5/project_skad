@@ -4,6 +4,9 @@ defmodule SkadWeb.ModeratorConceptController do
   alias Skad.Archive
   alias Skad.Archive.Concept
   alias Skad.Contributions
+  alias Skad.Media
+  alias Skad.Media.Item
+  alias Skad.Media.Storage
 
   def index(conn, params) do
     query = get_in(params, ["search", "query"]) || ""
@@ -57,6 +60,63 @@ defmodule SkadWeb.ModeratorConceptController do
     end
   end
 
+  def prepare_media(conn, %{"public_id" => public_id} = params) do
+    with %Concept{} = concept <- Archive.get_concept(public_id),
+         {:ok, instructions} <- Media.prepare_image_upload(concept, params) do
+      json(conn, instructions)
+    else
+      nil ->
+        send_resp(conn, :not_found, "Concept not found")
+
+      {:error, _reason} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: "Invalid image upload."})
+    end
+  end
+
+  def complete_media(conn, %{"public_id" => public_id} = params) do
+    with %Concept{} = concept <- Archive.get_concept(public_id),
+         {:ok, %Item{} = item} <- Media.complete_image_upload(concept, params) do
+      json(conn, %{public_id: item.public_id, kind: item.kind})
+    else
+      nil ->
+        send_resp(conn, :not_found, "Concept not found")
+
+      {:error, _reason} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "The image upload could not be verified."})
+    end
+  end
+
+  def preview_media(conn, %{"public_id" => public_id, "media_public_id" => media_public_id}) do
+    with %Concept{} = concept <- Archive.get_concept(public_id),
+         %Item{concept_id: concept_id} = item <- Media.get_item(media_public_id),
+         true <- concept_id == concept.id,
+         {:ok, preview} <- Storage.presign_get(item.original_object_key) do
+      redirect(conn, external: preview.url)
+    else
+      _missing_or_unavailable -> send_resp(conn, :not_found, "Concept image not found")
+    end
+  end
+
+  def remove_media(conn, %{"public_id" => public_id, "media_public_id" => media_public_id}) do
+    with %Concept{} = concept <- Archive.get_concept(public_id),
+         %Item{} = item <- Media.get_item(media_public_id),
+         {:ok, _item} <- Media.remove_concept_image(concept, item) do
+      conn
+      |> put_flash(:info, "Image removed from the concept.")
+      |> redirect(to: ~p"/moderator/concepts/#{concept.public_id}")
+    else
+      nil ->
+        send_resp(conn, :not_found, "Concept image not found")
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "The concept image could not be removed.")
+        |> redirect(to: ~p"/moderator/concepts/#{public_id}")
+    end
+  end
+
   defp render_index(conn, query, changeset \\ nil) do
     changeset =
       changeset || Contributions.change_concept(conn.assigns.current_scope, %Concept{})
@@ -76,7 +136,8 @@ defmodule SkadWeb.ModeratorConceptController do
     render(conn, :show,
       page_title: concept.editorial_label,
       concept: concept,
-      form: Phoenix.Component.to_form(changeset, as: :concept)
+      form: Phoenix.Component.to_form(changeset, as: :concept),
+      media_items: Media.list_concept_images(concept)
     )
   end
 end

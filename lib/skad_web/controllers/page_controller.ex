@@ -2,6 +2,7 @@ defmodule SkadWeb.PageController do
   use SkadWeb, :controller
 
   alias Skad.Archive
+  alias Skad.Media
 
   def home(conn, params) do
     languages = Archive.list_active_languages()
@@ -41,7 +42,9 @@ defmodule SkadWeb.PageController do
       entry ->
         render(conn, :entry,
           page_title: SkadWeb.PageHTML.primary_form_text(entry),
-          entry: entry
+          entry: entry,
+          audio: Media.get_public_entry_audio(entry),
+          images: Media.list_public_concept_images(entry.concept)
         )
     end
   end

@@ -53,6 +53,9 @@ defmodule SkadWeb.ModeratorSubmissionHTML do
       (is_nil(error) and Enum.any?(suggestions, &(&1.role == :focus)))
   end
 
+  def media_approvable?(media_items),
+    do: Enum.all?(media_items, &(&1.processing_state == :ready))
+
   def format_time(nil), do: nil
   def format_time(value), do: Calendar.strftime(value, "%Y-%m-%d %H:%M UTC")
 end

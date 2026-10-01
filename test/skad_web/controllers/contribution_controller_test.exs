@@ -3,6 +3,7 @@ defmodule SkadWeb.ContributionControllerTest do
 
   alias Skad.Archive
   alias Skad.Contributions.Submission
+  alias Skad.Media
   alias Skad.Repo
 
   test "renders a new-entry form with a stable client submission id", %{conn: conn} do
@@ -14,6 +15,9 @@ defmodule SkadWeb.ContributionControllerTest do
     assert Enum.count(form) == 1
     assert Enum.count(LazyHTML.query(form, "option[value=english]")) == 1
     assert Enum.count(LazyHTML.query(form, "#contribution_example")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "contribution-media")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "contribution-audio-upload")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "contribution-image-uploads")) == 1
 
     [client_submission_id] =
       form
@@ -93,6 +97,26 @@ defmodule SkadWeb.ContributionControllerTest do
     assert Repo.aggregate(Submission, :count) == 0
   end
 
+  test "claims uploaded media when the contribution form is submitted", %{conn: conn} do
+    create_language()
+    {:ok, media} = Media.create_item(image_attrs())
+
+    conn =
+      post(conn, ~p"/contributions", %{
+        "contribution" => %{
+          "client_submission_id" => Ecto.UUID.generate(),
+          "language_slug" => "english",
+          "primary_form" => "Water",
+          "definition" => "A clear liquid.",
+          "media_public_ids" => [media.public_id]
+        }
+      })
+
+    assert String.starts_with?(redirected_to(conn), "/contributions/")
+    submission = Repo.one!(Submission)
+    assert Repo.get!(Skad.Media.Item, media.id).submission_id == submission.id
+  end
+
   test "returns not found for an unknown receipt", %{conn: conn} do
     conn = get(conn, ~p"/contributions/#{Ecto.UUID.generate()}")
     assert response(conn, 404) == "Contribution receipt not found"
@@ -105,5 +129,15 @@ defmodule SkadWeb.ContributionControllerTest do
       name: "English",
       direction: :ltr
     })
+  end
+
+  defp image_attrs do
+    %{
+      kind: :image,
+      original_object_key: "private/images/#{Ecto.UUID.generate()}",
+      mime_type: "image/jpeg",
+      byte_size: 2_048,
+      sha256: String.duplicate("b", 64)
+    }
   end
 end

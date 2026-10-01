@@ -3,6 +3,8 @@ defmodule SkadWeb.ModeratorSubmissionController do
 
   alias Skad.Archive
   alias Skad.Contributions
+  alias Skad.Media
+  alias Skad.Media.Item
 
   def index(conn, _params) do
     render(conn, :index,
@@ -58,6 +60,59 @@ defmodule SkadWeb.ModeratorSubmissionController do
             |> put_flash(:error, error_message(reason))
             |> render_show(submission)
         end
+    end
+  end
+
+  def attach_media(
+        conn,
+        %{"public_id" => public_id, "media_public_id" => media_public_id} = params
+      ) do
+    with %{} = submission <-
+           Contributions.get_submission_for_review(conn.assigns.current_scope, public_id),
+         %Item{} = item <- Media.get_item(media_public_id),
+         {:ok, _item} <- attach_media_item(conn, submission, item, params["action"]) do
+      json(conn, %{ok: true})
+    else
+      nil ->
+        send_resp(conn, :not_found, "Submission or media not found")
+
+      {:error, reason} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: error_message(reason)})
+    end
+  end
+
+  def preview_media(conn, %{"public_id" => public_id, "media_public_id" => media_public_id}) do
+    with %{} = submission <-
+           Contributions.get_submission_for_review(conn.assigns.current_scope, public_id),
+         %Item{} = item <- Media.get_item(media_public_id),
+         {:ok, preview} <-
+           Contributions.preview_submission_media(conn.assigns.current_scope, submission, item) do
+      redirect(conn, external: preview.url)
+    else
+      nil -> send_resp(conn, :not_found, "Submission or media not found")
+      {:error, _reason} -> send_resp(conn, :not_found, "Submission media not found")
+    end
+  end
+
+  def remove_media(conn, %{"public_id" => public_id, "media_public_id" => media_public_id}) do
+    with %{} = submission <-
+           Contributions.get_submission_for_review(conn.assigns.current_scope, public_id),
+         %Item{} = item <- Media.get_item(media_public_id),
+         {:ok, _item} <-
+           Contributions.remove_submission_media(conn.assigns.current_scope, submission, item) do
+      conn
+      |> put_flash(:info, "Media removed from the submission.")
+      |> redirect(to: ~p"/moderator/submissions/#{submission.public_id}")
+    else
+      nil ->
+        send_resp(conn, :not_found, "Submission or media not found")
+
+      {:error, reason} ->
+        conn
+        |> put_flash(:error, error_message(reason))
+        |> redirect(to: ~p"/moderator/submissions/#{public_id}")
     end
   end
 
@@ -157,9 +212,20 @@ defmodule SkadWeb.ModeratorSubmissionController do
       languages: Archive.list_active_languages(),
       example_suggestions: example_suggestions,
       example_choices: example_choices,
-      example_match_error: example_match_error
+      example_match_error: example_match_error,
+      media_items: Contributions.list_submission_media(conn.assigns.current_scope, submission)
     )
   end
+
+  defp attach_media_item(conn, submission, item, "replace") do
+    Contributions.replace_submission_audio(conn.assigns.current_scope, submission, item)
+  end
+
+  defp attach_media_item(conn, submission, item, "attach") do
+    Contributions.attach_submission_media(conn.assigns.current_scope, submission, item)
+  end
+
+  defp attach_media_item(_conn, _submission, _item, _action), do: {:error, :invalid_media}
 
   defp concept_query(%{"concept_search" => %{"query" => query}}) when is_binary(query),
     do: query
@@ -213,5 +279,13 @@ defmodule SkadWeb.ModeratorSubmissionController do
   defp error_message(:invalid_example_links), do: "Choose valid entries for the example links."
   defp error_message(:example_too_long), do: "Keep the example to 100 words or fewer."
   defp error_message(:invalid_decision), do: "Choose a valid moderation decision."
+  defp error_message(:audio_already_attached), do: "Replace the existing audio instead."
+  defp error_message(:image_limit_reached), do: "A submission can have at most five images."
+  defp error_message(:invalid_media_kind), do: "Choose media of the expected type."
+  defp error_message(:invalid_media), do: "The uploaded media could not be attached."
+
+  defp error_message(%Ecto.Changeset{}),
+    do: "Attached media must finish processing before approval."
+
   defp error_message(_reason), do: "The moderation decision could not be saved."
 end

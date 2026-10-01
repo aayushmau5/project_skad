@@ -78,6 +78,20 @@ defmodule Skad.Media do
 
   def get_public_entry_audio(_entry), do: nil
 
+  def get_public_item(public_id) do
+    with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
+      Item
+      |> where(
+        [item],
+        item.public_id == ^public_id and item.visibility == :public and
+          is_nil(item.archived_at)
+      )
+      |> Repo.one()
+    else
+      :error -> nil
+    end
+  end
+
   def list_public_concept_images(%Concept{id: id}) when is_integer(id) do
     Item
     |> where(
@@ -243,6 +257,23 @@ defmodule Skad.Media do
   end
 
   def remove_submission_item(_submission, _item), do: {:error, :invalid_attributes}
+
+  def remove_concept_image(%Concept{} = concept, %Item{id: id}) when is_integer(id) do
+    with {:ok, concept} <- available_target(concept),
+         %Item{} = item <- active_concept_image(concept.id, id) do
+      item
+      |> Changeset.change(
+        visibility: :pending_deletion,
+        archived_at: DateTime.utc_now(:second)
+      )
+      |> Repo.update()
+    else
+      nil -> {:error, :item_not_found}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def remove_concept_image(_concept, _item), do: {:error, :invalid_attributes}
 
   def preview_submission_item(%Submission{} = submission, %Item{id: id})
       when is_integer(id) do
@@ -424,6 +455,16 @@ defmodule Skad.Media do
     |> where(
       [item],
       item.id == ^item_id and item.submission_id == ^submission_id and
+        is_nil(item.archived_at) and item.visibility not in [:withdrawn, :pending_deletion]
+    )
+    |> Repo.one()
+  end
+
+  defp active_concept_image(concept_id, item_id) do
+    Item
+    |> where(
+      [item],
+      item.id == ^item_id and item.concept_id == ^concept_id and item.kind == :image and
         is_nil(item.archived_at) and item.visibility not in [:withdrawn, :pending_deletion]
     )
     |> Repo.one()

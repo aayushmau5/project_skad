@@ -4,9 +4,13 @@ defmodule SkadWeb.ModeratorConceptControllerTest do
   alias Skad.Accounts
   alias Skad.Archive.Concept
   alias Skad.Contributions.Revision
+  alias Skad.Media.Item
+  alias Skad.Media.Storage
   alias Skad.Repo
 
   @password "correct horse battery staple"
+
+  setup {Req.Test, :verify_on_exit!}
 
   test "requires moderator authentication", %{conn: conn} do
     conn = get(conn, ~p"/moderator/concepts")
@@ -80,6 +84,71 @@ defmodule SkadWeb.ModeratorConceptControllerTest do
     assert Enum.count(LazyHTML.query_by_id(document, "new-concept-form")) == 1
     assert Repo.aggregate(Concept, :count) == 0
     assert Repo.aggregate(Revision, :count) == 0
+  end
+
+  test "uploads, previews, and removes a concept image", %{conn: conn} do
+    concept =
+      %Concept{}
+      |> Concept.changeset(%{editorial_label: "WATER"})
+      |> Repo.insert!()
+
+    conn = log_in(conn)
+    detail_path = ~p"/moderator/concepts/#{concept.public_id}"
+
+    conn =
+      post(conn, ~p"/moderator/concepts/#{concept.public_id}/media/uploads", %{
+        "kind" => "image",
+        "mime_type" => "image/jpeg",
+        "byte_size" => 2_048,
+        "sha256" => String.duplicate("a", 64)
+      })
+
+    instructions = json_response(conn, 200)
+
+    Req.Test.expect(Storage, fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-length", "2048")
+      |> Plug.Conn.put_resp_header("content-type", "image/jpeg")
+      |> Plug.Conn.send_resp(200, "")
+    end)
+
+    conn =
+      conn
+      |> recycle()
+      |> post(
+        ~p"/moderator/concepts/#{concept.public_id}/media/uploads/complete",
+        instructions["completion"]
+      )
+
+    %{"public_id" => media_public_id} = json_response(conn, 200)
+    item = Repo.get_by!(Item, public_id: media_public_id)
+    assert item.concept_id == concept.id
+
+    document =
+      conn
+      |> recycle()
+      |> get(detail_path)
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "concept-media-#{media_public_id}")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "concept-image-uploads")) == 1
+
+    preview_conn =
+      conn
+      |> recycle()
+      |> get(~p"/moderator/concepts/#{concept.public_id}/media/#{media_public_id}/preview")
+
+    assert URI.parse(redirected_to(preview_conn, 302)).path ==
+             "/skad-test/#{item.original_object_key}"
+
+    remove_conn =
+      preview_conn
+      |> recycle()
+      |> delete(~p"/moderator/concepts/#{concept.public_id}/media/#{media_public_id}")
+
+    assert redirected_to(remove_conn) == detail_path
+    assert Repo.get!(Item, item.id).visibility == :pending_deletion
   end
 
   defp log_in(conn) do

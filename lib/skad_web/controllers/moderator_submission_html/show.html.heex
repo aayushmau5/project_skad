@@ -56,6 +56,106 @@
     </details>
 
     <section
+      :if={@media_items != [] or @submission.status in [:pending, :reviewing]}
+      id="submission-media"
+      class="entry-section media-uploader"
+      data-media-uploader
+      data-prepare-url={~p"/media/uploads"}
+      data-complete-url={~p"/media/uploads/complete"}
+      data-attach-url={~p"/moderator/submissions/#{@submission.public_id}/media"}
+      data-max-images="5"
+    >
+      <h2>Pronunciation and cultural images</h2>
+      <p :if={@media_items == []} id="submission-media-empty">No media attached.</p>
+
+      <ul id="submission-media-list" class="media-list" data-media-list>
+        <li
+          :for={item <- @media_items}
+          id={"submission-media-#{item.public_id}"}
+          class="media-card"
+          data-media-item
+          data-kind={item.kind}
+        >
+          <audio
+            :if={item.kind == :audio}
+            id={"submission-audio-#{item.public_id}"}
+            controls
+            preload="none"
+            src={
+              ~p"/moderator/submissions/#{@submission.public_id}/media/#{item.public_id}/preview"
+            }
+          ></audio>
+          <img
+            :if={item.kind == :image}
+            id={"submission-image-#{item.public_id}"}
+            src={
+              ~p"/moderator/submissions/#{@submission.public_id}/media/#{item.public_id}/preview"
+            }
+            alt="Submitted cultural context"
+            loading="lazy"
+          />
+          <p class="result-meta">{status_label(item.processing_state)}</p>
+          <.link
+            :if={@submission.status in [:pending, :reviewing]}
+            href={~p"/moderator/submissions/#{@submission.public_id}/media/#{item.public_id}"}
+            method="delete"
+            id={"remove-submission-media-#{item.public_id}"}
+            class="link-button"
+          >
+            Remove
+          </.link>
+        </li>
+      </ul>
+
+      <p
+        :if={not media_approvable?(@media_items)}
+        id="submission-media-processing"
+        role="alert"
+      >
+        Attached media must finish processing before this submission can be approved.
+      </p>
+
+      <div :if={@submission.status in [:pending, :reviewing]} class="media-controls">
+        <.input
+          type="file"
+          name="moderator_audio_upload"
+          id="moderator-audio-upload"
+          value={nil}
+          label={
+            if Enum.any?(@media_items, &(&1.kind == :audio)),
+              do: "Replace pronunciation audio",
+              else: "Upload pronunciation audio"
+          }
+          accept="audio/*"
+          class="auth-input"
+          data-audio-input
+        />
+        <button
+          type="button"
+          id="record-moderator-audio"
+          class="secondary-button"
+          data-record-audio
+        >
+          {if Enum.any?(@media_items, &(&1.kind == :audio)),
+            do: "Record replacement",
+            else: "Record pronunciation"}
+        </button>
+        <.input
+          type="file"
+          name="moderator_image_uploads"
+          id="moderator-image-uploads"
+          value={nil}
+          label="Add cultural images"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          class="auth-input"
+          data-image-input
+        />
+      </div>
+      <p id="moderator-media-status" class="result-meta" role="status" data-upload-status></p>
+    </section>
+
+    <section
       :if={@submission.status in [:pending, :reviewing]}
       id="submission-edit"
       class="entry-section auth-panel"
@@ -285,11 +385,12 @@
           value="approve"
           class="auth-button"
           disabled={
-            not example_approvable?(
-              @submission,
-              @example_suggestions,
-              @example_match_error
-            )
+            not media_approvable?(@media_items) or
+              not example_approvable?(
+                @submission,
+                @example_suggestions,
+                @example_match_error
+              )
           }
         >
           Approve and publish

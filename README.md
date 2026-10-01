@@ -91,7 +91,7 @@ See Cloudflare's [R2 CORS documentation](https://developers.cloudflare.com/r2/bu
 
 ## Current stage
 
-The product direction, v0 architecture, and first data model are settled enough to begin implementation. The immediate focus is scaffolding the Phoenix project and nothing beyond it. [implementation-layers.md](docs/implementation-layers.md) holds a deliberately rough map of later layers; only the next layer should be planned in depth.
+The first complete archive loop is working: contribution, moderation, atomic publication, search, and public reading. The media database, object-storage, context, and browser UI slices are also in place for contributor pronunciation/cultural-image uploads, moderator review and replacement, moderator-managed concept images, and public playback/display. New uploads remain quarantined until the next layer validates and processes them; they cannot be published early. [implementation-layers.md](docs/implementation-layers.md) tracks that next boundary and the deliberately rough map beyond it.
 
 ## Historical artifacts
 

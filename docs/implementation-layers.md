@@ -22,29 +22,28 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
-### 10e. Submission media context
+### 10f. Media validation and processing
 
-Complete the backend flow for media attached to a new-entry submission. A
-completed anonymous upload begins unowned and quarantined. Submission creation
-claims at most one audio item and five images atomically. While the submission
-is open, its active audio can be replaced and any attached item can be removed.
-Approval moves the audio to the new language-specific entry and the images to
-its concept in the same transaction as the archive publication.
+Validate completed uploads outside the request cycle and move safe objects from
+quarantine to their public storage key. Images need safe decoding and bounded
+dimensions; audio needs safe decoding and duration metadata. Failures must be
+visible to moderators and retryable without publishing an unverified object.
 
-It is complete when context tests prove idempotent claiming, ownership and
-count limits, moderator replacement/removal, correct final targets, and full
-rollback when any attached item is not ready. Browser recording, upload inputs,
-moderation UI, validation jobs, renditions, cleanup, corrections, additions,
-and standalone media submissions remain outside this layer.
+The preceding media slices are complete. Contributors can upload or record one
+pronunciation and upload up to five cultural images with a new-entry
+submission. Moderators can preview, replace, or remove submission media and can
+upload or remove concept images. Approval publishes ready audio with the entry
+and ready images with its concept atomically, and public entry pages render the
+published media through short-lived signed reads.
 
-The object-storage foundation is complete: Phoenix issues five-minute signed
-instructions for server-owned keys, supports JPEG, PNG, WebP, and common browser
-audio types, verifies stored size and signed content type, and records one
-quarantined media row without proxying file bytes.
+New uploads deliberately remain quarantined and cannot be approved until this
+processing layer marks them ready. Renditions, cleanup of abandoned uploads,
+corrections, additions, standalone media submissions, and browser-resumable
+uploads remain outside this layer.
 
-The moderator concept correction is complete: moderators can create and edit a
-concept with a private editorial note, search concepts by their metadata or
-entries, and attach an approved new entry to an existing concept.
+The moderator concept correction is also complete: moderators can create and
+edit a concept with a private editorial note, search concepts by their metadata
+or entries, and attach an approved new entry to an existing concept.
 
 ### Deferred public archive refinement
 

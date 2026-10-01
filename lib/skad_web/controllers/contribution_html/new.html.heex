@@ -54,6 +54,68 @@
         class="auth-input"
         rows="3"
       />
+      <section
+        id="contribution-media"
+        class="media-uploader"
+        data-media-uploader
+        data-prepare-url={~p"/media/uploads"}
+        data-complete-url={~p"/media/uploads/complete"}
+        data-max-images="5"
+      >
+        <h2>Pronunciation and cultural images</h2>
+        <p>Add one pronunciation recording and up to five images. Both are optional.</p>
+
+        <.input
+          type="file"
+          name="audio_upload"
+          id="contribution-audio-upload"
+          value={nil}
+          label="Upload pronunciation audio"
+          accept="audio/*"
+          class="auth-input"
+          data-audio-input
+        />
+        <button
+          type="button"
+          id="record-contribution-audio"
+          class="secondary-button"
+          data-record-audio
+        >
+          Record pronunciation
+        </button>
+        <.input
+          type="file"
+          name="image_uploads"
+          id="contribution-image-uploads"
+          value={nil}
+          label="Upload cultural images"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          class="auth-input"
+          data-image-input
+        />
+
+        <ul id="contribution-media-list" class="media-list" data-media-list>
+          <li
+            :for={item <- @media_items}
+            id={"contribution-media-#{item.public_id}"}
+            class="media-card"
+            data-media-item
+            data-kind={item.kind}
+          >
+            <span>{if item.kind == :audio, do: "Pronunciation audio", else: "Cultural image"}</span>
+            <.input
+              type="hidden"
+              id={"contribution-media-id-#{item.public_id}"}
+              name="contribution[media_public_ids][]"
+              value={item.public_id}
+            />
+            <button type="button" class="link-button" data-remove-upload>Remove</button>
+          </li>
+        </ul>
+        <p id="contribution-media-status" class="result-meta" role="status" data-upload-status>
+        </p>
+      </section>
       <.input
         field={@form[:example]}
         type="textarea"

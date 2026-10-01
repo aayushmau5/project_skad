@@ -23,6 +23,34 @@
       </p>
     </section>
 
+    <section :if={@audio} id="entry-pronunciation" class="entry-section">
+      <h2>Pronunciation</h2>
+      <audio
+        id={"entry-audio-#{@audio.public_id}"}
+        controls
+        preload="none"
+        src={~p"/media/#{@audio.public_id}"}
+      ></audio>
+      <p :if={@audio.variety_label || @audio.place_label} class="result-meta">
+        {Enum.join(Enum.reject([@audio.variety_label, @audio.place_label], &is_nil/1), " · ")}
+      </p>
+      <p :if={@audio.attribution_text} class="result-meta">{@audio.attribution_text}</p>
+    </section>
+
+    <section :if={@images != []} id="entry-images" class="entry-section">
+      <h2>Cultural context images</h2>
+      <div class="media-gallery">
+        <figure :for={image <- @images} id={"entry-image-#{image.public_id}"} class="media-figure">
+          <img
+            src={~p"/media/#{image.public_id}"}
+            alt={"Cultural context for #{primary_form_text(@entry)}"}
+            loading="lazy"
+          />
+          <figcaption :if={image.attribution_text}>{image.attribution_text}</figcaption>
+        </figure>
+      </div>
+    </section>
+
     <section id="entry-forms" class="entry-section">
       <h2>Forms</h2>
       <ul>

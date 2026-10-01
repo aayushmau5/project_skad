@@ -6,6 +6,8 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
   alias Skad.Contributions
   alias Skad.Contributions.Revision
   alias Skad.Contributions.Submission
+  alias Skad.Media
+  alias Skad.Media.Item
   alias Skad.Repo
 
   @password "correct horse battery staple"
@@ -145,8 +147,59 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     assert Enum.count(LazyHTML.query_by_id(document, "review-event-0")) == 1
   end
 
+  test "previews, replaces, and removes submission media", %{conn: conn} do
+    submission = create_submission()
+    {:ok, original} = Media.create_item(submission, media_attrs(:audio))
+    {:ok, replacement} = Media.create_item(media_attrs(:audio))
+    conn = log_in(conn)
+    detail_path = ~p"/moderator/submissions/#{submission.public_id}"
+
+    conn = get(conn, detail_path)
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+    assert Enum.count(LazyHTML.query_by_id(document, "submission-media")) == 1
+
+    assert Enum.count(LazyHTML.query_by_id(document, "submission-audio-#{original.public_id}")) ==
+             1
+
+    assert Enum.count(LazyHTML.query_by_id(document, "moderator-audio-upload")) == 1
+
+    conn =
+      conn
+      |> recycle()
+      |> post(~p"/moderator/submissions/#{submission.public_id}/media", %{
+        "media_public_id" => replacement.public_id,
+        "action" => "replace"
+      })
+
+    assert json_response(conn, 200) == %{"ok" => true}
+    assert Repo.get!(Item, original.id).visibility == :pending_deletion
+    assert Repo.get!(Item, replacement.id).submission_id == submission.id
+
+    preview_conn =
+      conn
+      |> recycle()
+      |> get(
+        ~p"/moderator/submissions/#{submission.public_id}/media/#{replacement.public_id}/preview"
+      )
+
+    preview_location = redirected_to(preview_conn, 302)
+    assert URI.parse(preview_location).path == "/skad-test/#{replacement.original_object_key}"
+
+    remove_conn =
+      preview_conn
+      |> recycle()
+      |> delete(~p"/moderator/submissions/#{submission.public_id}/media/#{replacement.public_id}")
+
+    assert redirected_to(remove_conn) == detail_path
+    assert Repo.get!(Item, replacement.id).visibility == :pending_deletion
+  end
+
   test "approves and publishes a pending submission", %{conn: conn} do
     submission = create_submission()
+    {:ok, audio} = Media.create_item(submission, media_attrs(:audio))
+    {:ok, image} = Media.create_item(submission, media_attrs(:image))
+    make_ready(audio)
+    make_ready(image)
     conn = log_in(conn)
 
     conn =
@@ -167,6 +220,8 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       |> LazyHTML.from_document()
 
     assert Enum.count(LazyHTML.query_by_id(document, "entry-page")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "entry-pronunciation")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "entry-images")) == 1
   end
 
   test "reviews example segments and publishes clickable dictionary links", %{conn: conn} do
@@ -329,5 +384,35 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     conn
     |> init_test_session(%{})
     |> put_session(:moderator_session_token, token)
+  end
+
+  defp media_attrs(:audio) do
+    %{
+      kind: :audio,
+      original_object_key: "private/audio/#{Ecto.UUID.generate()}",
+      mime_type: "audio/webm",
+      byte_size: 8_192,
+      sha256: String.duplicate("a", 64)
+    }
+  end
+
+  defp media_attrs(:image) do
+    %{
+      kind: :image,
+      original_object_key: "private/images/#{Ecto.UUID.generate()}",
+      mime_type: "image/jpeg",
+      byte_size: 16_384,
+      sha256: String.duplicate("b", 64)
+    }
+  end
+
+  defp make_ready(item) do
+    {:ok, item} =
+      Media.update_item(item, %{
+        processing_state: :ready,
+        public_object_key: "public/#{item.kind}/#{item.public_id}"
+      })
+
+    item
   end
 end
