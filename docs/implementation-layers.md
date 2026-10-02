@@ -22,6 +22,21 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
+### Backup and restore complete for the pilot scope
+
+`bin/skad-data` creates a maintenance-window bundle containing a native SQLite
+backup and a complete object-storage mirror. It checks every file, SQLite
+integrity and foreign keys, and verifies that every object referenced by the
+media table exists in the bundle. Restore refuses to overwrite a database or
+merge into a non-empty bucket.
+
+A real RustFS drill restored into an isolated database and empty bucket. The
+restored database matched the source content hash, the object count and bytes
+matched, and the restored application served the published entry, audio, and
+images with their original content types. Scheduling, remote retention,
+alerting, deployment automation, and live backups remain outside this first
+recovery proof.
+
 ### Review the completed media slice
 
 Completed uploads have their stored size and declared content type checked,

@@ -1,0 +1,263 @@
+#!/bin/sh
+
+set -eu
+
+cleanup_path=""
+
+cleanup() {
+  if [ -n "$cleanup_path" ] && [ -e "$cleanup_path" ]; then
+    rm -rf -- "$cleanup_path"
+  fi
+}
+
+trap cleanup 0 HUP INT TERM
+
+die() {
+  echo "skad-data: $*" >&2
+  exit 1
+}
+
+usage() {
+  cat >&2 <<'EOF'
+Usage:
+  bin/skad-data backup BACKUP_DIRECTORY
+  bin/skad-data verify BACKUP_DIRECTORY
+  bin/skad-data restore BACKUP_DIRECTORY
+
+backup and restore require DATABASE_PATH, R2_ENDPOINT, R2_BUCKET,
+R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and SKAD_APP_STOPPED=1.
+R2_REGION defaults to auto.
+EOF
+  exit 2
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "$1 is required"
+}
+
+require_maintenance_environment() {
+  [ "${SKAD_APP_STOPPED:-}" = "1" ] ||
+    die "stop the application, then set SKAD_APP_STOPPED=1"
+  [ -n "${DATABASE_PATH:-}" ] || die "DATABASE_PATH is required"
+  [ -n "${R2_ENDPOINT:-}" ] || die "R2_ENDPOINT is required"
+  [ -n "${R2_BUCKET:-}" ] || die "R2_BUCKET is required"
+  [ -n "${R2_ACCESS_KEY_ID:-}" ] || die "R2_ACCESS_KEY_ID is required"
+  [ -n "${R2_SECRET_ACCESS_KEY:-}" ] || die "R2_SECRET_ACCESS_KEY is required"
+  R2_REGION="${R2_REGION:-auto}"
+
+  require_command aws
+  require_command sqlite3
+}
+
+aws_cli() {
+  AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
+    AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
+    AWS_DEFAULT_REGION="$R2_REGION" \
+    AWS_EC2_METADATA_DISABLED=true \
+    AWS_PAGER="" \
+    command aws --endpoint-url "$R2_ENDPOINT" "$@"
+}
+
+checksum_file() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1"
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1"
+  else
+    die "sha256sum or shasum is required"
+  fi
+}
+
+verify_checksums() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum -c manifest.sha256 >/dev/null
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 -c manifest.sha256 >/dev/null
+  else
+    die "sha256sum or shasum is required"
+  fi
+}
+
+validate_object_key() {
+  case "$1" in
+    "" | /* | .. | ../* | */../* | */..)
+      die "unsafe object key in database: $1"
+      ;;
+  esac
+}
+
+verify_referenced_objects() {
+  database="$1"
+  objects="$2"
+
+  sqlite3 "$database" \
+    "SELECT original_object_key FROM media UNION SELECT public_object_key FROM media WHERE public_object_key IS NOT NULL ORDER BY 1" |
+    while IFS= read -r object_key; do
+      validate_object_key "$object_key"
+      [ -f "$objects/$object_key" ] ||
+        die "database references missing object: $object_key"
+    done
+}
+
+write_object_metadata() {
+  bundle="$1"
+
+  (
+    cd "$bundle/objects"
+    find . -type f -print |
+      LC_ALL=C sort |
+      while IFS= read -r object_path; do
+        object_key="${object_path#./}"
+        validate_object_key "$object_key"
+        content_type="$(
+          aws_cli s3api head-object \
+            --bucket "$R2_BUCKET" \
+            --key "$object_key" \
+            --query ContentType \
+            --output text
+        )"
+        [ -n "$content_type" ] && [ "$content_type" != "None" ] ||
+          die "object content type is missing: $object_key"
+        printf '%s\t%s\n' "$content_type" "$object_key"
+      done
+  ) >"$bundle/objects.metadata"
+}
+
+verify_object_metadata() {
+  bundle="$1"
+  metadata_count="$(wc -l <"$bundle/objects.metadata" | tr -d ' ')"
+  unique_count="$(cut -f2 "$bundle/objects.metadata" | LC_ALL=C sort -u | wc -l | tr -d ' ')"
+  object_count="$(find "$bundle/objects" -type f | wc -l | tr -d ' ')"
+
+  [ "$metadata_count" = "$object_count" ] || die "object metadata count does not match"
+  [ "$unique_count" = "$object_count" ] || die "object metadata contains duplicate keys"
+
+  tab="$(printf '\t')"
+  while IFS="$tab" read -r content_type object_key; do
+    [ -n "$content_type" ] || die "object content type is missing"
+    validate_object_key "$object_key"
+    [ -f "$bundle/objects/$object_key" ] ||
+      die "object metadata references missing object: $object_key"
+  done <"$bundle/objects.metadata"
+}
+
+verify_bundle() {
+  bundle="$1"
+  require_command grep
+  require_command sqlite3
+  [ -d "$bundle" ] || die "backup directory does not exist: $bundle"
+  [ -f "$bundle/metadata" ] || die "backup metadata is missing"
+  [ -f "$bundle/database.sqlite3" ] || die "backup database is missing"
+  [ -d "$bundle/objects" ] || die "backup objects directory is missing"
+  [ -f "$bundle/objects.metadata" ] || die "backup object metadata is missing"
+  [ -f "$bundle/manifest.sha256" ] || die "backup checksum manifest is missing"
+  grep -qx "format=1" "$bundle/metadata" || die "unsupported backup format"
+
+  (
+    cd "$bundle"
+    verify_checksums
+  )
+
+  integrity="$(sqlite3 "$bundle/database.sqlite3" "PRAGMA integrity_check")"
+  [ "$integrity" = "ok" ] || die "SQLite integrity check failed: $integrity"
+
+  foreign_key_errors="$(sqlite3 "$bundle/database.sqlite3" "PRAGMA foreign_key_check")"
+  [ -z "$foreign_key_errors" ] || die "SQLite foreign key check failed"
+
+  verify_object_metadata "$bundle"
+  verify_referenced_objects "$bundle/database.sqlite3" "$bundle/objects"
+  echo "Verified backup: $bundle"
+}
+
+backup() {
+  destination="$1"
+  require_maintenance_environment
+  [ -f "$DATABASE_PATH" ] || die "database does not exist: $DATABASE_PATH"
+  [ ! -e "$destination" ] || die "backup destination already exists: $destination"
+
+  case "$DATABASE_PATH$destination" in
+    *"'"*) die "paths containing single quotes are not supported" ;;
+  esac
+
+  parent="$(dirname "$destination")"
+  mkdir -p "$parent"
+  cleanup_path="$(mktemp -d "$parent/.skad-backup.XXXXXX")"
+  mkdir "$cleanup_path/objects"
+
+  sqlite3 "$DATABASE_PATH" ".backup '$cleanup_path/database.sqlite3'"
+  aws_cli s3 sync "s3://$R2_BUCKET" "$cleanup_path/objects" --only-show-errors
+  write_object_metadata "$cleanup_path"
+
+  {
+    echo "format=1"
+    echo "created_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo "source_bucket=$R2_BUCKET"
+  } >"$cleanup_path/metadata"
+
+  (
+    cd "$cleanup_path"
+    find database.sqlite3 metadata objects.metadata objects -type f -print |
+      LC_ALL=C sort |
+      while IFS= read -r file; do
+        checksum_file "$file"
+      done >manifest.sha256
+  )
+
+  verify_bundle "$cleanup_path"
+  mv "$cleanup_path" "$destination"
+  cleanup_path=""
+  echo "Created backup: $destination"
+}
+
+restore() {
+  bundle="$1"
+  require_maintenance_environment
+  verify_bundle "$bundle"
+
+  [ ! -e "$DATABASE_PATH" ] || die "restore database already exists: $DATABASE_PATH"
+  [ ! -e "$DATABASE_PATH-wal" ] || die "restore WAL already exists: $DATABASE_PATH-wal"
+  [ ! -e "$DATABASE_PATH-shm" ] || die "restore shared-memory file already exists: $DATABASE_PATH-shm"
+
+  aws_cli s3api head-bucket --bucket "$R2_BUCKET" >/dev/null
+  existing_object="$({
+    aws_cli s3api list-objects-v2 \
+      --bucket "$R2_BUCKET" \
+      --max-keys 1 \
+      --query "Contents[0].Key" \
+      --output text
+  })"
+
+  case "$existing_object" in
+    "" | None) ;;
+    *) die "restore bucket is not empty: $R2_BUCKET" ;;
+  esac
+
+  tab="$(printf '\t')"
+  while IFS="$tab" read -r content_type object_key; do
+    aws_cli s3api put-object \
+      --bucket "$R2_BUCKET" \
+      --key "$object_key" \
+      --body "$bundle/objects/$object_key" \
+      --content-type "$content_type" >/dev/null
+  done <"$bundle/objects.metadata"
+
+  parent="$(dirname "$DATABASE_PATH")"
+  mkdir -p "$parent"
+  cleanup_path="$(mktemp "$parent/.skad-restore.XXXXXX")"
+  cp "$bundle/database.sqlite3" "$cleanup_path"
+  chmod 600 "$cleanup_path"
+  mv "$cleanup_path" "$DATABASE_PATH"
+  cleanup_path=""
+
+  echo "Restored database: $DATABASE_PATH"
+  echo "Restored object bucket: $R2_BUCKET"
+}
+
+[ "$#" -eq 2 ] || usage
+
+case "$1" in
+  backup) backup "$2" ;;
+  verify) verify_bundle "$2" ;;
+  restore) restore "$2" ;;
+  *) usage ;;
+esac

@@ -89,9 +89,56 @@ for the deployed application origin:
 
 See Cloudflare's [R2 CORS documentation](https://developers.cloudflare.com/r2/buckets/cors/).
 
+## Backup and restore
+
+`bin/skad-data` creates a checked backup containing one SQLite snapshot and a
+mirror of the complete object-storage bucket. Backups use a short maintenance
+window so the database and media cannot change while the bundle is assembled.
+
+Stop the application, set the production storage variables plus the durable
+database path, and explicitly acknowledge the maintenance window:
+
+```sh
+export DATABASE_PATH=/srv/skad-data/skad.sqlite3
+export R2_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+export R2_REGION=auto
+export R2_BUCKET=skad-private
+export R2_ACCESS_KEY_ID=<ACCESS_KEY_ID>
+export R2_SECRET_ACCESS_KEY=<SECRET_ACCESS_KEY>
+export SKAD_APP_STOPPED=1
+
+bin/skad-data backup /srv/skad-data/backups/2026-10-02T060000Z
+bin/skad-data verify /srv/skad-data/backups/2026-10-02T060000Z
+```
+
+Copy the completed backup directory to retained storage on another machine or
+provider. A backup left only on the application host does not protect against
+host loss. The bundle contains moderator password hashes and unpublished
+submissions, so keep its existing restrictive permissions and encrypt remote
+copies.
+
+Restore only while the application is stopped, into a database path that does
+not exist and an already-created empty bucket:
+
+```sh
+export DATABASE_PATH=/srv/skad-restore/skad.sqlite3
+export R2_BUCKET=skad-restore-empty
+
+bin/skad-data restore /srv/skad-data/backups/2026-10-02T060000Z
+```
+
+Start the application against the restored database and bucket, then verify
+search, one public entry, its media, and moderator login. The restore command
+refuses to overwrite an existing database or merge into a non-empty bucket.
+
 ## Current stage
 
 The first complete archive loop is working: new entries, corrections, additions, standalone examples, entry-targeted audio/images, moderation, atomic publication, search, and public reading. Audio approval replaces the current entry pronunciation, while image approval adds to the entry concept's gallery. Exact duplicates of existing canonical entry content are rejected; new-entry forms remain reviewable because identical spelling can represent distinct meanings. Upload completion verifies stored metadata, makes a synchronous server-side copy under a public key, and marks the quarantined media ready; only moderator approval makes it publicly reachable. [implementation-layers.md](docs/implementation-layers.md) records the deliberately deferred validation and background-processing hardening.
+
+The first operational recovery path is also available: a maintenance-window
+command snapshots SQLite and object storage together, verifies checksums and
+database integrity, and restores only into empty targets. Deployment automation
+and scheduled off-host retention remain deliberately separate work.
 
 ## Historical artifacts
 
