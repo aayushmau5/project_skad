@@ -257,6 +257,9 @@ defmodule Skad.Archive do
 
       {:ok,
        multi
+       |> Multi.run(:example_duplicate, fn repo, _changes ->
+         reject_duplicate_example(repo, language, example.normalized_text, links_attrs)
+       end)
        |> Multi.insert(:example, Example.changeset(example, example_attrs))
        |> Multi.run(:example_links, fn repo, %{example: example} ->
          insert_example_links(repo, example, links_attrs)
@@ -332,9 +335,15 @@ defmodule Skad.Archive do
           {:ok, repo.preload(entry, [:language, :concept, :forms])}
         end
       end)
+      |> Multi.run(:concept, fn _repo, %{entry: entry} -> {:ok, entry.concept} end)
 
     if form_attrs do
       multi
+      |> Multi.run(:form_duplicate, fn _repo, %{entry: entry} ->
+        if entry_has_form?(entry, attr(form_attrs, :text)),
+          do: {:error, :already_exists},
+          else: {:ok, false}
+      end)
       |> Multi.insert(:form, fn %{entry: entry} ->
         EntryForm.changeset(
           %EntryForm{
@@ -355,6 +364,23 @@ defmodule Skad.Archive do
   end
 
   def add_to_entry_multi(_multi, _entry, _form_attrs), do: {:error, :invalid_attributes}
+
+  def entry_has_form?(%Entry{} = entry, text) when is_binary(text) do
+    normalized_text = normalize_text(text)
+    Enum.any?(entry.forms, &(&1.normalized_text == normalized_text))
+  end
+
+  def entry_has_form?(_entry, _text), do: false
+
+  def entry_has_example?(%Entry{} = entry, text) when is_binary(text) do
+    normalized_text = normalize_text(text)
+
+    Enum.any?(entry.example_links, fn link ->
+      link.example.normalized_text == normalized_text and link.role == :focus
+    end)
+  end
+
+  def entry_has_example?(_entry, _text), do: false
 
   def get_public_entry(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
@@ -622,6 +648,29 @@ defmodule Skad.Archive do
   end
 
   defp validate_link_set(_links), do: {:error, :invalid_links}
+
+  defp reject_duplicate_example(repo, language, normalized_text, links_attrs) do
+    focus_entry_public_ids =
+      for attrs <- links_attrs,
+          focus_link?(attrs),
+          public_id = attr(attrs, :entry_public_id),
+          {:ok, public_id} <- [Ecto.UUID.cast(public_id)],
+          do: public_id
+
+    duplicate? =
+      Example
+      |> join(:inner, [example], link in ExampleLink, on: link.example_id == example.id)
+      |> join(:inner, [_example, link], entry in Entry, on: entry.id == link.entry_id)
+      |> where(
+        [example, link, entry],
+        example.language_id == ^language.id and
+          example.normalized_text == ^normalized_text and link.role == :focus and
+          entry.public_id in ^focus_entry_public_ids and is_nil(example.archived_at)
+      )
+      |> repo.exists?()
+
+    if duplicate?, do: {:error, :already_exists}, else: {:ok, false}
+  end
 
   defp focus_link?(attrs), do: attr(attrs, :role) in [:focus, "focus"]
 

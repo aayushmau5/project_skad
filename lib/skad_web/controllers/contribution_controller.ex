@@ -65,12 +65,36 @@ defmodule SkadWeb.ContributionController do
     render_entry_change(conn, public_id, :addition)
   end
 
+  def example(conn, %{"public_id" => public_id}) do
+    render_entry_change(conn, public_id, :example)
+  end
+
+  def audio(conn, %{"public_id" => public_id}) do
+    render_entry_change(conn, public_id, :audio)
+  end
+
+  def images(conn, %{"public_id" => public_id}) do
+    render_entry_change(conn, public_id, :image)
+  end
+
   def create_correction(conn, %{"public_id" => public_id} = params) do
     create_entry_change(conn, public_id, :correction, Map.get(params, "contribution", %{}))
   end
 
   def create_addition(conn, %{"public_id" => public_id} = params) do
     create_entry_change(conn, public_id, :addition, Map.get(params, "contribution", %{}))
+  end
+
+  def create_example(conn, %{"public_id" => public_id} = params) do
+    create_entry_change(conn, public_id, :example, Map.get(params, "contribution", %{}))
+  end
+
+  def create_audio(conn, %{"public_id" => public_id} = params) do
+    create_entry_change(conn, public_id, :audio, Map.get(params, "contribution", %{}))
+  end
+
+  def create_images(conn, %{"public_id" => public_id} = params) do
+    create_entry_change(conn, public_id, :image, Map.get(params, "contribution", %{}))
   end
 
   defp render_new(conn, changeset, media_public_ids \\ []) do
@@ -87,7 +111,7 @@ defmodule SkadWeb.ContributionController do
     )
   end
 
-  defp render_entry_change(conn, public_id, kind, changeset \\ nil) do
+  defp render_entry_change(conn, public_id, kind, changeset \\ nil, media_public_ids \\ []) do
     case Archive.get_public_entry(public_id) do
       nil ->
         send_resp(conn, :not_found, "Entry not found")
@@ -103,28 +127,38 @@ defmodule SkadWeb.ContributionController do
           page_title: entry_change_title(kind),
           entry: entry,
           kind: kind,
-          form: Phoenix.Component.to_form(changeset, as: :contribution)
+          form: Phoenix.Component.to_form(changeset, as: :contribution),
+          media_items: media_items(media_public_ids)
         )
     end
   end
 
   defp create_entry_change(conn, public_id, kind, params) do
+    media_public_ids = params |> Map.get("media_public_ids") |> List.wrap()
+    proposal_params = Map.delete(params, "media_public_ids")
+
     case Archive.get_public_entry(public_id) do
       nil ->
         send_resp(conn, :not_found, "Entry not found")
 
       entry ->
-        case Contributions.submit_entry_change(kind, entry, params) do
+        case Contributions.submit_entry_change(kind, entry, proposal_params, media_public_ids) do
           {:ok, receipt} ->
             redirect(conn, to: ~p"/contributions/#{receipt.public_id}")
 
           {:error, %Ecto.Changeset{} = changeset} ->
             conn
             |> put_status(:unprocessable_entity)
-            |> render_entry_change(public_id, kind, %{changeset | action: :insert})
+            |> render_entry_change(
+              public_id,
+              kind,
+              %{changeset | action: :insert},
+              media_public_ids
+            )
 
           {:error, :idempotency_conflict} ->
-            retry_params = Map.put(params, "client_submission_id", Ecto.UUID.generate())
+            retry_params =
+              Map.put(proposal_params, "client_submission_id", Ecto.UUID.generate())
 
             conn
             |> put_status(:conflict)
@@ -135,7 +169,32 @@ defmodule SkadWeb.ContributionController do
             |> render_entry_change(
               public_id,
               kind,
-              %{Contributions.change_entry_change(kind, entry, retry_params) | action: :insert}
+              %{Contributions.change_entry_change(kind, entry, retry_params) | action: :insert},
+              media_public_ids
+            )
+
+          {:error, :already_exists} ->
+            conn
+            |> put_status(:conflict)
+            |> put_flash(:error, "That contribution is already part of this entry.")
+            |> render_entry_change(
+              public_id,
+              kind,
+              %{
+                Contributions.change_entry_change(kind, entry, proposal_params)
+                | action: :insert
+              },
+              media_public_ids
+            )
+
+          {:error, :invalid_media} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> put_flash(:error, media_error(kind))
+            |> render_entry_change(
+              public_id,
+              kind,
+              %{Contributions.change_entry_change(kind, entry, proposal_params) | action: :insert}
             )
         end
     end
@@ -143,4 +202,17 @@ defmodule SkadWeb.ContributionController do
 
   defp entry_change_title(:correction), do: "Suggest a correction"
   defp entry_change_title(:addition), do: "Add information"
+  defp entry_change_title(:example), do: "Add an example"
+  defp entry_change_title(:audio), do: "Add pronunciation audio"
+  defp entry_change_title(:image), do: "Add cultural images"
+
+  defp media_items(public_ids) do
+    public_ids
+    |> Enum.map(&Media.get_item/1)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp media_error(:audio), do: "Upload exactly one ready audio file and try again."
+  defp media_error(:image), do: "Upload between one and five ready images and try again."
+  defp media_error(_kind), do: "Media is not accepted for this contribution type."
 end

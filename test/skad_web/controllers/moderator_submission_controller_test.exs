@@ -418,6 +418,72 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
            ]
   end
 
+  test "reviews and publishes a standalone example", %{conn: conn} do
+    entry = create_entry("Water", "A clear liquid.")
+
+    {:ok, receipt} =
+      Contributions.submit_entry_change(:example, entry, %{
+        client_submission_id: Ecto.UUID.generate(),
+        example: "Drink water."
+      })
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    conn = log_in(conn)
+    path = ~p"/moderator/submissions/#{submission.public_id}"
+    conn = get(conn, path)
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query(document, "#proposal_example[required]")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(document, "submission-media"))
+
+    conn =
+      conn
+      |> recycle()
+      |> patch(path, %{"moderation" => %{"decision" => "approve"}})
+
+    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+    updated = Archive.get_public_entry(entry.public_id)
+    assert Enum.any?(updated.example_links, &(&1.example.text == "Drink water."))
+  end
+
+  test "reviews and publishes an audio-only submission", %{conn: conn} do
+    entry = create_entry("Water", "A clear liquid.")
+    {:ok, audio} = Media.create_item(media_attrs(:audio))
+    audio = make_ready(audio)
+
+    {:ok, receipt} =
+      Contributions.submit_entry_change(
+        :audio,
+        entry,
+        %{client_submission_id: Ecto.UUID.generate()},
+        [audio.public_id]
+      )
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    conn = log_in(conn)
+    path = ~p"/moderator/submissions/#{submission.public_id}"
+    conn = get(conn, path)
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "submission-media")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "moderator-audio-upload")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(document, "moderator-image-uploads"))
+    assert Enum.empty?(LazyHTML.query_by_id(document, "proposal-edit-form"))
+
+    refute "disabled" in LazyHTML.attribute(
+             LazyHTML.query_by_id(document, "approve-submission"),
+             "disabled"
+           )
+
+    conn =
+      conn
+      |> recycle()
+      |> patch(path, %{"moderation" => %{"decision" => "approve"}})
+
+    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+    assert Media.get_public_entry_audio(Archive.get_public_entry(entry.public_id)).id == audio.id
+  end
+
   defp create_submission do
     {:ok, language} =
       Archive.create_language(%{

@@ -19,6 +19,11 @@ defmodule SkadWeb.ContributionControllerTest do
     assert Enum.count(LazyHTML.query_by_id(document, "contribution-audio-upload")) == 1
     assert Enum.count(LazyHTML.query_by_id(document, "contribution-image-uploads")) == 1
 
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(document, "contribution-image-uploads"),
+             "multiple"
+           ) == [""]
+
     [client_submission_id] =
       form
       |> LazyHTML.query("#contribution_client_submission_id")
@@ -152,6 +157,23 @@ defmodule SkadWeb.ContributionControllerTest do
     assert submission.payload["definition"] == "A transparent liquid."
   end
 
+  test "does not create a moderation item for canonical duplicate content", %{conn: conn} do
+    entry = create_entry()
+
+    conn =
+      post(conn, ~p"/entries/#{entry.public_id}/corrections", %{
+        "contribution" => %{
+          "client_submission_id" => Ecto.UUID.generate(),
+          "primary_form" => "Water",
+          "definition" => "A clear liquid."
+        }
+      })
+
+    document = conn |> html_response(409) |> LazyHTML.from_document()
+    assert LazyHTML.text(document) =~ "already part of this entry"
+    assert Repo.aggregate(Submission, :count) == 0
+  end
+
   test "requires content when adding information to an entry", %{conn: conn} do
     entry = create_entry()
     path = ~p"/entries/#{entry.public_id}/add"
@@ -176,6 +198,73 @@ defmodule SkadWeb.ContributionControllerTest do
              "or an example is required"
 
     assert Repo.aggregate(Submission, :count) == 0
+  end
+
+  test "renders and submits a standalone example", %{conn: conn} do
+    entry = create_entry()
+    path = ~p"/entries/#{entry.public_id}/examples/new"
+
+    document = conn |> get(path) |> html_response(200) |> LazyHTML.from_document()
+    form = LazyHTML.query_by_id(document, "entry-change-contribution-form")
+
+    assert Enum.count(LazyHTML.query(form, "#contribution_example[required]")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(document, "entry-media-contribution"))
+
+    conn =
+      post(recycle(conn), ~p"/entries/#{entry.public_id}/examples", %{
+        "contribution" => %{
+          "client_submission_id" => Ecto.UUID.generate(),
+          "example" => "Drink water."
+        }
+      })
+
+    assert String.starts_with?(redirected_to(conn), "/contributions/")
+    assert Repo.one!(Submission).kind == :example
+  end
+
+  test "renders media-only forms and claims exactly the requested kind", %{conn: conn} do
+    entry = create_entry()
+
+    audio_document =
+      conn
+      |> get(~p"/entries/#{entry.public_id}/audio/new")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(audio_document, "entry-audio-upload")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(audio_document, "entry-image-uploads"))
+
+    image_document =
+      conn
+      |> recycle()
+      |> get(~p"/entries/#{entry.public_id}/images/new")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(image_document, "entry-image-uploads")) == 1
+
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(image_document, "entry-image-uploads"),
+             "multiple"
+           ) == [""]
+
+    assert Enum.empty?(LazyHTML.query_by_id(image_document, "entry-audio-upload"))
+
+    {:ok, audio} = Media.create_item(audio_attrs())
+    audio = make_ready(audio)
+
+    conn =
+      post(recycle(conn), ~p"/entries/#{entry.public_id}/audio", %{
+        "contribution" => %{
+          "client_submission_id" => Ecto.UUID.generate(),
+          "media_public_ids" => [audio.public_id]
+        }
+      })
+
+    assert String.starts_with?(redirected_to(conn), "/contributions/")
+    submission = Repo.one!(Submission)
+    assert submission.kind == :audio
+    assert Repo.get!(Skad.Media.Item, audio.id).submission_id == submission.id
   end
 
   defp create_language do
@@ -208,5 +297,25 @@ defmodule SkadWeb.ContributionControllerTest do
       byte_size: 2_048,
       sha256: String.duplicate("b", 64)
     }
+  end
+
+  defp audio_attrs do
+    %{
+      kind: :audio,
+      original_object_key: "private/audio/#{Ecto.UUID.generate()}",
+      mime_type: "audio/webm",
+      byte_size: 8_192,
+      sha256: String.duplicate("a", 64)
+    }
+  end
+
+  defp make_ready(item) do
+    {:ok, item} =
+      Media.update_item(item, %{
+        processing_state: :ready,
+        public_object_key: "public/#{item.kind}/#{item.public_id}"
+      })
+
+    item
   end
 end

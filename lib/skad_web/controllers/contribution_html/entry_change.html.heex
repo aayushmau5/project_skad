@@ -1,7 +1,7 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
   <section id="entry-change-contribution" class="auth-panel">
     <p><.link href={~p"/entries/#{@entry.public_id}"}>Back to entry</.link></p>
-    <h1>{if @kind == :correction, do: "Suggest a correction", else: "Add information"}</h1>
+    <h1>{entry_change_title(@kind)}</h1>
     <p>
       For <strong>{primary_form_text(@entry)}</strong> in {@entry.language.name}. Your suggestion
       will be reviewed before it appears in the archive.
@@ -9,80 +9,153 @@
 
     <.form
       for={@form}
-      action={
-        if(@kind == :correction,
-          do: ~p"/entries/#{@entry.public_id}/corrections",
-          else: ~p"/entries/#{@entry.public_id}/additions"
-        )
-      }
+      action={entry_change_action(@kind, @entry)}
       id="entry-change-contribution-form"
       class="auth-form"
     >
       <.input field={@form[:client_submission_id]} type="hidden" />
 
-      <%= if @kind == :correction do %>
-        <.input
-          field={@form[:primary_form]}
-          type="text"
-          label="Word or expression"
-          class="auth-input"
-          required
-        />
-        <.input
-          field={@form[:definition]}
-          type="textarea"
-          label="Meaning"
-          class="auth-input"
-          rows="4"
-          required
-        />
-        <.input
-          field={@form[:part_of_speech]}
-          type="text"
-          label="Part of speech"
-          class="auth-input"
-        />
-        <.input
-          field={@form[:usage_note]}
-          type="textarea"
-          label="Usage note"
-          class="auth-input"
-          rows="3"
-        />
-        <.input
-          field={@form[:cultural_note]}
-          type="textarea"
-          label="Cultural context"
-          class="auth-input"
-          rows="3"
-        />
-      <% else %>
-        <.input
-          field={@form[:alternate_form]}
-          type="text"
-          label="Alternate form (optional)"
-          class="auth-input"
-        />
-        <.input
-          field={@form[:form_kind]}
-          type="select"
-          label="Alternate form type"
-          class="auth-input"
-          options={[
-            {"Alias", :alias},
-            {"Spelling", :spelling},
-            {"Transliteration", :transliteration},
-            {"Historical", :historical}
-          ]}
-        />
-        <.input
-          field={@form[:example]}
-          type="textarea"
-          label="Example sentence (optional)"
-          class="auth-input"
-          rows="3"
-        />
-        <p class="result-meta">Provide an alternate form, an example sentence, or both.</p>
+      <%= case @kind do %>
+        <% :correction -> %>
+          <.input
+            field={@form[:primary_form]}
+            type="text"
+            label="Word or expression"
+            class="auth-input"
+            required
+          />
+          <.input
+            field={@form[:definition]}
+            type="textarea"
+            label="Meaning"
+            class="auth-input"
+            rows="4"
+            required
+          />
+          <.input
+            field={@form[:part_of_speech]}
+            type="text"
+            label="Part of speech"
+            class="auth-input"
+          />
+          <.input
+            field={@form[:usage_note]}
+            type="textarea"
+            label="Usage note"
+            class="auth-input"
+            rows="3"
+          />
+          <.input
+            field={@form[:cultural_note]}
+            type="textarea"
+            label="Cultural context"
+            class="auth-input"
+            rows="3"
+          />
+        <% :addition -> %>
+          <.input
+            field={@form[:alternate_form]}
+            type="text"
+            label="Alternate form (optional)"
+            class="auth-input"
+          />
+          <.input
+            field={@form[:form_kind]}
+            type="select"
+            label="Alternate form type"
+            class="auth-input"
+            options={[
+              {"Alias", :alias},
+              {"Spelling", :spelling},
+              {"Transliteration", :transliteration},
+              {"Historical", :historical}
+            ]}
+          />
+          <.input
+            field={@form[:example]}
+            type="textarea"
+            label="Example sentence (optional)"
+            class="auth-input"
+            rows="3"
+          />
+          <p class="result-meta">Provide an alternate form, an example sentence, or both.</p>
+        <% :example -> %>
+          <.input
+            field={@form[:example]}
+            type="textarea"
+            label="Example sentence"
+            class="auth-input"
+            rows="3"
+            required
+          />
+        <% kind when kind in [:audio, :image] -> %>
+          <section
+            id="entry-media-contribution"
+            class="media-uploader"
+            data-media-uploader
+            data-prepare-url={~p"/media/uploads"}
+            data-complete-url={~p"/media/uploads/complete"}
+            data-max-images={if @kind == :image, do: "5", else: "0"}
+          >
+            <p>
+              {if @kind == :audio,
+                do: "Upload or record one pronunciation.",
+                else: "Upload up to five cultural images."}
+            </p>
+
+            <%= if @kind == :audio do %>
+              <.input
+                type="file"
+                name="audio_upload"
+                id="entry-audio-upload"
+                value={nil}
+                label="Upload pronunciation audio"
+                accept="audio/*"
+                class="auth-input"
+                data-audio-input
+              />
+              <button
+                type="button"
+                id="record-entry-audio"
+                class="secondary-button"
+                data-record-audio
+              >
+                Record pronunciation
+              </button>
+            <% else %>
+              <.input
+                type="file"
+                name="image_uploads"
+                id="entry-image-uploads"
+                value={nil}
+                label="Upload cultural images"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                class="auth-input"
+                data-image-input
+              />
+            <% end %>
+
+            <ul id="entry-media-list" class="media-list" data-media-list>
+              <li
+                :for={item <- @media_items}
+                id={"contribution-media-#{item.public_id}"}
+                class="media-card"
+                data-media-item
+                data-kind={item.kind}
+              >
+                <span>{if item.kind == :audio, do: "Pronunciation audio", else: "Cultural image"}</span>
+                <.input
+                  type="hidden"
+                  id={"entry-media-id-#{item.public_id}"}
+                  name="contribution[media_public_ids][]"
+                  value={item.public_id}
+                />
+                <button type="button" class="link-button" data-remove-upload>Remove</button>
+              </li>
+            </ul>
+            <p id="entry-media-status" class="result-meta" role="status" data-upload-status></p>
+          </section>
       <% end %>
 
       <button type="submit" id="entry-change-contribution-submit" class="auth-button">

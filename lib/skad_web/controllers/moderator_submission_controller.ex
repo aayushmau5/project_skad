@@ -179,8 +179,10 @@ defmodule SkadWeb.ModeratorSubmissionController do
          concept_query \\ nil
        ) do
     edit_changeset =
-      edit_changeset ||
-        Contributions.change_submission_for_review(conn.assigns.current_scope, submission)
+      if submission.kind in [:new_entry, :correction, :addition, :example] do
+        edit_changeset ||
+          Contributions.change_submission_for_review(conn.assigns.current_scope, submission)
+      end
 
     concept_query = concept_query || params["concept_query"] || ""
     concept_candidates = concept_candidates(concept_query, params["concept_public_id"])
@@ -210,7 +212,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
       submission: submission,
       target_entry: target_entry,
       form: Phoenix.Component.to_form(moderation_params, as: :moderation),
-      edit_form: Phoenix.Component.to_form(edit_changeset, as: :proposal),
+      edit_form: edit_changeset && Phoenix.Component.to_form(edit_changeset, as: :proposal),
       concept_search_form:
         Phoenix.Component.to_form(%{"query" => concept_query}, as: :concept_search),
       concept_candidates: concept_candidates,
@@ -289,6 +291,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
   defp error_message(:image_limit_reached), do: "A submission can have at most five images."
   defp error_message(:invalid_media_kind), do: "Choose media of the expected type."
   defp error_message(:invalid_media), do: "The uploaded media could not be attached."
+  defp error_message(:already_exists), do: "That content is already published on this entry."
 
   defp error_message(%Ecto.Changeset{}),
     do: "Attached media must finish processing before approval."

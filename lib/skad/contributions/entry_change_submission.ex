@@ -19,7 +19,8 @@ defmodule Skad.Contributions.EntryChangeSubmission do
     field :example, :string, redact: true
   end
 
-  def changeset(kind, submission, attrs) when kind in [:correction, :addition] do
+  def changeset(kind, submission, attrs)
+      when kind in [:correction, :addition, :example, :audio, :image] do
     submission
     |> cast(attrs, fields(kind))
     |> normalize_text_fields()
@@ -73,6 +74,21 @@ defmodule Skad.Contributions.EntryChangeSubmission do
     }
   end
 
+  def to_payload(:example, %__MODULE__{} = submission) do
+    %{
+      "language_slug" => submission.language_slug,
+      "primary_form" => submission.primary_form,
+      "example" => submission.example
+    }
+  end
+
+  def to_payload(kind, %__MODULE__{} = submission) when kind in [:audio, :image] do
+    %{
+      "language_slug" => submission.language_slug,
+      "primary_form" => submission.primary_form
+    }
+  end
+
   defp fields(:correction) do
     [
       :client_submission_id,
@@ -89,10 +105,22 @@ defmodule Skad.Contributions.EntryChangeSubmission do
     [:client_submission_id, :language_slug, :primary_form, :alternate_form, :form_kind, :example]
   end
 
+  defp fields(:example),
+    do: [:client_submission_id, :language_slug, :primary_form, :example]
+
+  defp fields(kind) when kind in [:audio, :image],
+    do: [:client_submission_id, :language_slug, :primary_form]
+
   defp required_fields(:correction),
     do: [:client_submission_id, :language_slug, :primary_form, :definition]
 
   defp required_fields(:addition),
+    do: [:client_submission_id, :language_slug, :primary_form]
+
+  defp required_fields(:example),
+    do: [:client_submission_id, :language_slug, :primary_form, :example]
+
+  defp required_fields(kind) when kind in [:audio, :image],
     do: [:client_submission_id, :language_slug, :primary_form]
 
   defp validate_addition(changeset, :addition) do
@@ -104,6 +132,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
   end
 
   defp validate_addition(changeset, :correction), do: changeset
+  defp validate_addition(changeset, kind) when kind in [:example, :audio, :image], do: changeset
 
   defp normalize_text_fields(changeset) do
     Enum.reduce(

@@ -53,7 +53,17 @@ defmodule SkadWeb.ModeratorSubmissionHTML do
       (is_nil(error) and Enum.any?(suggestions, &(&1.role == :focus)))
   end
 
-  def media_approvable?(media_items),
+  def media_approvable?(%{kind: :audio}, media_items),
+    do:
+      length(media_items) == 1 and
+        Enum.all?(media_items, &(&1.kind == :audio and &1.processing_state == :ready))
+
+  def media_approvable?(%{kind: :image}, media_items),
+    do:
+      media_items != [] and length(media_items) <= 5 and
+        Enum.all?(media_items, &(&1.kind == :image and &1.processing_state == :ready))
+
+  def media_approvable?(_submission, media_items),
     do: Enum.all?(media_items, &(&1.processing_state == :ready))
 
   def format_time(nil), do: nil

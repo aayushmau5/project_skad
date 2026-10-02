@@ -290,6 +290,7 @@ defmodule SkadWeb.CoreComponents do
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+          multiple={@multiple}
           class={[
             @class || "w-full input",
             @errors != [] && (@error_class || "input-error")

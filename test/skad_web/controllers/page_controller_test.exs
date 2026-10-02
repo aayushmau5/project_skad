@@ -102,6 +102,15 @@ defmodule SkadWeb.PageControllerTest do
              [
                ~p"/entries/#{water.public_id}/add"
              ]
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-example"), "href") ==
+             [~p"/entries/#{water.public_id}/examples/new"]
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-audio"), "href") ==
+             [~p"/entries/#{water.public_id}/audio/new"]
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-images"), "href") ==
+             [~p"/entries/#{water.public_id}/images/new"]
   end
 
   test "returns not found for an unknown public entry", %{conn: conn} do

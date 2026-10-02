@@ -16,6 +16,7 @@ defmodule Skad.Contributions do
   alias Skad.Repo
 
   @submitted_media_key "media_public_ids"
+  @entry_change_kinds [:correction, :addition, :example, :audio, :image]
 
   @review_transitions %{
     pending: [:reviewing, :clarification_needed, :rejected],
@@ -98,7 +99,7 @@ defmodule Skad.Contributions do
   def change_entry_change(kind, entry, attrs \\ %{})
 
   def change_entry_change(kind, %Skad.Archive.Entry{} = entry, attrs)
-      when kind in [:correction, :addition] and is_map(attrs) do
+      when kind in @entry_change_kinds and is_map(attrs) do
     base =
       EntryChangeSubmission.from_entry(
         entry,
@@ -110,14 +111,18 @@ defmodule Skad.Contributions do
       |> stringify_keys()
       |> Map.put("language_slug", entry.language.slug)
       |> then(fn attrs ->
-        if kind == :addition, do: Map.put(attrs, "primary_form", base.primary_form), else: attrs
+        if kind == :correction,
+          do: attrs,
+          else: Map.put(attrs, "primary_form", base.primary_form)
       end)
 
     EntryChangeSubmission.changeset(kind, base, attrs)
   end
 
-  def submit_entry_change(kind, %Skad.Archive.Entry{} = entry, attrs)
-      when kind in [:correction, :addition] and is_map(attrs) do
+  def submit_entry_change(kind, entry, attrs, media_public_ids \\ [])
+
+  def submit_entry_change(kind, %Skad.Archive.Entry{} = entry, attrs, media_public_ids)
+      when kind in @entry_change_kinds and is_map(attrs) and is_list(media_public_ids) do
     changeset = change_entry_change(kind, entry, attrs)
 
     if changeset.valid? do
@@ -125,15 +130,25 @@ defmodule Skad.Contributions do
       payload = EntryChangeSubmission.to_payload(kind, change)
 
       case Repo.get_by(Submission, client_submission_id: change.client_submission_id) do
-        nil -> insert_entry_change(kind, entry, change, payload, changeset)
-        submission -> entry_change_idempotent_result(submission, kind, entry, payload)
+        nil ->
+          insert_entry_change(kind, entry, change, payload, changeset, media_public_ids)
+
+        submission ->
+          entry_change_idempotent_result(
+            submission,
+            kind,
+            entry,
+            payload,
+            media_public_ids
+          )
       end
     else
       {:error, changeset}
     end
   end
 
-  def submit_entry_change(_kind, _entry, _attrs), do: {:error, :invalid_attributes}
+  def submit_entry_change(_kind, _entry, _attrs, _media_public_ids),
+    do: {:error, :invalid_attributes}
 
   def get_receipt(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
@@ -195,7 +210,9 @@ defmodule Skad.Contributions do
         %Submission{} = submission,
         %Item{} = item
       ) do
-    Media.attach_item_to_submission(submission, item)
+    with :ok <- attachment_kind_allowed?(submission, item) do
+      Media.attach_item_to_submission(submission, item)
+    end
   end
 
   def attach_submission_media(_scope, %Submission{}, %Item{}),
@@ -206,7 +223,9 @@ defmodule Skad.Contributions do
         %Submission{} = submission,
         %Item{} = item
       ) do
-    Media.replace_submission_audio(submission, item)
+    with :ok <- attachment_kind_allowed?(submission, item) do
+      Media.replace_submission_audio(submission, item)
+    end
   end
 
   def replace_submission_audio(_scope, %Submission{}, %Item{}),
@@ -277,7 +296,7 @@ defmodule Skad.Contributions do
         %Submission{kind: kind, target_type: "entry"} = submission,
         attrs
       )
-      when kind in [:correction, :addition] and is_map(attrs) do
+      when kind in [:correction, :addition, :example] and is_map(attrs) do
     case Archive.get_public_entry(submission.target_public_id) do
       %Skad.Archive.Entry{} = entry ->
         submission
@@ -334,6 +353,9 @@ defmodule Skad.Contributions do
 
   defp reviewed_payload(kind, reviewed) when kind in [:correction, :addition],
     do: EntryChangeSubmission.to_payload(kind, reviewed)
+
+  defp reviewed_payload(:example, reviewed),
+    do: EntryChangeSubmission.to_payload(:example, reviewed)
 
   def moderate_submission(scope, submission, status, note \\ nil)
 
@@ -431,7 +453,7 @@ defmodule Skad.Contributions do
         example_choices,
         _concept_params
       )
-      when kind in [:correction, :addition] and is_integer(id) do
+      when kind in @entry_change_kinds and is_integer(id) do
     note = normalize_review_note(note)
 
     with %Submission{kind: ^kind} = submission <- Repo.get(Submission, id),
@@ -458,7 +480,8 @@ defmodule Skad.Contributions do
     payload = effective_payload(submission)
     before_state = canonical_entry_snapshot(entry)
 
-    with {:ok, archive_attrs} <- correction_archive_attrs(payload),
+    with :ok <- validate_entry_change_content(:correction, entry, payload, []),
+         {:ok, archive_attrs} <- correction_archive_attrs(payload),
          {:ok, multi} <-
            approval_multi(submission, moderator, note)
            |> Archive.correct_entry_multi(entry, archive_attrs) do
@@ -479,12 +502,13 @@ defmodule Skad.Contributions do
   end
 
   defp approve_entry_change(
-         %Submission{kind: :addition} = submission,
+         %Submission{kind: kind} = submission,
          entry,
          moderator,
          note,
          choices
-       ) do
+       )
+       when kind in [:addition, :example] do
     payload = effective_payload(submission)
     before_state = canonical_entry_snapshot(entry)
     form_attrs = addition_form_attrs(payload)
@@ -504,6 +528,37 @@ defmodule Skad.Contributions do
           note,
           before_state,
           added_entry_snapshot(before_state, changes, example_plan)
+        )
+      end)
+      |> Repo.transaction()
+      |> approval_result()
+    end
+  end
+
+  defp approve_entry_change(
+         %Submission{kind: kind} = submission,
+         entry,
+         moderator,
+         note,
+         _choices
+       )
+       when kind in [:audio, :image] do
+    before_state = entry_with_media_snapshot(entry)
+
+    with :ok <- validate_submission_media(submission, kind),
+         {:ok, multi} <-
+           approval_multi(submission, moderator, note)
+           |> Archive.add_to_entry_multi(entry, nil) do
+      multi
+      |> Media.publish_submission_items_multi(submission)
+      |> Multi.insert(:revision, fn changes ->
+        entry_revision(
+          changes.entry,
+          submission,
+          moderator,
+          note,
+          before_state,
+          media_entry_snapshot(before_state, changes.media, kind)
         )
       end)
       |> Repo.transaction()
@@ -569,34 +624,37 @@ defmodule Skad.Contributions do
     end
   end
 
-  defp insert_entry_change(kind, entry, change, payload, command_changeset) do
+  defp insert_entry_change(
+         kind,
+         entry,
+         change,
+         payload,
+         command_changeset,
+         media_public_ids
+       ) do
     case Archive.get_public_entry(entry.public_id) do
       %Skad.Archive.Entry{} = target ->
-        %Submission{
-          kind: kind,
-          target_type: "entry",
-          target_public_id: target.public_id
-        }
-        |> Submission.changeset(%{
-          client_submission_id: change.client_submission_id,
-          payload: payload
-        })
-        |> Repo.insert()
-        |> case do
-          {:ok, submission} ->
-            {:ok, receipt(submission)}
+        with :ok <- validate_entry_change_content(kind, target, payload, media_public_ids) do
+          stored_payload = put_submitted_media(payload, media_public_ids)
 
-          {:error, %Changeset{} = changeset} ->
-            if Keyword.has_key?(changeset.errors, :client_submission_id) do
-              submission =
-                Repo.get_by!(Submission,
-                  client_submission_id: Changeset.get_field(changeset, :client_submission_id)
-                )
-
-              entry_change_idempotent_result(submission, kind, target, payload)
-            else
-              {:error, changeset}
-            end
+          Multi.new()
+          |> Multi.insert(
+            :submission,
+            Submission.changeset(
+              %Submission{
+                kind: kind,
+                target_type: "entry",
+                target_public_id: target.public_id
+              },
+              %{
+                client_submission_id: change.client_submission_id,
+                payload: stored_payload
+              }
+            )
+          )
+          |> Media.claim_submission_items_multi(media_public_ids, media_kind(kind))
+          |> Repo.transaction()
+          |> entry_change_inserted_result(kind, target, payload, media_public_ids)
         end
 
       nil ->
@@ -613,15 +671,63 @@ defmodule Skad.Contributions do
          } = submission,
          kind,
          %{public_id: target_public_id},
-         payload
+         payload,
+         media_public_ids
        ) do
-    if stored_payload == payload,
-      do: {:ok, receipt(submission)},
-      else: {:error, :idempotency_conflict}
+    stored_media_public_ids = Map.get(stored_payload, @submitted_media_key, [])
+    stored_payload = proposal_payload(stored_payload)
+
+    if stored_payload == payload and
+         Enum.sort(stored_media_public_ids) == Enum.sort(media_public_ids),
+       do: {:ok, receipt(submission)},
+       else: {:error, :idempotency_conflict}
   end
 
-  defp entry_change_idempotent_result(_submission, _kind, _entry, _payload),
-    do: {:error, :idempotency_conflict}
+  defp entry_change_idempotent_result(
+         _submission,
+         _kind,
+         _entry,
+         _payload,
+         _media_public_ids
+       ),
+       do: {:error, :idempotency_conflict}
+
+  defp entry_change_inserted_result(
+         {:ok, %{submission: submission}},
+         _kind,
+         _entry,
+         _payload,
+         _media_public_ids
+       ),
+       do: {:ok, receipt(submission)}
+
+  defp entry_change_inserted_result(
+         {:error, :submission, %Changeset{} = changeset, _changes},
+         kind,
+         entry,
+         payload,
+         media_public_ids
+       ) do
+    if Keyword.has_key?(changeset.errors, :client_submission_id) do
+      submission =
+        Repo.get_by!(Submission,
+          client_submission_id: Changeset.get_field(changeset, :client_submission_id)
+        )
+
+      entry_change_idempotent_result(submission, kind, entry, payload, media_public_ids)
+    else
+      {:error, changeset}
+    end
+  end
+
+  defp entry_change_inserted_result(
+         {:error, :media, reason, _changes},
+         _kind,
+         _entry,
+         _payload,
+         _media_public_ids
+       ),
+       do: {:error, reason}
 
   defp inserted_result({:ok, %{submission: submission}}, _payload, _media_public_ids),
     do: {:ok, receipt(submission)}
@@ -671,6 +777,72 @@ defmodule Skad.Contributions do
     Map.put(payload, @submitted_media_key, Enum.sort(media_public_ids))
   end
 
+  defp validate_entry_change_content(kind, _entry, _payload, media_public_ids)
+       when kind in [:correction, :addition, :example] and media_public_ids != [],
+       do: {:error, :invalid_media}
+
+  defp validate_entry_change_content(:correction, entry, payload, []) do
+    if correction_matches?(entry, payload), do: {:error, :already_exists}, else: :ok
+  end
+
+  defp validate_entry_change_content(:addition, entry, payload, []) do
+    duplicate_form? =
+      is_binary(payload["alternate_form"]) and
+        Archive.entry_has_form?(entry, payload["alternate_form"])
+
+    duplicate_example? =
+      is_binary(payload["example"]) and Archive.entry_has_example?(entry, payload["example"])
+
+    if duplicate_form? or duplicate_example?, do: {:error, :already_exists}, else: :ok
+  end
+
+  defp validate_entry_change_content(:example, entry, payload, []) do
+    if Archive.entry_has_example?(entry, payload["example"]),
+      do: {:error, :already_exists},
+      else: :ok
+  end
+
+  defp validate_entry_change_content(kind, entry, _payload, media_public_ids)
+       when kind in [:audio, :image],
+       do: Media.validate_entry_submission(entry, kind, media_public_ids)
+
+  defp correction_matches?(entry, payload) do
+    primary_form = Enum.find(entry.forms, & &1.is_primary)
+
+    definition =
+      Enum.find(entry.definitions, &(&1.language == payload["language_slug"])) ||
+        List.first(entry.definitions)
+
+    same_value?(primary_form && primary_form.text, payload["primary_form"]) and
+      same_value?(definition && definition.text, payload["definition"]) and
+      same_value?(entry.part_of_speech, payload["part_of_speech"]) and
+      same_value?(entry.usage_note, payload["usage_note"]) and
+      same_value?(entry.cultural_note, payload["cultural_note"])
+  end
+
+  defp same_value?(left, right), do: normalize_comparison(left) == normalize_comparison(right)
+
+  defp normalize_comparison(value) when is_binary(value), do: String.trim(value)
+  defp normalize_comparison(value), do: value
+
+  defp media_kind(kind) when kind in [:audio, :image], do: kind
+  defp media_kind(_kind), do: nil
+
+  defp validate_submission_media(submission, :audio) do
+    case Media.list_submission_items(submission) do
+      [%Item{kind: :audio}] -> :ok
+      _items -> {:error, :invalid_media}
+    end
+  end
+
+  defp validate_submission_media(submission, :image) do
+    items = Media.list_submission_items(submission)
+
+    if items != [] and length(items) <= 5 and Enum.all?(items, &(&1.kind == :image)),
+      do: :ok,
+      else: {:error, :invalid_media}
+  end
+
   defp proposal_payload(payload), do: Map.delete(payload, @submitted_media_key)
 
   defp receipt(submission) do
@@ -691,7 +863,7 @@ defmodule Skad.Contributions do
   defp normalize_review_note(_note), do: nil
 
   defp approvable?(%Submission{status: status, kind: kind})
-       when status in [:pending, :reviewing] and kind in [:new_entry, :correction, :addition],
+       when status in [:pending, :reviewing] and kind in [:new_entry | @entry_change_kinds],
        do: :ok
 
   defp approvable?(%Submission{status: status}) when status in [:pending, :reviewing],
@@ -700,13 +872,24 @@ defmodule Skad.Contributions do
   defp approvable?(%Submission{}), do: {:error, :invalid_transition}
 
   defp editable?(%Submission{status: status, kind: kind})
-       when status in [:pending, :reviewing] and kind in [:new_entry, :correction, :addition],
+       when status in [:pending, :reviewing] and
+              kind in [:new_entry, :correction, :addition, :example],
        do: :ok
 
   defp editable?(%Submission{status: status}) when status in [:pending, :reviewing],
     do: {:error, :unsupported_submission_kind}
 
   defp editable?(%Submission{}), do: {:error, :invalid_transition}
+
+  defp attachment_kind_allowed?(%Submission{kind: :new_entry}, %Item{kind: kind})
+       when kind in [:audio, :image],
+       do: :ok
+
+  defp attachment_kind_allowed?(%Submission{kind: kind}, %Item{kind: kind})
+       when kind in [:audio, :image],
+       do: :ok
+
+  defp attachment_kind_allowed?(_submission, _item), do: {:error, :invalid_media_kind}
 
   defp save_submission_edits(submission, moderator, payload) do
     if payload == effective_payload(submission) do
@@ -992,6 +1175,35 @@ defmodule Skad.Contributions do
           %{"public_id" => example.public_id, "text" => example.text}
         end)
     }
+  end
+
+  defp entry_with_media_snapshot(entry) do
+    canonical_entry_snapshot(entry)
+    |> Map.put("media", %{
+      "audio" =>
+        case Media.get_public_entry_audio(entry) do
+          nil -> nil
+          item -> item.public_id
+        end,
+      "images" =>
+        entry.concept
+        |> Media.list_public_concept_images()
+        |> Enum.map(& &1.public_id)
+    })
+  end
+
+  defp media_entry_snapshot(before_state, published, :audio) do
+    audio = published |> Enum.find(&(&1.kind == :audio)) |> Map.fetch!(:public_id)
+    put_in(before_state, ["media", "audio"], audio)
+  end
+
+  defp media_entry_snapshot(before_state, published, :image) do
+    image_public_ids =
+      published
+      |> Enum.filter(&(&1.kind == :image))
+      |> Enum.map(& &1.public_id)
+
+    update_in(before_state, ["media", "images"], &(&1 ++ image_public_ids))
   end
 
   defp corrected_entry_snapshot(before_state, changes) do

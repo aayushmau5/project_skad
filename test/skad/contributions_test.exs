@@ -725,6 +725,176 @@ defmodule Skad.ContributionsTest do
     assert [%{"text" => "Water is clear."}] = revision.after_state["examples"]
   end
 
+  test "submits and approves a standalone example and rejects a published duplicate" do
+    language = create_language()
+    scope = Scope.for_moderator(insert_moderator())
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: "A clear liquid."}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    attrs = %{
+      client_submission_id: Ecto.UUID.generate(),
+      example: "Drink water every day."
+    }
+
+    assert {:ok, receipt} = Contributions.submit_entry_change(:example, entry, attrs)
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+
+    assert submission.kind == :example
+    assert {:ok, %{entry: updated}} = Contributions.approve_submission(scope, submission)
+    assert Enum.any?(updated.example_links, &(&1.example.text == "Drink water every day."))
+
+    assert {:error, :already_exists} =
+             Contributions.submit_entry_change(:example, updated, %{
+               client_submission_id: Ecto.UUID.generate(),
+               example: "  Drink water every day.  "
+             })
+  end
+
+  test "publishes audio-only submissions as atomic replacements" do
+    language = create_language()
+    scope = Scope.for_moderator(insert_moderator())
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: "A clear liquid."}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    {:ok, old_audio} = Media.create_item(entry, media_attrs(:audio, "a"))
+    old_audio = publish_media(old_audio)
+    new_audio = :audio |> insert_media("c") |> make_ready()
+
+    assert {:ok, receipt} =
+             Contributions.submit_entry_change(
+               :audio,
+               entry,
+               %{client_submission_id: Ecto.UUID.generate()},
+               [new_audio.public_id]
+             )
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    assert Repo.get!(Item, new_audio.id).submission_id == submission.id
+    assert {:ok, %{entry: updated}} = Contributions.approve_submission(scope, submission)
+
+    assert Media.get_public_entry_audio(updated).id == new_audio.id
+    assert Repo.get!(Item, old_audio.id).visibility == :pending_deletion
+    assert Repo.get!(Item, old_audio.id).archived_at
+
+    duplicate = :audio |> insert_media("c") |> make_ready()
+
+    assert {:error, :already_exists} =
+             Contributions.submit_entry_change(
+               :audio,
+               updated,
+               %{client_submission_id: Ecto.UUID.generate()},
+               [duplicate.public_id]
+             )
+  end
+
+  test "publishes image-only submissions and rejects an existing image" do
+    language = create_language()
+    scope = Scope.for_moderator(insert_moderator())
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: "A clear liquid."}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    image = :image |> insert_media("d") |> make_ready()
+
+    assert {:ok, receipt} =
+             Contributions.submit_entry_change(
+               :image,
+               entry,
+               %{client_submission_id: Ecto.UUID.generate()},
+               [image.public_id]
+             )
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    assert {:ok, %{entry: updated}} = Contributions.approve_submission(scope, submission)
+    assert Enum.map(Media.list_public_concept_images(updated.concept), & &1.id) == [image.id]
+
+    duplicate = :image |> insert_media("d") |> make_ready()
+
+    assert {:error, :already_exists} =
+             Contributions.submit_entry_change(
+               :image,
+               updated,
+               %{client_submission_id: Ecto.UUID.generate()},
+               [duplicate.public_id]
+             )
+  end
+
+  test "rechecks media duplicates atomically during approval" do
+    language = create_language()
+    scope = Scope.for_moderator(insert_moderator())
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: language.slug, text: "A clear liquid."}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    submitted_image = :image |> insert_media("e") |> make_ready()
+
+    assert {:ok, receipt} =
+             Contributions.submit_entry_change(
+               :image,
+               entry,
+               %{client_submission_id: Ecto.UUID.generate()},
+               [submitted_image.public_id]
+             )
+
+    submission = Repo.get_by!(Submission, public_id: receipt.public_id)
+    {:ok, published_image} = Media.create_item(entry.concept, media_attrs(:image, "e"))
+    publish_media(published_image)
+
+    assert {:error, :already_exists} = Contributions.approve_submission(scope, submission)
+    assert Repo.get!(Submission, submission.id).status == :pending
+    assert Repo.get!(Item, submitted_image.id).submission_id == submission.id
+  end
+
+  test "rejects corrections and additions that are already canonical" do
+    language = create_language()
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(language, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{
+          part_of_speech: "noun",
+          definitions: [%{language: language.slug, text: "A clear liquid."}]
+        },
+        forms: [
+          %{text: "Water", kind: :spelling, is_primary: true},
+          %{text: "H₂O", kind: :alias, is_primary: false}
+        ]
+      })
+
+    assert {:error, :already_exists} =
+             Contributions.submit_entry_change(:correction, entry, %{
+               client_submission_id: Ecto.UUID.generate(),
+               primary_form: "Water",
+               definition: "A clear liquid.",
+               part_of_speech: "noun"
+             })
+
+    assert {:error, :already_exists} =
+             Contributions.submit_entry_change(:addition, entry, %{
+               client_submission_id: Ecto.UUID.generate(),
+               alternate_form: " h₂o ",
+               form_kind: :alias
+             })
+  end
+
   defp valid_attrs(client_submission_id \\ Ecto.UUID.generate()) do
     %{
       client_submission_id: client_submission_id,
@@ -764,27 +934,29 @@ defmodule Skad.ContributionsTest do
     |> Repo.insert!()
   end
 
-  defp insert_media(:audio) do
+  defp insert_media(kind, sha_character \\ nil)
+
+  defp insert_media(:audio, sha_character) do
     {:ok, item} =
       Media.create_item(%{
         kind: :audio,
         original_object_key: "private/audio/#{Ecto.UUID.generate()}.webm",
         mime_type: "audio/webm",
         byte_size: 8_192,
-        sha256: String.duplicate("a", 64)
+        sha256: String.duplicate(sha_character || "a", 64)
       })
 
     item
   end
 
-  defp insert_media(:image) do
+  defp insert_media(:image, sha_character) do
     {:ok, item} =
       Media.create_item(%{
         kind: :image,
         original_object_key: "private/images/#{Ecto.UUID.generate()}.jpg",
         mime_type: "image/jpeg",
         byte_size: 16_384,
-        sha256: String.duplicate("b", 64)
+        sha256: String.duplicate(sha_character || "b", 64)
       })
 
     item
@@ -794,6 +966,37 @@ defmodule Skad.ContributionsTest do
     {:ok, item} =
       Media.update_item(item, %{
         processing_state: :ready,
+        public_object_key: "public/#{item.kind}/#{item.public_id}"
+      })
+
+    item
+  end
+
+  defp media_attrs(:audio, sha_character) do
+    %{
+      kind: :audio,
+      original_object_key: "private/audio/#{Ecto.UUID.generate()}.webm",
+      mime_type: "audio/webm",
+      byte_size: 8_192,
+      sha256: String.duplicate(sha_character, 64)
+    }
+  end
+
+  defp media_attrs(:image, sha_character) do
+    %{
+      kind: :image,
+      original_object_key: "private/images/#{Ecto.UUID.generate()}.jpg",
+      mime_type: "image/jpeg",
+      byte_size: 16_384,
+      sha256: String.duplicate(sha_character, 64)
+    }
+  end
+
+  defp publish_media(item) do
+    {:ok, item} =
+      Media.update_item(item, %{
+        processing_state: :ready,
+        visibility: :public,
         public_object_key: "public/#{item.kind}/#{item.public_id}"
       })
 

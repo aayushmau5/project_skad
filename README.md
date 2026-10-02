@@ -91,7 +91,7 @@ See Cloudflare's [R2 CORS documentation](https://developers.cloudflare.com/r2/bu
 
 ## Current stage
 
-The first complete archive loop is working: new entries, corrections, additions, moderation, atomic publication, search, and public reading. Additions currently cover alternate forms and same-language examples. The media database, object-storage, context, and browser UI slices are also in place for contributor pronunciation/cultural-image uploads, moderator review and replacement, moderator-managed concept images, and public playback/display. Upload completion verifies stored metadata, makes a synchronous server-side copy under a public key, and marks the quarantined media ready; only moderator approval makes it publicly reachable. [implementation-layers.md](docs/implementation-layers.md) records the deliberately deferred validation and background-processing hardening.
+The first complete archive loop is working: new entries, corrections, additions, standalone examples, entry-targeted audio/images, moderation, atomic publication, search, and public reading. Audio approval replaces the current entry pronunciation, while image approval adds to the entry concept's gallery. Exact duplicates of existing canonical entry content are rejected; new-entry forms remain reviewable because identical spelling can represent distinct meanings. Upload completion verifies stored metadata, makes a synchronous server-side copy under a public key, and marks the quarantined media ready; only moderator approval makes it publicly reachable. [implementation-layers.md](docs/implementation-layers.md) records the deliberately deferred validation and background-processing hardening.
 
 ## Historical artifacts
 

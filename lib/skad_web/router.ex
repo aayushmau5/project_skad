@@ -26,6 +26,12 @@ defmodule SkadWeb.Router do
     post "/entries/:public_id/corrections", ContributionController, :create_correction
     get "/entries/:public_id/add", ContributionController, :add
     post "/entries/:public_id/additions", ContributionController, :create_addition
+    get "/entries/:public_id/examples/new", ContributionController, :example
+    post "/entries/:public_id/examples", ContributionController, :create_example
+    get "/entries/:public_id/audio/new", ContributionController, :audio
+    post "/entries/:public_id/audio", ContributionController, :create_audio
+    get "/entries/:public_id/images/new", ContributionController, :images
+    post "/entries/:public_id/images", ContributionController, :create_images
     get "/contribute", ContributionController, :new
     post "/contributions", ContributionController, :create
     get "/contributions/:public_id", ContributionController, :show

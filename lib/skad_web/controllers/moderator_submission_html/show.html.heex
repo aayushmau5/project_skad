@@ -14,18 +14,22 @@
         <dd>{status_label(@submission.kind)}</dd>
         <dt>Language</dt>
         <dd id="submission-language">{payload_value(@submission, "language_slug")}</dd>
-        <dt>Meaning</dt>
-        <dd id="submission-definition">{payload_value(@submission, "definition") || "—"}</dd>
-        <dt :if={@submission.kind != :addition}>Part of speech</dt>
-        <dd :if={@submission.kind != :addition}>
+        <dt :if={@submission.kind in [:new_entry, :correction]}>Meaning</dt>
+        <dd
+          :if={@submission.kind in [:new_entry, :correction]}
+          phx-no-format
+          id="submission-definition"
+        >{payload_value(@submission, "definition") || "—"}</dd>
+        <dt :if={@submission.kind in [:new_entry, :correction]}>Part of speech</dt>
+        <dd :if={@submission.kind in [:new_entry, :correction]}>
           {payload_value(@submission, "part_of_speech") || "—"}
         </dd>
-        <dt :if={@submission.kind != :addition}>Usage note</dt>
-        <dd :if={@submission.kind != :addition}>
+        <dt :if={@submission.kind in [:new_entry, :correction]}>Usage note</dt>
+        <dd :if={@submission.kind in [:new_entry, :correction]}>
           {payload_value(@submission, "usage_note") || "—"}
         </dd>
-        <dt :if={@submission.kind != :addition}>Cultural context</dt>
-        <dd :if={@submission.kind != :addition}>
+        <dt :if={@submission.kind in [:new_entry, :correction]}>Cultural context</dt>
+        <dd :if={@submission.kind in [:new_entry, :correction]}>
           {payload_value(@submission, "cultural_note") || "—"}
         </dd>
         <dt :if={@submission.kind == :addition}>Alternate form</dt>
@@ -36,8 +40,10 @@
         <dd :if={@submission.kind == :addition}>
           {payload_value(@submission, "form_kind") || "—"}
         </dd>
-        <dt>Example</dt>
-        <dd id="submission-example">{payload_value(@submission, "example") || "—"}</dd>
+        <dt :if={@submission.kind in [:new_entry, :addition, :example]}>Example</dt>
+        <dd :if={@submission.kind in [:new_entry, :addition, :example]} id="submission-example">
+          {payload_value(@submission, "example") || "—"}
+        </dd>
         <dt>Received</dt>
         <dd>{format_time(@submission.received_at)}</dd>
         <dt>Receipt</dt>
@@ -81,7 +87,7 @@
 
     <section
       :if={
-        @submission.kind == :new_entry and
+        @submission.kind in [:new_entry, :audio, :image] and
           (@media_items != [] or @submission.status in [:pending, :reviewing])
       }
       id="submission-media"
@@ -92,7 +98,13 @@
       data-attach-url={~p"/moderator/submissions/#{@submission.public_id}/media"}
       data-max-images="5"
     >
-      <h2>Pronunciation and cultural images</h2>
+      <h2>
+        {case @submission.kind do
+          :audio -> "Pronunciation audio"
+          :image -> "Cultural images"
+          :new_entry -> "Pronunciation and cultural images"
+        end}
+      </h2>
       <p :if={@media_items == []} id="submission-media-empty">No media attached.</p>
 
       <ul id="submission-media-list" class="media-list" data-media-list>
@@ -135,7 +147,7 @@
       </ul>
 
       <p
-        :if={not media_approvable?(@media_items)}
+        :if={not media_approvable?(@submission, @media_items)}
         id="submission-media-processing"
         role="alert"
       >
@@ -144,6 +156,7 @@
 
       <div :if={@submission.status in [:pending, :reviewing]} class="media-controls">
         <.input
+          :if={@submission.kind in [:new_entry, :audio]}
           type="file"
           name="moderator_audio_upload"
           id="moderator-audio-upload"
@@ -158,6 +171,7 @@
           data-audio-input
         />
         <button
+          :if={@submission.kind in [:new_entry, :audio]}
           type="button"
           id="record-moderator-audio"
           class="secondary-button"
@@ -168,6 +182,7 @@
             else: "Record pronunciation"}
         </button>
         <.input
+          :if={@submission.kind in [:new_entry, :image]}
           type="file"
           name="moderator_image_uploads"
           id="moderator-image-uploads"
@@ -183,7 +198,10 @@
     </section>
 
     <section
-      :if={@submission.status in [:pending, :reviewing]}
+      :if={
+        @submission.kind in [:new_entry, :correction, :addition, :example] and
+          @submission.status in [:pending, :reviewing]
+      }
       id="submission-edit"
       class="entry-section auth-panel"
     >
@@ -195,85 +213,95 @@
         id="proposal-edit-form"
         class="auth-form"
       >
-        <%= if @submission.kind == :addition do %>
-          <.input
-            field={@edit_form[:alternate_form]}
-            type="text"
-            label="Alternate form"
-            class="auth-input"
-          />
-          <.input
-            field={@edit_form[:form_kind]}
-            type="select"
-            label="Form type"
-            class="auth-input"
-            options={[
-              {"Alias", :alias},
-              {"Spelling", :spelling},
-              {"Transliteration", :transliteration},
-              {"Historical", :historical}
-            ]}
-          />
-          <.input
-            field={@edit_form[:example]}
-            type="textarea"
-            label="Example sentence"
-            class="auth-input"
-            rows="3"
-          />
-        <% else %>
-          <.input
-            :if={@submission.kind == :new_entry}
-            field={@edit_form[:language_slug]}
-            type="select"
-            label="Language"
-            class="auth-input"
-            options={Enum.map(@languages, &{&1.name, &1.slug})}
-            required
-          />
-          <.input
-            field={@edit_form[:primary_form]}
-            type="text"
-            label="Word or expression"
-            class="auth-input"
-            required
-          />
-          <.input
-            field={@edit_form[:definition]}
-            type="textarea"
-            label="Meaning"
-            class="auth-input"
-            rows="4"
-            required
-          />
-          <.input
-            field={@edit_form[:part_of_speech]}
-            type="text"
-            label="Part of speech"
-            class="auth-input"
-          />
-          <.input
-            field={@edit_form[:usage_note]}
-            type="textarea"
-            label="Usage note"
-            class="auth-input"
-            rows="3"
-          />
-          <.input
-            field={@edit_form[:cultural_note]}
-            type="textarea"
-            label="Cultural context"
-            class="auth-input"
-            rows="3"
-          />
-          <.input
-            :if={@submission.kind == :new_entry}
-            field={@edit_form[:example]}
-            type="textarea"
-            label="Example sentence"
-            class="auth-input"
-            rows="3"
-          />
+        <%= cond do %>
+          <% @submission.kind == :addition -> %>
+            <.input
+              field={@edit_form[:alternate_form]}
+              type="text"
+              label="Alternate form"
+              class="auth-input"
+            />
+            <.input
+              field={@edit_form[:form_kind]}
+              type="select"
+              label="Form type"
+              class="auth-input"
+              options={[
+                {"Alias", :alias},
+                {"Spelling", :spelling},
+                {"Transliteration", :transliteration},
+                {"Historical", :historical}
+              ]}
+            />
+            <.input
+              field={@edit_form[:example]}
+              type="textarea"
+              label="Example sentence"
+              class="auth-input"
+              rows="3"
+            />
+          <% @submission.kind == :example -> %>
+            <.input
+              field={@edit_form[:example]}
+              type="textarea"
+              label="Example sentence"
+              class="auth-input"
+              rows="3"
+              required
+            />
+          <% true -> %>
+            <.input
+              :if={@submission.kind == :new_entry}
+              field={@edit_form[:language_slug]}
+              type="select"
+              label="Language"
+              class="auth-input"
+              options={Enum.map(@languages, &{&1.name, &1.slug})}
+              required
+            />
+            <.input
+              field={@edit_form[:primary_form]}
+              type="text"
+              label="Word or expression"
+              class="auth-input"
+              required
+            />
+            <.input
+              field={@edit_form[:definition]}
+              type="textarea"
+              label="Meaning"
+              class="auth-input"
+              rows="4"
+              required
+            />
+            <.input
+              field={@edit_form[:part_of_speech]}
+              type="text"
+              label="Part of speech"
+              class="auth-input"
+            />
+            <.input
+              field={@edit_form[:usage_note]}
+              type="textarea"
+              label="Usage note"
+              class="auth-input"
+              rows="3"
+            />
+            <.input
+              field={@edit_form[:cultural_note]}
+              type="textarea"
+              label="Cultural context"
+              class="auth-input"
+              rows="3"
+            />
+            <.input
+              :if={@submission.kind == :new_entry}
+              field={@edit_form[:example]}
+              type="textarea"
+              label="Example sentence"
+              class="auth-input"
+              rows="3"
+            />
         <% end %>
         <button type="submit" id="save-proposal" class="auth-button">Save changes</button>
       </.form>
@@ -446,7 +474,7 @@
           value="approve"
           class="auth-button"
           disabled={
-            not media_approvable?(@media_items) or
+            not media_approvable?(@submission, @media_items) or
               not example_approvable?(
                 @submission,
                 @example_suggestions,

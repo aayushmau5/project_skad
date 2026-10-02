@@ -195,11 +195,71 @@ defmodule Skad.Media do
     end
   end
 
-  def claim_submission_items_multi(%Multi{} = multi, public_ids) when is_list(public_ids) do
+  def claim_submission_items_multi(multi, public_ids, expected_kind \\ nil)
+
+  def claim_submission_items_multi(%Multi{} = multi, public_ids, expected_kind)
+      when is_list(public_ids) and expected_kind in [nil, :audio, :image] do
     Multi.run(multi, :media, fn repo, %{submission: submission} ->
-      claim_submission_items(repo, submission, public_ids)
+      claim_submission_items(repo, submission, public_ids, expected_kind)
     end)
   end
+
+  def validate_entry_submission(%Entry{} = entry, :audio, [public_id]) do
+    case get_item(public_id) do
+      %Item{
+        kind: :audio,
+        processing_state: :ready,
+        visibility: :quarantine,
+        submission_id: nil,
+        entry_id: nil,
+        concept_id: nil
+      } = item ->
+        case get_public_entry_audio(entry) do
+          %Item{sha256: sha256} when sha256 == item.sha256 -> {:error, :already_exists}
+          _other -> :ok
+        end
+
+      _invalid_item ->
+        {:error, :invalid_media}
+    end
+  end
+
+  def validate_entry_submission(%Entry{} = entry, :image, public_ids)
+      when is_list(public_ids) and public_ids != [] and
+             length(public_ids) <= @max_submission_images do
+    items = Enum.map(public_ids, &get_item/1)
+
+    valid? =
+      Enum.uniq(public_ids) == public_ids and
+        Enum.all?(items, fn
+          %Item{
+            kind: :image,
+            processing_state: :ready,
+            visibility: :quarantine,
+            submission_id: nil,
+            entry_id: nil,
+            concept_id: nil
+          } ->
+            true
+
+          _other ->
+            false
+        end)
+
+    existing_hashes =
+      entry.concept
+      |> list_public_concept_images()
+      |> MapSet.new(& &1.sha256)
+
+    cond do
+      not valid? -> {:error, :invalid_media}
+      Enum.any?(items, &MapSet.member?(existing_hashes, &1.sha256)) -> {:error, :already_exists}
+      true -> :ok
+    end
+  end
+
+  def validate_entry_submission(%Entry{}, kind, _public_ids) when kind in [:audio, :image],
+    do: {:error, :invalid_media}
 
   def attach_item_to_submission(%Submission{} = submission, %Item{id: id})
       when is_integer(id) do
@@ -326,14 +386,14 @@ defmodule Skad.Media do
 
   def update_item(%Item{}, _attrs), do: {:error, :item_not_found}
 
-  defp claim_submission_items(_repo, _submission, []), do: {:ok, []}
+  defp claim_submission_items(_repo, _submission, [], nil), do: {:ok, []}
 
-  defp claim_submission_items(repo, submission, public_ids) do
+  defp claim_submission_items(repo, submission, public_ids, expected_kind) do
     with {:ok, public_ids} <- cast_public_ids(public_ids),
          true <- Enum.uniq(public_ids) == public_ids,
          items <- unowned_items(repo, public_ids),
          true <- length(items) == length(public_ids),
-         :ok <- validate_submission_limits(items),
+         :ok <- validate_submission_limits(items, expected_kind),
          item_ids = Enum.map(items, & &1.id),
          {count, _rows} <-
            Item
@@ -376,7 +436,7 @@ defmodule Skad.Media do
     |> repo.all()
   end
 
-  defp validate_submission_limits(items) do
+  defp validate_submission_limits(items, nil) do
     audio_count = Enum.count(items, &(&1.kind == :audio))
     image_count = Enum.count(items, &(&1.kind == :image))
 
@@ -385,6 +445,17 @@ defmodule Skad.Media do
        do: :ok,
        else: {:error, :invalid_media}
   end
+
+  defp validate_submission_limits([%Item{kind: :audio}], :audio), do: :ok
+
+  defp validate_submission_limits(items, :image) do
+    if items != [] and length(items) <= @max_submission_images and
+         Enum.all?(items, &(&1.kind == :image)),
+       do: :ok,
+       else: {:error, :invalid_media}
+  end
+
+  defp validate_submission_limits(_items, _expected_kind), do: {:error, :invalid_media}
 
   defp attachment_available?(submission, %Item{kind: :audio}) do
     if submission_item_count(submission.id, :audio) == 0,
@@ -409,29 +480,80 @@ defmodule Skad.Media do
   end
 
   defp publish_submission_items(repo, submission, entry, concept) do
-    repo
-    |> list_submission_items_with_repo(submission.id)
-    |> Enum.reduce_while({:ok, []}, fn item, {:ok, published} ->
-      ownership =
-        case item.kind do
-          :audio -> [submission_id: nil, entry_id: entry.id, concept_id: nil]
-          :image -> [submission_id: nil, entry_id: nil, concept_id: concept.id]
+    items = list_submission_items_with_repo(repo, submission.id)
+
+    with :ok <- reject_published_duplicates(repo, items, entry, concept),
+         :ok <- archive_replaced_audio(repo, items, entry) do
+      items
+      |> Enum.reduce_while({:ok, []}, fn item, {:ok, published} ->
+        ownership =
+          case item.kind do
+            :audio -> [submission_id: nil, entry_id: entry.id, concept_id: nil]
+            :image -> [submission_id: nil, entry_id: nil, concept_id: concept.id]
+          end
+
+        changeset =
+          item
+          |> Changeset.change(ownership)
+          |> Item.changeset(%{visibility: :public})
+
+        case repo.update(changeset) do
+          {:ok, item} -> {:cont, {:ok, [item | published]}}
+          {:error, changeset} -> {:halt, {:error, changeset}}
         end
-
-      changeset =
-        item
-        |> Changeset.change(ownership)
-        |> Item.changeset(%{visibility: :public})
-
-      case repo.update(changeset) do
-        {:ok, item} -> {:cont, {:ok, [item | published]}}
-        {:error, changeset} -> {:halt, {:error, changeset}}
+      end)
+      |> case do
+        {:ok, published} -> {:ok, Enum.reverse(published)}
+        error -> error
       end
-    end)
-    |> case do
-      {:ok, published} -> {:ok, Enum.reverse(published)}
-      error -> error
     end
+  end
+
+  defp reject_published_duplicates(repo, items, entry, concept) do
+    audio_hash =
+      Item
+      |> where(
+        [item],
+        item.entry_id == ^entry.id and item.kind == :audio and item.visibility == :public and
+          is_nil(item.archived_at)
+      )
+      |> select([item], item.sha256)
+      |> repo.one()
+
+    image_hashes =
+      Item
+      |> where(
+        [item],
+        item.concept_id == ^concept.id and item.kind == :image and item.visibility == :public and
+          is_nil(item.archived_at)
+      )
+      |> select([item], item.sha256)
+      |> repo.all()
+      |> MapSet.new()
+
+    duplicate? =
+      Enum.any?(items, fn
+        %Item{kind: :audio, sha256: sha256} -> sha256 == audio_hash
+        %Item{kind: :image, sha256: sha256} -> MapSet.member?(image_hashes, sha256)
+      end)
+
+    if duplicate?, do: {:error, :already_exists}, else: :ok
+  end
+
+  defp archive_replaced_audio(repo, items, entry) do
+    if Enum.any?(items, &(&1.kind == :audio)) do
+      now = DateTime.utc_now(:second)
+
+      Item
+      |> where(
+        [item],
+        item.entry_id == ^entry.id and item.kind == :audio and is_nil(item.archived_at) and
+          item.visibility not in [:withdrawn, :pending_deletion]
+      )
+      |> repo.update_all(set: [visibility: :pending_deletion, archived_at: now])
+    end
+
+    :ok
   end
 
   defp list_submission_items_with_repo(repo, submission_id) do
