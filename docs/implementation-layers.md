@@ -22,6 +22,17 @@ accepted product decisions, architecture, or data model.
 
 ## Immediate focus
 
+### Representative performance baseline complete
+
+The reproducible `mix skad.benchmark` task builds the complete PD-018 synthetic
+dataset and measures indexed query plans, warm-cache application queries,
+twenty readers with one writer, HTTP throughput, failures, and process memory.
+All database budgets passed in production mode on ARM64 Mac and in constrained
+ARM64 Linux runs at one CPU with both 1 GB and 512 MB memory. Each Linux run also
+completed 4,000 HTTP requests without failure or SQLite errors. Repeat the
+benchmark on the eventual VPS before choosing its final size. See
+`docs/performance-baseline.md` for the measurements and limitations.
+
 ### Backup and restore complete for the pilot scope
 
 `bin/skad-data` creates a maintenance-window bundle containing a native SQLite
