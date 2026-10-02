@@ -18,6 +18,13 @@ defmodule SkadWeb.Router do
   end
 
   scope "/", SkadWeb do
+    pipe_through :api
+
+    get "/health", HealthController, :health
+    get "/ready", HealthController, :ready
+  end
+
+  scope "/", SkadWeb do
     pipe_through :browser
 
     get "/", PageController, :home
