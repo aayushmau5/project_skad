@@ -1,0 +1,773 @@
+msgid ""
+msgstr ""
+"Language: hi\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "1. Choose what you know: a word or expression"
+msgstr "1. जो जानते हैं, उसे चुनें: कोई शब्द या बोलचाल का वाक्य"
+
+msgid "2. Share it with context"
+msgstr "2. उसके बारे में बताएँ"
+
+msgid "3. Confirm and send"
+msgstr "3. जाँचकर भेजें"
+
+msgid "A living archive of Kinnaur’s languages"
+msgstr "किन्नौर की भाषाओं का जीवंत संग्रह"
+
+msgid "A note is required for this decision."
+msgstr "इस निर्णय के लिए कारण लिखना ज़रूरी है।"
+
+msgid "A pronunciation has not been recorded yet."
+msgstr "अभी उच्चारण की रिकॉर्डिंग नहीं है।"
+
+msgid "A submission can have at most five images."
+msgstr "एक सुझाव में अधिकतम पाँच चित्र हो सकते हैं।"
+
+msgid "About this record"
+msgstr "इस जानकारी के बारे में"
+
+msgid "Add a recording or images (optional)"
+msgstr "रिकॉर्डिंग या चित्र जोड़ें (वैकल्पिक)"
+
+msgid "Add an example"
+msgstr "उदाहरण जोड़ें"
+
+msgid "Add cultural images"
+msgstr "सांस्कृतिक चित्र जोड़ें"
+
+msgid "Add images"
+msgstr "चित्र जोड़ें"
+
+msgid "Add information"
+msgstr "जानकारी जोड़ें"
+
+msgid "Add one pronunciation recording and up to five images. Both are optional."
+msgstr "चाहें तो उच्चारण की एक रिकॉर्डिंग और पाँच तक चित्र जोड़ें।"
+
+msgid "Add pronunciation audio"
+msgstr "उच्चारण की रिकॉर्डिंग जोड़ें"
+
+msgid "Add the form used in your village"
+msgstr "अपने गाँव में बोला जाने वाला रूप जोड़ें"
+
+msgid "Add usage or cultural context (optional)"
+msgstr "प्रयोग या सांस्कृतिक संदर्भ जोड़ें (वैकल्पिक)"
+
+msgid "Addition"
+msgstr "अतिरिक्त जानकारी"
+
+msgid "Alias"
+msgstr "दूसरा स्थानीय रूप"
+
+msgid "All languages"
+msgstr "सभी भाषाएँ"
+
+msgid "Alternate form"
+msgstr "दूसरा रूप"
+
+msgid "Alternate form (optional)"
+msgstr "दूसरा रूप (वैकल्पिक)"
+
+msgid "Alternate form type"
+msgstr "दूसरे रूप का प्रकार"
+
+msgid "Approve and publish"
+msgstr "स्वीकृत करके प्रकाशित करें"
+
+msgid "Approved"
+msgstr "स्वीकृत"
+
+msgid "Attached media must finish processing before approval."
+msgstr "स्वीकृति से पहले रिकॉर्डिंग और चित्रों की जाँच पूरी होनी चाहिए।"
+
+msgid "Attached media must finish processing before this submission can be approved."
+msgstr "इस सुझाव को स्वीकृत करने से पहले रिकॉर्डिंग और चित्रों की जाँच पूरी होनी चाहिए।"
+
+msgid "Attempting to reconnect"
+msgstr "फिर से जुड़ने की कोशिश हो रही है"
+
+msgid "Audio replaced"
+msgstr "रिकॉर्डिंग बदली गई"
+
+msgid "Back to concepts"
+msgstr "अवधारणाओं पर लौटें"
+
+msgid "Back to entry"
+msgstr "शब्द पर लौटें"
+
+msgid "Back to moderator workspace"
+msgstr "समीक्षा कार्यक्षेत्र पर लौटें"
+
+msgid "Back to search"
+msgstr "खोज पर लौटें"
+
+msgid "Back to submission queue"
+msgstr "समीक्षा सूची पर लौटें"
+
+msgid "Check the highlighted fields. Your entered information is still here."
+msgstr "चिह्नित जानकारी जाँचें। आपकी लिखी जानकारी यहीं है।"
+
+msgid "Choose a contribution to review"
+msgstr "समीक्षा के लिए सुझाव चुनें"
+
+msgid "Choose a language"
+msgstr "भाषा चुनें"
+
+msgid "Choose a valid moderation decision."
+msgstr "उपलब्ध समीक्षा निर्णय चुनें।"
+
+msgid "Choose an available concept or create a new one."
+msgstr "मौजूदा अवधारणा चुनें या नई बनाएँ।"
+
+msgid "Choose media of the expected type."
+msgstr "सही प्रकार की रिकॉर्डिंग या चित्र चुनें।"
+
+msgid "Choose valid entries for the example links."
+msgstr "उदाहरण की कड़ियों के लिए उपलब्ध शब्द चुनें।"
+
+msgid "Compare the proposal with published content, check its context, then decide."
+msgstr "सुझाव की प्रकाशित जानकारी से तुलना करें, संदर्भ जाँचें और निर्णय लें।"
+
+msgid "Concept"
+msgstr "अवधारणा"
+
+msgid "Concept created."
+msgstr "अवधारणा बन गई है।"
+
+msgid "Concept cultural context"
+msgstr "अवधारणा का सांस्कृतिक संदर्भ"
+
+msgid "Concept updated."
+msgstr "अवधारणा में बदलाव सहेजे गए हैं।"
+
+msgid "Concepts"
+msgstr "अवधारणाएँ"
+
+msgid "Confirm and send"
+msgstr "जाँचकर भेजें"
+
+msgid "Confirm rejection"
+msgstr "अस्वीकृति की पुष्टि करें"
+
+msgid "Confirm rejection before continuing."
+msgstr "आगे बढ़ने से पहले अस्वीकृति की पुष्टि करें।"
+
+msgid "Contribution receipt not found"
+msgstr "सुझाव की रसीद नहीं मिली"
+
+msgid "Contribution received"
+msgstr "सुझाव मिल गया"
+
+msgid "Correction"
+msgstr "सुधार"
+
+msgid "Create a new concept"
+msgstr "नई अवधारणा बनाएँ"
+
+msgid "Create concept"
+msgstr "अवधारणा बनाएँ"
+
+msgid "Cultural context"
+msgstr "सांस्कृतिक संदर्भ"
+
+msgid "Cultural context for %{word}"
+msgstr "%{word} का सांस्कृतिक संदर्भ"
+
+msgid "Cultural image"
+msgstr "सांस्कृतिक चित्र"
+
+msgid "Cultural images"
+msgstr "सांस्कृतिक चित्र"
+
+msgid "Current published entry"
+msgstr "अभी प्रकाशित जानकारी"
+
+msgid "Decision"
+msgstr "निर्णय"
+
+msgid "Do not link"
+msgstr "कड़ी न जोड़ें"
+
+msgid "Duration not recorded"
+msgstr "अवधि की जानकारी नहीं है"
+
+msgid "Duration: %{seconds} seconds"
+msgstr "अवधि: %{seconds} सेकंड"
+
+msgid "Edit concept"
+msgstr "अवधारणा बदलें"
+
+msgid "Edit proposal"
+msgstr "सुझाव बदलें"
+
+msgid "Edited"
+msgstr "बदलाव किए गए"
+
+msgid "Editorial label"
+msgstr "संपादकीय नाम"
+
+msgid "Email"
+msgstr "ईमेल"
+
+msgid "Entries"
+msgstr "शब्द"
+
+msgid "Entry not found"
+msgstr "यह शब्द नहीं मिला"
+
+msgid "Example"
+msgstr "उदाहरण"
+
+msgid "Example links"
+msgstr "उदाहरण की कड़ियाँ"
+
+msgid "Example sentence"
+msgstr "उदाहरण वाक्य"
+
+msgid "Example sentence (optional)"
+msgstr "उदाहरण वाक्य (वैकल्पिक)"
+
+msgid "Examples"
+msgstr "उदाहरण"
+
+msgid "Existing concept"
+msgstr "मौजूदा अवधारणा"
+
+msgid "Failed"
+msgstr "जाँच विफल हुई"
+
+msgid "Find a word, a spelling, or a meaning in Kinnaur’s languages."
+msgstr "किन्नौर की भाषाओं में कोई शब्द, उसकी वर्तनी या अर्थ खोजें।"
+
+msgid "Find an existing concept by concept or entry"
+msgstr "अवधारणा या शब्द से मौजूदा अवधारणा खोजें"
+
+msgid "Form type"
+msgstr "रूप का प्रकार"
+
+msgid "Help keep these languages alive"
+msgstr "इन भाषाओं को जीवित रखने में साथ दें"
+
+msgid "Here is the string to translate"
+msgstr "अनुवाद के लिए पाठ"
+
+msgid "Historical"
+msgstr "पुराना रूप"
+
+msgid "Historical form"
+msgstr "पुराना रूप"
+
+msgid "I confirm this contribution should not be published."
+msgstr "मैं पुष्टि करता/करती हूँ कि यह सुझाव प्रकाशित नहीं किया जाना चाहिए।"
+
+msgid "I have permission to share this media publicly after review."
+msgstr "मुझे समीक्षा के बाद इस रिकॉर्डिंग या चित्र को सार्वजनिक करने की अनुमति है।"
+
+msgid "Image removed from the concept."
+msgstr "अवधारणा से चित्र हटा दिया गया है।"
+
+msgid "Interface language"
+msgstr "पेज की भाषा"
+
+msgid "Invalid email or password."
+msgstr "ईमेल या पासवर्ड सही नहीं है।"
+
+msgid "Keep the example to 100 words or fewer."
+msgstr "उदाहरण 100 या उससे कम शब्दों में लिखें।"
+
+msgid "Keep this receipt link to check the review status."
+msgstr "समीक्षा की स्थिति देखने के लिए इस रसीद का लिंक सँभालकर रखें।"
+
+msgid "Kind"
+msgstr "प्रकार"
+
+msgid "Know this word? Share it for review"
+msgstr "यह शब्द जानते हैं? समीक्षा के लिए भेजें"
+
+msgid "Language"
+msgstr "भाषा"
+
+msgid "Listen to this word"
+msgstr "इस शब्द का उच्चारण सुनें"
+
+msgid "Local forms and pronunciations may vary. Share the form used in your village."
+msgstr "अलग-अलग जगहों पर शब्द का रूप और उच्चारण बदल सकता है। अपने गाँव में बोला जाने वाला रूप बताएँ।"
+
+msgid "Local language variety (optional)"
+msgstr "स्थानीय बोली (वैकल्पिक)"
+
+msgid "Local or alternative form"
+msgstr "स्थानीय या दूसरा रूप"
+
+msgid "Log in"
+msgstr "प्रवेश करें"
+
+msgid "Log out"
+msgstr "बाहर निकलें"
+
+msgid "Logged out."
+msgstr "आप बाहर निकल गए हैं।"
+
+msgid "Manage concepts"
+msgstr "अवधारणाएँ सँभालें"
+
+msgid "Matched form:"
+msgstr "मिलता-जुलता रूप:"
+
+msgid "Meaning"
+msgstr "अर्थ"
+
+msgid "Media attached"
+msgstr "रिकॉर्डिंग या चित्र जोड़े गए"
+
+msgid "Media is not accepted for this contribution type."
+msgstr "इस प्रकार के सुझाव में रिकॉर्डिंग या चित्र नहीं जोड़े जा सकते।"
+
+msgid "Media removed"
+msgstr "रिकॉर्डिंग या चित्र हटाए गए"
+
+msgid "Media removed from the submission."
+msgstr "सुझाव से रिकॉर्डिंग या चित्र हटा दिया गया है।"
+
+msgid "Moderator"
+msgstr "समीक्षक"
+
+msgid "Moderator log in"
+msgstr "समीक्षक प्रवेश"
+
+msgid "Moderator navigation"
+msgstr "समीक्षक नेविगेशन"
+
+msgid "Moderator note"
+msgstr "समीक्षक की टिप्पणी"
+
+msgid "Moderator workspace"
+msgstr "समीक्षा कार्यक्षेत्र"
+
+msgid "More information needed"
+msgstr "और जानकारी चाहिए"
+
+msgid "Narrow by language (optional)"
+msgstr "भाषा के अनुसार खोजें (वैकल्पिक)"
+
+msgid "New concept label (used only when creating)"
+msgstr "नई अवधारणा का नाम (बनाते समय ही उपयोग होगा)"
+
+msgid "New concept private note (used only when creating)"
+msgstr "नई अवधारणा की निजी टिप्पणी (बनाते समय ही उपयोग होगी)"
+
+msgid "New word"
+msgstr "नया शब्द"
+
+msgid "Next submissions"
+msgstr "अगले सुझाव"
+
+msgid "No concepts found. Try another word or create a concept below."
+msgstr "कोई अवधारणा नहीं मिली। दूसरा शब्द आज़माएँ या नीचे नई अवधारणा बनाएँ।"
+
+msgid "No decisions yet."
+msgstr "अभी कोई निर्णय नहीं लिया गया है।"
+
+msgid "No editorial note."
+msgstr "कोई संपादकीय टिप्पणी नहीं है।"
+
+msgid "No entries use this concept yet."
+msgstr "अभी इस अवधारणा से कोई शब्द नहीं जुड़ा है।"
+
+msgid "No images attached."
+msgstr "कोई चित्र नहीं जोड़ा गया है।"
+
+msgid "No media attached."
+msgstr "कोई रिकॉर्डिंग या चित्र नहीं जोड़ा गया है।"
+
+msgid "No submissions need review."
+msgstr "अभी कोई सुझाव समीक्षा के लिए नहीं है।"
+
+msgid "Not published"
+msgstr "प्रकाशित नहीं हुआ"
+
+msgid "Only share recordings or images you have permission to make public after review."
+msgstr "केवल वही रिकॉर्डिंग या चित्र साझा करें जिन्हें समीक्षा के बाद सार्वजनिक करने की अनुमति आपके पास है।"
+
+msgid "Original contributor proposal"
+msgstr "योगदानकर्ता का मूल सुझाव"
+
+msgid "Other forms and spellings"
+msgstr "दूसरे रूप और वर्तनियाँ"
+
+msgid "Other languages"
+msgstr "अन्य भाषाएँ"
+
+msgid "Page unavailable"
+msgstr "पेज उपलब्ध नहीं है"
+
+msgid "Part of speech"
+msgstr "शब्द का प्रकार"
+
+msgid "Password"
+msgstr "पासवर्ड"
+
+msgid "Pending"
+msgstr "लंबित"
+
+msgid "Private editorial note"
+msgstr "निजी संपादकीय टिप्पणी"
+
+msgid "Processing"
+msgstr "जाँच चल रही है"
+
+msgid "Pronunciation and cultural images"
+msgstr "उच्चारण और सांस्कृतिक चित्र"
+
+msgid "Pronunciation audio"
+msgstr "उच्चारण की रिकॉर्डिंग"
+
+msgid "Pronunciation of %{word}"
+msgstr "%{word} का उच्चारण"
+
+msgid "Proposal"
+msgstr "सुझाव"
+
+msgid "Proposal changes saved."
+msgstr "सुझाव में बदलाव सहेज दिए गए हैं।"
+
+msgid "Provide an alternate form, an example sentence, or both."
+msgstr "दूसरा रूप, उदाहरण वाक्य या दोनों बताएँ।"
+
+msgid "Public-use permission is not recorded. Verify it before publication."
+msgstr "सार्वजनिक उपयोग की अनुमति दर्ज नहीं है। प्रकाशन से पहले इसकी पुष्टि करें।"
+
+msgid "Published"
+msgstr "प्रकाशित"
+
+msgid "Published in the community archive"
+msgstr "सामुदायिक संग्रह में प्रकाशित"
+
+msgid "Ready"
+msgstr "तैयार"
+
+msgid "Reason for rejection"
+msgstr "अस्वीकृति का कारण"
+
+msgid "Receipt"
+msgstr "रसीद"
+
+msgid "Received"
+msgstr "प्राप्ति का समय"
+
+msgid "Record pronunciation"
+msgstr "उच्चारण रिकॉर्ड करें"
+
+msgid "Record replacement"
+msgstr "नई रिकॉर्डिंग करें"
+
+msgid "Record this pronunciation"
+msgstr "यह उच्चारण रिकॉर्ड करें"
+
+msgid "Recording and uploads need JavaScript. You can still send a word or text suggestion."
+msgstr "रिकॉर्डिंग और अपलोड के लिए जावास्क्रिप्ट चाहिए। आप फिर भी शब्द या लिखित सुझाव भेज सकते हैं।"
+
+msgid "Reject this contribution"
+msgstr "यह सुझाव अस्वीकार करें"
+
+msgid "Rejected"
+msgstr "अस्वीकृत"
+
+msgid "Remove"
+msgstr "हटाएँ"
+
+msgid "Replace pronunciation audio"
+msgstr "उच्चारण की रिकॉर्डिंग बदलें"
+
+msgid "Replace the existing audio instead."
+msgstr "मौजूदा रिकॉर्डिंग बदलें।"
+
+msgid "Results"
+msgstr "खोज के नतीजे"
+
+msgid "Return to the archive"
+msgstr "संग्रह पर लौटें"
+
+msgid "Review history"
+msgstr "समीक्षा का इतिहास"
+
+msgid "Review queue"
+msgstr "समीक्षा सूची"
+
+msgid "Review submission"
+msgstr "सुझाव की समीक्षा करें"
+
+msgid "Review submissions"
+msgstr "सुझावों की समीक्षा करें"
+
+msgid "Reviewed proposal"
+msgstr "समीक्षा के बाद का सुझाव"
+
+msgid "Reviewing"
+msgstr "समीक्षा चल रही है"
+
+msgid "Save changes"
+msgstr "बदलाव सहेजें"
+
+msgid "Save concept"
+msgstr "अवधारणा सहेजें"
+
+msgid "Search"
+msgstr "खोजें"
+
+msgid "Search concepts"
+msgstr "अवधारणाएँ खोजें"
+
+msgid "Search concepts or entries"
+msgstr "अवधारणाएँ या शब्द खोजें"
+
+msgid "Select a result during approval, or leave the selection blank to create a new concept."
+msgstr "स्वीकृति के समय नतीजा चुनें, या नई अवधारणा बनाने के लिए चयन खाली छोड़ें।"
+
+msgid "Send for review"
+msgstr "समीक्षा के लिए भेजें"
+
+msgid "Share a word you know. You don’t need an account."
+msgstr "जो शब्द जानते हैं, उसे साझा करें। खाता बनाना ज़रूरी नहीं है।"
+
+msgid "Share it with context"
+msgstr "उसके बारे में बताएँ"
+
+msgid "Share what you know"
+msgstr "जो जानते हैं, उसे साझा करें"
+
+msgid "Signed in as"
+msgstr "प्रवेश किया है:"
+
+msgid "Skip to content"
+msgstr "सीधे मुख्य जानकारी पर जाएँ"
+
+msgid "Something went wrong!"
+msgstr "कुछ गड़बड़ हो गई है!"
+
+msgid "Detailed source and review information is not available here."
+msgstr "स्रोत और समीक्षा का विस्तृत विवरण यहाँ उपलब्ध नहीं है।"
+
+msgid "Speaker or photographer credit (optional, public)"
+msgstr "वक्ता या फ़ोटोग्राफ़र का नाम (वैकल्पिक, सार्वजनिक)"
+
+msgid "Spelling"
+msgstr "वर्तनी"
+
+msgid "Start review"
+msgstr "समीक्षा शुरू करें"
+
+msgid "Status"
+msgstr "स्थिति"
+
+msgid "Submission"
+msgstr "सुझाव"
+
+msgid "Submission approved and published."
+msgstr "सुझाव स्वीकृत करके प्रकाशित कर दिया गया है।"
+
+msgid "Submission marked as reviewing."
+msgstr "सुझाव की समीक्षा शुरू हो गई है।"
+
+msgid "Submission queue"
+msgstr "सुझावों की सूची"
+
+msgid "Submission rejected."
+msgstr "सुझाव अस्वीकार कर दिया गया है।"
+
+msgid "Submitted cultural context"
+msgstr "भेजा गया सांस्कृतिक संदर्भ"
+
+msgid "Submitted pronunciation"
+msgstr "भेजा गया उच्चारण"
+
+msgid "Suggest a correction"
+msgstr "सुधार सुझाएँ"
+
+msgid "Suggest a word"
+msgstr "शब्द सुझाएँ"
+
+msgid "Suggestion received"
+msgstr "सुझाव मिल गया"
+
+msgid "System dashboard"
+msgstr "सिस्टम डैशबोर्ड"
+
+msgid "That content is already published on this entry."
+msgstr "यह जानकारी इस शब्द के साथ पहले से प्रकाशित है।"
+
+msgid "That contribution is already part of this entry."
+msgstr "यह सुझाव इस शब्द की जानकारी में पहले से शामिल है।"
+
+msgid "The concept image could not be removed."
+msgstr "अवधारणा का चित्र नहीं हटाया जा सका।"
+
+msgid "The example could not be matched."
+msgstr "उदाहरण में संबंधित शब्द नहीं मिले।"
+
+msgid "The example must contain the proposed word."
+msgstr "उदाहरण में सुझाया गया शब्द होना चाहिए।"
+
+msgid "The example must contain the proposed word. Edit the sentence before approving."
+msgstr "उदाहरण में सुझाया गया शब्द होना चाहिए। स्वीकृति से पहले वाक्य बदलें।"
+
+msgid "The link may have changed. Search the archive to find the word again."
+msgstr "लिंक बदल गया होगा। शब्द फिर से ढूँढ़ने के लिए संग्रह में खोजें।"
+
+msgid "The meaning has not been recorded yet."
+msgstr "अभी अर्थ की जानकारी नहीं है।"
+
+msgid "The moderation decision could not be saved."
+msgstr "समीक्षा का निर्णय नहीं सहेजा जा सका।"
+
+msgid "The submission status changed. Reload and try again."
+msgstr "सुझाव की स्थिति बदल गई है। पेज फिर खोलकर कोशिश करें।"
+
+msgid "The target entry is no longer available."
+msgstr "जिस शब्द के लिए सुझाव है, वह अब उपलब्ध नहीं है।"
+
+msgid "The uploaded media could not be attached."
+msgstr "अपलोड की गई रिकॉर्डिंग या चित्र नहीं जोड़े जा सके।"
+
+msgid "The uploaded media could not be attached. Please upload it again."
+msgstr "अपलोड की गई रिकॉर्डिंग या चित्र नहीं जोड़े जा सके। फिर से अपलोड करें।"
+
+msgid "This page is unavailable"
+msgstr "यह पेज उपलब्ध नहीं है"
+
+msgid "This recording is unavailable. Try again when your connection returns."
+msgstr "यह रिकॉर्डिंग उपलब्ध नहीं है। कनेक्शन लौटने पर फिर कोशिश करें।"
+
+msgid "This recording reflects one speaker’s pronunciation."
+msgstr "यह रिकॉर्डिंग एक वक्ता का उच्चारण दर्शाती है।"
+
+msgid "This submission identifier was already used for different content."
+msgstr "इस रसीद संख्या से अलग सुझाव पहले भेजा जा चुका है। आपकी लिखी जानकारी यहाँ है। जाँचकर फिर भेजें।"
+
+msgid "This submission payload cannot be approved."
+msgstr "इस सुझाव की जानकारी स्वीकृत नहीं की जा सकती।"
+
+msgid "This submission's language is not active."
+msgstr "इस सुझाव की भाषा सक्रिय नहीं है।"
+
+msgid "Transliteration"
+msgstr "लिप्यंतरण"
+
+msgid "Try a word or meaning"
+msgstr "कोई शब्द या अर्थ लिखें"
+
+msgid "Under review"
+msgstr "समीक्षा चल रही है"
+
+msgid "Unknown"
+msgstr "जानकारी उपलब्ध नहीं है"
+
+msgid "Untitled entry"
+msgstr "बिना नाम का शब्द"
+
+msgid "Untitled submission"
+msgstr "बिना नाम का सुझाव"
+
+msgid "Upload between one and five ready images and try again."
+msgstr "एक से पाँच तैयार चित्र अपलोड करके फिर कोशिश करें।"
+
+msgid "Upload cultural images"
+msgstr "सांस्कृतिक चित्र अपलोड करें"
+
+msgid "Upload exactly one ready audio file and try again."
+msgstr "एक तैयार ऑडियो फ़ाइल अपलोड करके फिर कोशिश करें।"
+
+msgid "Upload or record one pronunciation."
+msgstr "उच्चारण रिकॉर्ड करें या एक ऑडियो फ़ाइल अपलोड करें।"
+
+msgid "Upload pronunciation audio"
+msgstr "उच्चारण की ऑडियो फ़ाइल अपलोड करें"
+
+msgid "Upload up to five cultural images."
+msgstr "पाँच तक सांस्कृतिक चित्र अपलोड करें।"
+
+msgid "Uploaded"
+msgstr "अपलोड हुआ"
+
+msgid "Usage"
+msgstr "प्रयोग"
+
+msgid "Usage note"
+msgstr "यह शब्द कैसे इस्तेमाल होता है"
+
+msgid "Validated"
+msgstr "जाँच पूरी हुई"
+
+msgid "Village or community (optional)"
+msgstr "गाँव या समुदाय (वैकल्पिक)"
+
+msgid "Waiting for review"
+msgstr "समीक्षा की प्रतीक्षा है"
+
+msgid "We can't find the internet"
+msgstr "इंटरनेट से जुड़ नहीं पा रहे हैं"
+
+msgid "We haven’t found this word yet. Try another spelling or search by meaning."
+msgstr "अभी यह शब्द नहीं मिला। दूसरी वर्तनी आज़माएँ या अर्थ से खोजें।"
+
+msgid "Welcome back."
+msgstr "फिर से स्वागत है।"
+
+msgid "What word are you looking for?"
+msgstr "आप कौन-सा शब्द खोज रहे हैं?"
+
+msgid "Withdrawn"
+msgstr "वापस लिया गया"
+
+msgid "Word or expression"
+msgstr "शब्द या बोलचाल का वाक्य"
+
+msgid "Word or meaning"
+msgstr "शब्द या अर्थ"
+
+msgid "Workspace"
+msgstr "कार्यक्षेत्र"
+
+msgid "You are offline. Keep this page open to retain your entered information. Reconnect before sending or uploading."
+msgstr "इंटरनेट कनेक्शन नहीं है। अपनी लिखी जानकारी बनाए रखने के लिए यह पेज खुला रखें। भेजने या अपलोड करने से पहले फिर जुड़ें।"
+
+msgid "You can also try a different spelling or transliteration."
+msgstr "आप दूसरी वर्तनी या लिप्यंतरण से भी खोज सकते हैं।"
+
+msgid "You must log in to access this page."
+msgstr "यह पेज देखने के लिए समीक्षक के रूप में प्रवेश करें।"
+
+msgid "Your suggestion has been saved. A moderator will review it before publication."
+msgstr "आपका सुझाव सहेज लिया गया है। प्रकाशन से पहले समीक्षक इसे जाँचेगा।"
+
+msgid "Your suggestion will be reviewed before it appears in the archive."
+msgstr "संग्रह में प्रकाशित होने से पहले आपके सुझाव की समीक्षा होगी।"
+
+msgid "Your suggestion will be reviewed before publication. Keep the receipt to check its status."
+msgstr "प्रकाशन से पहले आपके सुझाव की समीक्षा होगी। स्थिति देखने के लिए रसीद सँभालकर रखें।"
+
+msgid "proposed entry"
+msgstr "सुझाया गया शब्द"
+
+msgid "target entry"
+msgstr "संबंधित शब्द"
+
+msgid "Link “%{word}” to"
+msgstr "“%{word}” की कड़ी जोड़ें:"
+
+msgid "Changed:"
+msgstr "बदलाव:"
+
+msgid "Entries: %{count}"
+msgstr "शब्द: %{count}"
+
+msgid "We couldn’t complete this request"
+msgstr "यह अनुरोध पूरा नहीं हो सका"
+
+msgid "Use your browser’s Back button to check your information, then try again. If you received a receipt, your suggestion was saved."
+msgstr "अपने ब्राउज़र के वापस जाने वाले बटन से अपनी जानकारी जाँचें, फिर कोशिश करें। अगर आपको रसीद मिली थी, तो आपका सुझाव सहेज लिया गया है।"
+
+msgid "Replace or add media"
+msgstr "रिकॉर्डिंग या चित्र बदलें या जोड़ें"

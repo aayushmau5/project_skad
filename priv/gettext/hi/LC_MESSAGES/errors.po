@@ -1,0 +1,36 @@
+msgid ""
+msgstr ""
+"Language: hi\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "can't be blank"
+msgstr "यह जानकारी भरें"
+
+msgid "is invalid"
+msgstr "यह जानकारी सही नहीं है"
+
+msgid "is not active"
+msgstr "यह भाषा अभी उपलब्ध नहीं है"
+
+msgid "entry is unavailable"
+msgstr "यह शब्द अभी उपलब्ध नहीं है"
+
+msgid "or an example is required"
+msgstr "दूसरा रूप या उदाहरण लिखें"
+
+msgid "should be at most %{count} character(s)"
+msgid_plural "should be at most %{count} character(s)"
+msgstr[0] "अधिकतम %{count} अक्षर लिखें"
+msgstr[1] "अधिकतम %{count} अक्षर लिखें"
+
+msgid "should be at least %{count} character(s)"
+msgid_plural "should be at least %{count} character(s)"
+msgstr[0] "कम से कम %{count} अक्षर लिखें"
+msgstr[1] "कम से कम %{count} अक्षर लिखें"
+
+msgid "has already been taken"
+msgstr "यह पहले से मौजूद है"
+
+msgid "must be accepted"
+msgstr "कृपया इसकी पुष्टि करें"

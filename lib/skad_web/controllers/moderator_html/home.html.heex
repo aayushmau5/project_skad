@@ -1,17 +1,29 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
   <section id="moderator-home">
-    <h1>Moderator workspace</h1>
+    <h1>{gettext("Moderator workspace")}</h1>
     <p>
-      Signed in as <strong id="moderator-display-name">{@current_scope.moderator_account.display_name}</strong>.
+      {gettext("Signed in as")} <strong id="moderator-display-name">{@current_scope.moderator_account.display_name}</strong>.
     </p>
     <p>
-      <.link id="moderator-submissions-link" href={~p"/moderator/submissions"}>Review submissions</.link>
+      <.link id="moderator-submissions-link" href={~p"/moderator/submissions"}>{gettext(
+        "Review submissions"
+      )}</.link>
     </p>
     <p>
-      <.link id="moderator-concepts-link" href={~p"/moderator/concepts"}>Manage concepts</.link>
+      <.link id="moderator-concepts-link" href={~p"/moderator/concepts"}>{gettext(
+        "Manage concepts"
+      )}</.link>
     </p>
     <p>
-      <.link id="moderator-dashboard-link" href={~p"/moderator/dashboard"}>System dashboard</.link>
+      <.link id="moderator-dashboard-link" href={~p"/moderator/dashboard"}>{gettext(
+        "System dashboard"
+      )}</.link>
     </p>
   </section>
 </Layouts.app>

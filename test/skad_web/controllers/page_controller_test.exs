@@ -64,13 +64,27 @@ defmodule SkadWeb.PageControllerTest do
     conn = get(recycle(conn), ~p"/entries/#{water.public_id}")
     document = conn |> html_response(200) |> LazyHTML.from_document()
 
-    assert LazyHTML.text(LazyHTML.query_by_id(document, "entry-title")) == "Water"
+    assert String.trim(LazyHTML.text(LazyHTML.query_by_id(document, "entry-title"))) == "Water"
 
     assert LazyHTML.text(LazyHTML.query_by_id(document, "entry-definitions")) =~
              "A clear liquid used for drinking."
 
+    assert LazyHTML.attribute(LazyHTML.query(document, "#entry-definitions p"), "lang") == ["en"]
+
+    assert LazyHTML.attribute(LazyHTML.query(document, "#entry-definitions p"), "data-language") ==
+             ["english"]
+
     assert LazyHTML.text(LazyHTML.query_by_id(document, "entry-forms")) =~ "H₂O"
-    assert LazyHTML.text(LazyHTML.query_by_id(document, "entry-equivalents")) =~ "पानी — Hindi"
+
+    assert LazyHTML.attribute(
+             LazyHTML.query(document, "#equivalent-entry-#{hindi_water.public_id} a"),
+             "href"
+           ) == [~p"/entries/#{hindi_water.public_id}"]
+
+    assert LazyHTML.attribute(
+             LazyHTML.query(document, "#equivalent-entry-#{hindi_water.public_id} span"),
+             "lang"
+           ) == ["hi"]
 
     assert LazyHTML.text(LazyHTML.query_by_id(document, "example-#{example.public_id}")) =~
              "Drink water."
@@ -115,7 +129,9 @@ defmodule SkadWeb.PageControllerTest do
 
   test "returns not found for an unknown public entry", %{conn: conn} do
     conn = get(conn, ~p"/entries/00000000-0000-4000-8000-000000000000")
-    assert response(conn, 404) == "Entry not found"
+    document = conn |> html_response(404) |> LazyHTML.from_document()
+    assert Enum.count(LazyHTML.query_by_id(document, "archive-not-found")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "not-found-search")) == 1
   end
 
   defp create_language(slug, code, name) do

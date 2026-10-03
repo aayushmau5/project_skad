@@ -88,6 +88,65 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
            ) == 1
 
     assert Enum.empty?(LazyHTML.query_by_id(second_page, "next-submissions-page"))
+
+    [detail_path] =
+      LazyHTML.attribute(
+        LazyHTML.query_by_id(
+          second_page,
+          "review-submission-#{List.last(submissions).public_id}"
+        ),
+        "href"
+      )
+
+    document =
+      first_page_conn
+      |> recycle()
+      |> get(detail_path)
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(
+             LazyHTML.query(
+               document,
+               "#review-submission-#{List.last(submissions).public_id}[aria-current=page]"
+             )
+           ) == 1
+
+    [decision_path] =
+      LazyHTML.attribute(LazyHTML.query_by_id(document, "moderation-form"), "action")
+
+    assert decision_path == detail_path
+
+    decision_conn =
+      first_page_conn
+      |> recycle()
+      |> patch(decision_path, %{"moderation" => %{"decision" => "reviewing"}})
+
+    assert redirected_to(decision_conn) == detail_path
+    assert Repo.get!(Submission, List.last(submissions).id).status == :reviewing
+  end
+
+  test "requires explicit rejection confirmation and keeps the reason on errors", %{conn: conn} do
+    submission = create_submission()
+    conn = log_in(conn)
+    path = ~p"/moderator/submissions/#{submission.public_id}"
+
+    document =
+      conn
+      |> patch(path, %{"moderation" => %{"decision" => "rejected", "note" => "Needs evidence"}})
+      |> html_response(422)
+      |> LazyHTML.from_document()
+
+    assert Repo.get!(Submission, submission.id).status == :pending
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "rejection-reason")) == "Needs evidence"
+    assert Enum.count(LazyHTML.query(document, "#confirm-rejection[required]")) == 1
+
+    assert Enum.count(
+             LazyHTML.query(
+               document,
+               "#review-submission-#{submission.public_id}[aria-current=page]"
+             )
+           ) == 1
   end
 
   test "handles review and rejection decisions", %{conn: conn} do
@@ -107,7 +166,7 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       conn
       |> recycle()
       |> patch(path, %{
-        "moderation" => %{"decision" => "rejected", "note" => " "}
+        "moderation" => %{"decision" => "rejected", "note" => " ", "confirm_rejection" => "true"}
       })
 
     document = invalid_conn |> html_response(422) |> LazyHTML.from_document()
@@ -118,7 +177,11 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       invalid_conn
       |> recycle()
       |> patch(path, %{
-        "moderation" => %{"decision" => "rejected", "note" => "Could not verify"}
+        "moderation" => %{
+          "decision" => "rejected",
+          "note" => "Could not verify",
+          "confirm_rejection" => "true"
+        }
       })
 
     assert redirected_to(conn) == path

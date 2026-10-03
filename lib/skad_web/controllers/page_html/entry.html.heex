@@ -1,122 +1,195 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
-  <article
-    id="entry-page"
-    lang={@entry.language.code || @entry.language.slug}
-    dir={to_string(@entry.language.direction)}
-  >
-    <p><.link href={~p"/"}>Back to search</.link></p>
-
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
+  <article id="entry-page">
+    <p><.link href={~p"/"}>{gettext("Back to search")}</.link></p>
     <header class="entry-header">
-      <h1 id="entry-title">{primary_form_text(@entry)}</h1>
+      <h1
+        id="entry-title"
+        lang={@entry.language.code || @entry.language.slug}
+        dir={to_string(@entry.language.direction)}
+      >
+        {primary_form_text(@entry)}
+      </h1>
       <p class="result-meta">
-        {@entry.language.name}
-        <%= if @entry.part_of_speech do %>
-          · {@entry.part_of_speech}
-        <% end %>
+        {Enum.join(
+          Enum.reject(
+            [
+              @entry.language.name,
+              @entry.variety_label,
+              @entry.place_label,
+              @entry.part_of_speech
+            ],
+            &is_nil/1
+          ),
+          " · "
+        )}
       </p>
     </header>
-
+    <section id="entry-pronunciation" class="entry-section">
+      <h2>{gettext("Listen to this word")}</h2>
+      <%= if @audio do %>
+        <audio
+          id={"entry-audio-#{@audio.public_id}"}
+          controls
+          preload="none"
+          src={~p"/media/#{@audio.public_id}"}
+          aria-label={gettext("Pronunciation of %{word}", word: primary_form_text(@entry))}
+          aria-describedby="entry-audio-context"
+        ></audio>
+        <p id="entry-audio-context" class="result-meta">
+          {Enum.join(
+            Enum.reject(
+              [@audio.variety_label, @audio.place_label, @audio.attribution_text],
+              &is_nil/1
+            ),
+            " · "
+          )}
+        </p>
+        <p class="result-meta">{audio_duration(@audio.duration_ms)}</p>
+        <p class="help-text">{gettext("This recording reflects one speaker’s pronunciation.")}</p>
+        <p data-media-error hidden role="status">
+          {gettext("This recording is unavailable. Try again when your connection returns.")}
+        </p>
+      <% else %>
+        <p id="entry-audio-missing">{gettext("A pronunciation has not been recorded yet.")}</p>
+        <.link id="record-missing-pronunciation" href={~p"/entries/#{@entry.public_id}/audio/new"}>{gettext(
+          "Record this pronunciation"
+        )}</.link>
+      <% end %>
+    </section>
     <section id="entry-definitions" class="entry-section">
-      <h2>Meaning</h2>
-      <p :for={definition <- @entry.definitions} lang={definition.language}>
+      <h2>{gettext("Meaning")}</h2>
+      <p
+        :for={definition <- @entry.definitions}
+        lang={content_language(definition.language, @languages)}
+        data-language={definition.language}
+        dir="auto"
+      >
         {definition.text}
       </p>
+      <p :if={@entry.definitions == []}>{gettext("The meaning has not been recorded yet.")}</p>
     </section>
-
-    <section :if={@audio} id="entry-pronunciation" class="entry-section">
-      <h2>Pronunciation</h2>
-      <audio
-        id={"entry-audio-#{@audio.public_id}"}
-        controls
-        preload="none"
-        src={~p"/media/#{@audio.public_id}"}
-      ></audio>
-      <p :if={@audio.variety_label || @audio.place_label} class="result-meta">
-        {Enum.join(Enum.reject([@audio.variety_label, @audio.place_label], &is_nil/1), " · ")}
+    <section :if={examples(@entry) != []} id="entry-examples" class="entry-section">
+      <h2>{gettext("Examples")}</h2>
+      <article :for={example <- examples(@entry)} id={"example-#{example.public_id}"}>
+        <p
+          phx-no-format
+          lang={example.language.code || example.language.slug}
+          dir={to_string(example.language.direction)}
+        ><%= for segment <- text_segments(example.text, example.links) do %><%= case segment do %><% {:text, text} -> %>{text}<% {:match, link} -> %><.link id={"example-link-#{example.public_id}-#{link.id}"} href={~p"/entries/#{link.entry.public_id}"}>{link.surface_text}</.link><% end %><% end %></p>
+        <p
+          :for={translation <- example.translations}
+          lang={content_language(translation.language, @languages)}
+          data-language={translation.language}
+          dir="auto"
+        >
+          {translation.text}
+        </p>
+      </article>
+    </section>
+    <section id="entry-review" class="entry-section">
+      <h2>{gettext("About this record")}</h2>
+      <p class="trust-note">{gettext("Published in the community archive")}</p>
+      <p class="help-text">
+        {gettext("Detailed source and review information is not available here.")}
       </p>
-      <p :if={@audio.attribution_text} class="result-meta">{@audio.attribution_text}</p>
+      <p class="help-text">
+        {gettext("Local forms and pronunciations may vary. Share the form used in your village.")}
+      </p>
     </section>
-
-    <section :if={@images != []} id="entry-images" class="entry-section">
-      <h2>Cultural context images</h2>
-      <div class="media-gallery">
+    <section id="entry-forms" class="entry-section">
+      <h2>{gettext("Other forms and spellings")}</h2>
+      <ul>
+        <li :for={form <- @entry.forms} id={"entry-form-#{form.id}"}>
+          <span
+            lang={@entry.language.code || @entry.language.slug}
+            dir={to_string(@entry.language.direction)}
+          >{form.text}</span> <small>({form_label(form.kind)})</small>
+        </li>
+      </ul>
+    </section>
+    <section :if={equivalent_entries(@entry) != []} id="entry-equivalents" class="entry-section">
+      <h2>{gettext("Other languages")}</h2>
+      <ul>
+        <li
+          :for={equivalent <- equivalent_entries(@entry)}
+          id={"equivalent-entry-#{equivalent.public_id}"}
+        >
+          <.link href={~p"/entries/#{equivalent.public_id}"}><span
+            lang={equivalent.language.code || equivalent.language.slug}
+            dir={to_string(equivalent.language.direction)}
+          >{primary_form_text(equivalent)}</span>
+          — {equivalent.language.name}</.link>
+        </li>
+      </ul>
+    </section>
+    <section :if={@entry.usage_note} id="entry-usage-note" class="entry-section">
+      <h2>{gettext("Usage")}</h2>
+      <p
+        lang={@entry.language.code || @entry.language.slug}
+        dir={to_string(@entry.language.direction)}
+      >
+        {@entry.usage_note}
+      </p>
+    </section>
+    <section
+      :if={@entry.cultural_note || @images != []}
+      id="entry-cultural-note"
+      class="entry-section"
+    >
+      <h2>{gettext("Cultural context")}</h2>
+      <p
+        :if={@entry.cultural_note}
+        lang={@entry.language.code || @entry.language.slug}
+        dir={to_string(@entry.language.direction)}
+      >
+        {@entry.cultural_note}
+      </p>
+      <div :if={@images != []} id="entry-images" class="media-gallery">
         <figure :for={image <- @images} id={"entry-image-#{image.public_id}"} class="media-figure">
           <img
             src={~p"/media/#{image.public_id}"}
-            alt={"Cultural context for #{primary_form_text(@entry)}"}
+            alt={gettext("Cultural context for %{word}", word: primary_form_text(@entry))}
             loading="lazy"
           />
           <figcaption :if={image.attribution_text}>{image.attribution_text}</figcaption>
         </figure>
       </div>
     </section>
-
-    <section id="entry-forms" class="entry-section">
-      <h2>Forms</h2>
-      <ul>
-        <li :for={form <- @entry.forms} id={"entry-form-#{form.id}"}>
-          {form.text} <small>({form.kind})</small>
-        </li>
-      </ul>
-    </section>
-
-    <section :if={equivalent_entries(@entry) != []} id="entry-equivalents" class="entry-section">
-      <h2>Other languages</h2>
-      <ul>
-        <li
-          :for={equivalent <- equivalent_entries(@entry)}
-          id={"equivalent-entry-#{equivalent.public_id}"}
-        >
-          <.link href={~p"/entries/#{equivalent.public_id}"}>
-            {primary_form_text(equivalent)} — {equivalent.language.name}
-          </.link>
-        </li>
-      </ul>
-    </section>
-
-    <section :if={@entry.usage_note} id="entry-usage-note" class="entry-section">
-      <h2>Usage</h2>
-      <p>{@entry.usage_note}</p>
-    </section>
-
-    <section :if={@entry.cultural_note} id="entry-cultural-note" class="entry-section">
-      <h2>Cultural context</h2>
-      <p>{@entry.cultural_note}</p>
-    </section>
-
-    <section :if={examples(@entry) != []} id="entry-examples" class="entry-section">
-      <h2>Examples</h2>
-      <article :for={example <- examples(@entry)} id={"example-#{example.public_id}"}>
-        <p phx-no-format lang={example.language.code || example.language.slug}><%= for segment <- text_segments(example.text, example.links) do %><%= case segment do %><% {:text, text} -> %>{text}<% {:match, link} -> %><.link id={"example-link-#{example.public_id}-#{link.id}"} href={~p"/entries/#{link.entry.public_id}"}>{link.surface_text}</.link><% end %><% end %></p>
-        <p :for={translation <- example.translations} lang={translation.language}>
-          {translation.text}
-        </p>
-      </article>
-    </section>
-
     <section id="entry-contributions" class="entry-section">
-      <h2>Improve this entry</h2>
-      <p>
-        <.link id="suggest-entry-correction" href={~p"/entries/#{@entry.public_id}/correct"}>
-          Suggest a correction
-        </.link>
-        ·
-        <.link id="suggest-entry-addition" href={~p"/entries/#{@entry.public_id}/add"}>
-          Add a form or example
-        </.link>
-        ·
-        <.link id="suggest-entry-example" href={~p"/entries/#{@entry.public_id}/examples/new"}>
-          Add an example
-        </.link>
-        ·
-        <.link id="suggest-entry-audio" href={~p"/entries/#{@entry.public_id}/audio/new"}>
-          Add pronunciation
-        </.link>
-        ·
-        <.link id="suggest-entry-images" href={~p"/entries/#{@entry.public_id}/images/new"}>
-          Add images
-        </.link>
-      </p>
+      <h2>{gettext("Share what you know")}</h2>
+      <ul class="contribution-actions">
+        <li>
+          <.link id="suggest-entry-correction" href={~p"/entries/#{@entry.public_id}/correct"}>{gettext(
+            "Suggest a correction"
+          )}</.link>
+        </li>
+        <li>
+          <.link id="suggest-entry-addition" href={~p"/entries/#{@entry.public_id}/add"}>{gettext(
+            "Add the form used in your village"
+          )}</.link>
+        </li>
+        <li>
+          <.link id="suggest-entry-example" href={~p"/entries/#{@entry.public_id}/examples/new"}>{gettext(
+            "Add an example"
+          )}</.link>
+        </li>
+        <li>
+          <.link id="suggest-entry-audio" href={~p"/entries/#{@entry.public_id}/audio/new"}>{gettext(
+            "Record this pronunciation"
+          )}</.link>
+        </li>
+        <li>
+          <.link id="suggest-entry-images" href={~p"/entries/#{@entry.public_id}/images/new"}>{gettext(
+            "Add images"
+          )}</.link>
+        </li>
+      </ul>
     </section>
   </article>
 </Layouts.app>

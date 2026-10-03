@@ -1,38 +1,17 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
-  <section id="moderator-submission-queue">
-    <h1>Submission queue</h1>
-    <p><.link href={~p"/moderator"}>Back to workspace</.link></p>
-
-    <p :if={@submissions == []} id="empty-submission-queue">No submissions need review.</p>
-
-    <ol :if={@submissions != []} class="result-list">
-      <li
-        :for={submission <- @submissions}
-        id={"submission-#{submission.public_id}"}
-        class="result-card"
-      >
-        <.link
-          id={"review-submission-#{submission.public_id}"}
-          href={~p"/moderator/submissions/#{submission.public_id}"}
-          class="result-link"
-        >
-          {payload_value(submission, "primary_form") || "Untitled submission"}
-        </.link>
-        <p class="result-meta">
-          {payload_value(submission, "language_slug")} · {status_label(submission.status)} · {format_time(
-            submission.received_at
-          )}
-        </p>
-      </li>
-    </ol>
-
-    <p :if={@next_cursor}>
-      <.link
-        id="next-submissions-page"
-        href={~p"/moderator/submissions?after=#{@next_cursor}"}
-      >
-        Next submissions
-      </.link>
-    </p>
-  </section>
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
+  <div class="review-workspace">
+    <.review_queue submissions={@submissions} next_cursor={@next_cursor} cursor={@queue_after} />
+    <section id="review-queue-intro">
+      <h1>{gettext("Choose a contribution to review")}</h1>
+      <p>
+        {gettext("Compare the proposal with published content, check its context, then decide.")}
+      </p>
+    </section>
+  </div>
 </Layouts.app>

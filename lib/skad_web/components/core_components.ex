@@ -37,27 +37,12 @@ defmodule SkadWeb.CoreComponents do
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      role="alert"
-      class="toast toast-top toast-end z-50"
+      role={if @kind == :error, do: "alert", else: "status"}
+      class={["flash", "flash-#{@kind}"]}
       {@rest}
     >
-      <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
-      ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
-        </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
-        </button>
-      </div>
+      <p :if={@title}><strong>{@title}</strong></p>
+      <p>{msg}</p>
     </div>
     """
   end
@@ -151,7 +136,7 @@ defmodule SkadWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="fieldset">
       <label for={@id}>
         <input
           type="hidden"
@@ -160,60 +145,72 @@ defmodule SkadWeb.CoreComponents do
           disabled={@rest[:disabled]}
           form={@rest[:form]}
         />
-        <span class="label">
+        <span class="label checkbox-label">
           <input
             type="checkbox"
             id={@id}
+            aria-invalid={if @errors != [], do: "true"}
+            aria-describedby={error_description(@id, @errors, @rest)}
             name={@name}
             value="true"
             checked={@checked}
             class={@class || "checkbox checkbox-sm"}
-            {@rest}
+            {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
           />{@label}
         </span>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-errors"} class="field-errors">
+        <p :for={msg <- @errors}>{msg}</p>
+      </div>
     </div>
     """
   end
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="fieldset">
       <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <select
           id={@id}
+          aria-invalid={if @errors != [], do: "true"}
+          aria-describedby={error_description(@id, @errors, @rest)}
           name={@name}
           class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
-          {@rest}
+          {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-errors"} class="field-errors">
+        <p :for={msg <- @errors}>{msg}</p>
+      </div>
     </div>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="fieldset">
       <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <textarea
           id={@id}
+          aria-invalid={if @errors != [], do: "true"}
+          aria-describedby={error_description(@id, @errors, @rest)}
           name={@name}
           class={[
             @class || "w-full textarea",
             @errors != [] && (@error_class || "textarea-error")
           ]}
-          {@rest}
+          {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-errors"} class="field-errors">
+        <p :for={msg <- @errors}>{msg}</p>
+      </div>
     </div>
     """
   end
@@ -221,35 +218,50 @@ defmodule SkadWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="fieldset">
       <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input
           type={@type}
           name={@name}
           id={@id}
+          aria-invalid={if @errors != [], do: "true"}
+          aria-describedby={error_description(@id, @errors, @rest)}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           multiple={@multiple}
           class={[
             @class || "w-full input",
             @errors != [] && (@error_class || "input-error")
           ]}
-          {@rest}
+          {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
         />
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-errors"} class="field-errors">
+        <p :for={msg <- @errors}>{msg}</p>
+      </div>
     </div>
     """
   end
 
-  # Helper used by inputs to generate form errors
-  defp error(assigns) do
+  attr :form, Phoenix.HTML.Form, required: true
+  attr :id, :string, required: true
+
+  def form_errors(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
-      {render_slot(@inner_block)}
+    <p :if={@form.errors != []} id={@id} class="flash flash-error" role="alert">
+      {gettext("Check the highlighted fields. Your entered information is still here.")}
     </p>
     """
+  end
+
+  defp error_description(id, errors, rest) do
+    [rest[:"aria-describedby"], if(errors != [], do: "#{id}-errors")]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+    |> case do
+      "" -> nil
+      description -> description
+    end
   end
 
   @doc """

@@ -1,15 +1,21 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
   <article id="moderator-concept-detail">
-    <p><.link href={~p"/moderator/concepts"}>Back to concepts</.link></p>
+    <p><.link href={~p"/moderator/concepts"}>{gettext("Back to concepts")}</.link></p>
 
     <header class="entry-header">
       <h1 id="concept-label">{@concept.editorial_label}</h1>
-      <p id="concept-note">{@concept.editorial_note || "No editorial note."}</p>
+      <p id="concept-note">{@concept.editorial_note || gettext("No editorial note.")}</p>
     </header>
 
     <section id="concept-entries" class="entry-section">
-      <h2>Entries</h2>
-      <p :if={@concept.entries == []}>No entries use this concept yet.</p>
+      <h2>{gettext("Entries")}</h2>
+      <p :if={@concept.entries == []}>{gettext("No entries use this concept yet.")}</p>
       <ul :if={@concept.entries != []}>
         <li :for={entry <- @concept.entries} id={"concept-entry-#{entry.public_id}"}>
           <.link href={~p"/entries/#{entry.public_id}"}>{entry_label(entry)}</.link>
@@ -25,8 +31,8 @@
       data-complete-url={~p"/moderator/concepts/#{@concept.public_id}/media/uploads/complete"}
       data-reload-after-upload="true"
     >
-      <h2>Cultural images</h2>
-      <p :if={@media_items == []} id="concept-media-empty">No images attached.</p>
+      <h2>{gettext("Cultural images")}</h2>
+      <p :if={@media_items == []} id="concept-media-empty">{gettext("No images attached.")}</p>
       <ul id="concept-media-list" class="media-list" data-media-list>
         <li
           :for={item <- @media_items}
@@ -37,7 +43,7 @@
         >
           <img
             src={~p"/moderator/concepts/#{@concept.public_id}/media/#{item.public_id}/preview"}
-            alt="Concept cultural context"
+            alt={gettext("Concept cultural context")}
             loading="lazy"
           />
           <p class="result-meta">{item.processing_state}</p>
@@ -47,7 +53,7 @@
             id={"remove-concept-media-#{item.public_id}"}
             class="link-button"
           >
-            Remove
+            {gettext("Remove")}
           </.link>
         </li>
       </ul>
@@ -56,7 +62,7 @@
         name="concept_image_uploads"
         id="concept-image-uploads"
         value={nil}
-        label="Add cultural images"
+        label={gettext("Add cultural images")}
         accept="image/jpeg,image/png,image/webp"
         multiple
         class="auth-input"
@@ -66,7 +72,7 @@
     </section>
 
     <section id="edit-concept" class="entry-section auth-panel">
-      <h2>Edit concept</h2>
+      <h2>{gettext("Edit concept")}</h2>
       <.form
         for={@form}
         action={~p"/moderator/concepts/#{@concept.public_id}"}
@@ -77,18 +83,18 @@
         <.input
           field={@form[:editorial_label]}
           type="text"
-          label="Editorial label"
+          label={gettext("Editorial label")}
           class="auth-input"
           required
         />
         <.input
           field={@form[:editorial_note]}
           type="textarea"
-          label="Private editorial note"
+          label={gettext("Private editorial note")}
           class="auth-input"
           rows="4"
         />
-        <button type="submit" id="update-concept" class="auth-button">Save concept</button>
+        <button type="submit" id="update-concept" class="auth-button">{gettext("Save concept")}</button>
       </.form>
     </section>
   </article>

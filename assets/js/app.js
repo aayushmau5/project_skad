@@ -34,13 +34,24 @@ const liveSocket = new LiveSocket("/live", Socket, {
 })
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
+topbar.config({barColors: {0: "#4B4F96"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 initializeMediaUploads()
+const connectionStatus = document.querySelector("[data-connection-status]")
+const updateConnection = () => { if (connectionStatus) connectionStatus.hidden = navigator.onLine }
+window.addEventListener("online", updateConnection)
+window.addEventListener("offline", updateConnection)
+updateConnection()
+document.querySelectorAll("audio").forEach(audio => {
+  audio.addEventListener("error", () => {
+    const message = audio.closest("section")?.querySelector("[data-media-error]")
+    if (message) message.hidden = false
+  })
+})
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()

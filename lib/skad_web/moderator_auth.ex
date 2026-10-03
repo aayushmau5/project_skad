@@ -1,6 +1,8 @@
 defmodule SkadWeb.ModeratorAuth do
   use SkadWeb, :verified_routes
 
+  use Gettext, backend: SkadWeb.Gettext
+
   import Phoenix.Controller
   import Plug.Conn
 
@@ -33,7 +35,7 @@ defmodule SkadWeb.ModeratorAuth do
 
     conn
     |> renew_session()
-    |> put_flash(:info, "Logged out.")
+    |> put_flash(:info, gettext("Logged out."))
     |> redirect(to: ~p"/")
   end
 
@@ -52,7 +54,7 @@ defmodule SkadWeb.ModeratorAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You must log in to access this page.")
+      |> put_flash(:error, gettext("You must log in to access this page."))
       |> maybe_store_return_to()
       |> redirect(to: ~p"/moderator/log-in")
       |> halt()

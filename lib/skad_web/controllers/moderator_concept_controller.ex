@@ -17,7 +17,7 @@ defmodule SkadWeb.ModeratorConceptController do
     case Contributions.create_concept(conn.assigns.current_scope, attrs) do
       {:ok, concept} ->
         conn
-        |> put_flash(:info, "Concept created.")
+        |> put_flash(:info, gettext("Concept created."))
         |> redirect(to: ~p"/moderator/concepts/#{concept.public_id}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -46,7 +46,7 @@ defmodule SkadWeb.ModeratorConceptController do
         case Contributions.update_concept(conn.assigns.current_scope, concept, attrs) do
           {:ok, concept} ->
             conn
-            |> put_flash(:info, "Concept updated.")
+            |> put_flash(:info, gettext("Concept updated."))
             |> redirect(to: ~p"/moderator/concepts/#{concept.public_id}")
 
           {:error, %Ecto.Changeset{} = changeset} ->
@@ -104,7 +104,7 @@ defmodule SkadWeb.ModeratorConceptController do
          %Item{} = item <- Media.get_item(media_public_id),
          {:ok, _item} <- Media.remove_concept_image(concept, item) do
       conn
-      |> put_flash(:info, "Image removed from the concept.")
+      |> put_flash(:info, gettext("Image removed from the concept."))
       |> redirect(to: ~p"/moderator/concepts/#{concept.public_id}")
     else
       nil ->
@@ -112,7 +112,7 @@ defmodule SkadWeb.ModeratorConceptController do
 
       {:error, _reason} ->
         conn
-        |> put_flash(:error, "The concept image could not be removed.")
+        |> put_flash(:error, gettext("The concept image could not be removed."))
         |> redirect(to: ~p"/moderator/concepts/#{public_id}")
     end
   end
@@ -122,7 +122,7 @@ defmodule SkadWeb.ModeratorConceptController do
       changeset || Contributions.change_concept(conn.assigns.current_scope, %Concept{})
 
     render(conn, :index,
-      page_title: "Manage concepts",
+      page_title: gettext("Manage concepts"),
       concepts: Archive.search_concepts(query),
       search_form: Phoenix.Component.to_form(%{"query" => query}, as: :search),
       concept_form: Phoenix.Component.to_form(changeset, as: :concept)

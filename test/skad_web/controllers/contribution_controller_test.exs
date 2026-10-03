@@ -124,7 +124,9 @@ defmodule SkadWeb.ContributionControllerTest do
 
   test "returns not found for an unknown receipt", %{conn: conn} do
     conn = get(conn, ~p"/contributions/#{Ecto.UUID.generate()}")
-    assert response(conn, 404) == "Contribution receipt not found"
+    document = conn |> html_response(404) |> LazyHTML.from_document()
+    assert Enum.count(LazyHTML.query_by_id(document, "archive-not-found")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "not-found-search")) == 1
   end
 
   test "submits a correction for an existing entry", %{conn: conn} do
@@ -170,7 +172,7 @@ defmodule SkadWeb.ContributionControllerTest do
       })
 
     document = conn |> html_response(409) |> LazyHTML.from_document()
-    assert LazyHTML.text(document) =~ "already part of this entry"
+    assert Enum.count(LazyHTML.query_by_id(document, "flash-error")) == 1
     assert Repo.aggregate(Submission, :count) == 0
   end
 
@@ -194,8 +196,12 @@ defmodule SkadWeb.ContributionControllerTest do
 
     document = conn |> html_response(422) |> LazyHTML.from_document()
 
-    assert LazyHTML.text(LazyHTML.query_by_id(document, "entry-change-contribution-form")) =~
-             "or an example is required"
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(document, "contribution_alternate_form"),
+             "aria-invalid"
+           ) == ["true"]
+
+    assert Enum.count(LazyHTML.query_by_id(document, "contribution_alternate_form-errors")) == 1
 
     assert Repo.aggregate(Submission, :count) == 0
   end

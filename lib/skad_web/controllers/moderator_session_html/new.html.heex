@@ -1,12 +1,18 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
   <section id="moderator-login" class="auth-panel">
-    <h1>Moderator log in</h1>
+    <h1>{gettext("Moderator log in")}</h1>
 
     <.form for={@form} action={~p"/moderator/log-in"} id="moderator-login-form" class="auth-form">
       <.input
         field={@form[:email]}
         type="email"
-        label="Email"
+        label={gettext("Email")}
         class="auth-input"
         autocomplete="username"
         required
@@ -14,12 +20,12 @@
       <.input
         field={@form[:password]}
         type="password"
-        label="Password"
+        label={gettext("Password")}
         class="auth-input"
         autocomplete="current-password"
         required
       />
-      <button type="submit" id="moderator-login-submit" class="auth-button">Log in</button>
+      <button type="submit" id="moderator-login-submit" class="auth-button">{gettext("Log in")}</button>
     </.form>
   </section>
 </Layouts.app>

@@ -26,7 +26,7 @@ defmodule SkadWeb.PageController do
       )
 
     render(conn, :home,
-      page_title: "Search",
+      page_title: gettext("Search"),
       search_form: search_form,
       languages: languages,
       results: results,
@@ -37,15 +37,23 @@ defmodule SkadWeb.PageController do
   def entry(conn, %{"public_id" => public_id}) do
     case Archive.get_public_entry(public_id) do
       nil ->
-        send_resp(conn, :not_found, "Entry not found")
+        not_found(conn, gettext("Entry not found"))
 
       entry ->
         render(conn, :entry,
           page_title: SkadWeb.PageHTML.primary_form_text(entry),
           entry: entry,
+          languages: Archive.list_active_languages(),
           audio: Media.get_public_entry_audio(entry),
           images: Media.list_public_concept_images(entry.concept)
         )
     end
+  end
+
+  def not_found(conn, message) do
+    conn
+    |> put_status(:not_found)
+    |> put_view(SkadWeb.PageHTML)
+    |> render(:missing, page_title: gettext("Page unavailable"), message: message)
   end
 end

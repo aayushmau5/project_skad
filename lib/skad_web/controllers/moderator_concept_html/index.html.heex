@@ -1,7 +1,13 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
   <section id="moderator-concepts">
-    <p><.link href={~p"/moderator"}>Back to moderator workspace</.link></p>
-    <h1>Concepts</h1>
+    <p><.link href={~p"/moderator"}>{gettext("Back to moderator workspace")}</.link></p>
+    <h1>{gettext("Concepts")}</h1>
 
     <.form
       for={@search_form}
@@ -13,11 +19,15 @@
       <.input
         field={@search_form[:query]}
         type="search"
-        label="Search concepts or entries"
+        label={gettext("Search concepts or entries")}
         class="search-input"
       />
-      <button type="submit" id="search-concepts" class="search-button">Search</button>
+      <button type="submit" id="search-concepts" class="search-button">{gettext("Search")}</button>
     </.form>
+
+    <p :if={@concepts == []} id="empty-concept-search">
+      {gettext("No concepts found. Try another word or create a concept below.")}
+    </p>
 
     <ul :if={@concepts != []} id="concept-search-results" class="result-list">
       <li :for={concept <- @concepts} id={"concept-#{concept.public_id}"} class="result-card">
@@ -25,12 +35,12 @@
           {concept.editorial_label}
         </.link>
         <p :if={concept.editorial_note}>{concept.editorial_note}</p>
-        <p class="result-meta">{length(concept.entries)} entries</p>
+        <p class="result-meta">{gettext("Entries: %{count}", count: length(concept.entries))}</p>
       </li>
     </ul>
 
     <section id="new-concept" class="entry-section auth-panel">
-      <h2>Create concept</h2>
+      <h2>{gettext("Create concept")}</h2>
       <.form
         for={@concept_form}
         action={~p"/moderator/concepts"}
@@ -40,18 +50,18 @@
         <.input
           field={@concept_form[:editorial_label]}
           type="text"
-          label="Editorial label"
+          label={gettext("Editorial label")}
           class="auth-input"
           required
         />
         <.input
           field={@concept_form[:editorial_note]}
           type="textarea"
-          label="Private editorial note"
+          label={gettext("Private editorial note")}
           class="auth-input"
           rows="4"
         />
-        <button type="submit" id="create-concept" class="auth-button">Create concept</button>
+        <button type="submit" id="create-concept" class="auth-button">{gettext("Create concept")}</button>
       </.form>
     </section>
   </section>

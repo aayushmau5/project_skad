@@ -6,7 +6,7 @@ defmodule SkadWeb.ModeratorSessionController do
 
   def new(conn, _params) do
     render(conn, :new,
-      page_title: "Moderator log in",
+      page_title: gettext("Moderator log in"),
       form: Phoenix.Component.to_form(%{}, as: :moderator)
     )
   end
@@ -18,7 +18,7 @@ defmodule SkadWeb.ModeratorSessionController do
     case Accounts.authenticate_moderator(email, password) do
       {:ok, account} ->
         conn
-        |> put_flash(:info, "Welcome back.")
+        |> put_flash(:info, gettext("Welcome back."))
         |> ModeratorAuth.log_in_moderator(account)
 
       :error ->
@@ -32,9 +32,9 @@ defmodule SkadWeb.ModeratorSessionController do
 
   defp invalid_credentials(conn, email) do
     conn
-    |> put_flash(:error, "Invalid email or password.")
+    |> put_flash(:error, gettext("Invalid email or password."))
     |> render(:new,
-      page_title: "Moderator log in",
+      page_title: gettext("Moderator log in"),
       form: Phoenix.Component.to_form(%{"email" => String.slice(email, 0, 160)}, as: :moderator)
     )
   end

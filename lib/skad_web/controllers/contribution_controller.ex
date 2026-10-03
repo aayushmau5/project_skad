@@ -30,13 +30,22 @@ defmodule SkadWeb.ContributionController do
 
         conn
         |> put_status(:conflict)
-        |> put_flash(:error, "This submission identifier was already used for different content.")
-        |> render_new(%{Contributions.change_new_entry(retry_params) | action: :insert})
+        |> put_flash(
+          :error,
+          gettext("This submission identifier was already used for different content.")
+        )
+        |> render_new(
+          %{Contributions.change_new_entry(retry_params) | action: :insert},
+          media_public_ids
+        )
 
       {:error, :invalid_media} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> put_flash(:error, "The uploaded media could not be attached. Please upload it again.")
+        |> put_flash(
+          :error,
+          gettext("The uploaded media could not be attached. Please upload it again.")
+        )
         |> render_new(%{Contributions.change_new_entry(proposal_params) | action: :insert})
     end
   end
@@ -52,8 +61,11 @@ defmodule SkadWeb.ContributionController do
 
   def show(conn, %{"public_id" => public_id}) do
     case Contributions.get_receipt(public_id) do
-      nil -> send_resp(conn, :not_found, "Contribution receipt not found")
-      receipt -> render(conn, :show, page_title: "Contribution received", receipt: receipt)
+      nil ->
+        SkadWeb.PageController.not_found(conn, gettext("Contribution receipt not found"))
+
+      receipt ->
+        render(conn, :show, page_title: gettext("Contribution received"), receipt: receipt)
     end
   end
 
@@ -104,17 +116,19 @@ defmodule SkadWeb.ContributionController do
       |> Enum.reject(&is_nil/1)
 
     render(conn, :new,
-      page_title: "Suggest a word",
+      page_title: gettext("Suggest a word"),
       form: Phoenix.Component.to_form(changeset, as: :contribution),
       languages: Archive.list_active_languages(),
-      media_items: media_items
+      media_items: media_items,
+      media_context_form:
+        Phoenix.Component.to_form(conn.params["media_context"] || %{}, as: :media_context)
     )
   end
 
   defp render_entry_change(conn, public_id, kind, changeset \\ nil, media_public_ids \\ []) do
     case Archive.get_public_entry(public_id) do
       nil ->
-        send_resp(conn, :not_found, "Entry not found")
+        SkadWeb.PageController.not_found(conn, gettext("Entry not found"))
 
       entry ->
         changeset =
@@ -128,7 +142,9 @@ defmodule SkadWeb.ContributionController do
           entry: entry,
           kind: kind,
           form: Phoenix.Component.to_form(changeset, as: :contribution),
-          media_items: media_items(media_public_ids)
+          media_items: media_items(media_public_ids),
+          media_context_form:
+            Phoenix.Component.to_form(conn.params["media_context"] || %{}, as: :media_context)
         )
     end
   end
@@ -139,7 +155,7 @@ defmodule SkadWeb.ContributionController do
 
     case Archive.get_public_entry(public_id) do
       nil ->
-        send_resp(conn, :not_found, "Entry not found")
+        SkadWeb.PageController.not_found(conn, gettext("Entry not found"))
 
       entry ->
         case Contributions.submit_entry_change(kind, entry, proposal_params, media_public_ids) do
@@ -164,7 +180,7 @@ defmodule SkadWeb.ContributionController do
             |> put_status(:conflict)
             |> put_flash(
               :error,
-              "This submission identifier was already used for different content."
+              gettext("This submission identifier was already used for different content.")
             )
             |> render_entry_change(
               public_id,
@@ -176,7 +192,7 @@ defmodule SkadWeb.ContributionController do
           {:error, :already_exists} ->
             conn
             |> put_status(:conflict)
-            |> put_flash(:error, "That contribution is already part of this entry.")
+            |> put_flash(:error, gettext("That contribution is already part of this entry."))
             |> render_entry_change(
               public_id,
               kind,
@@ -200,11 +216,11 @@ defmodule SkadWeb.ContributionController do
     end
   end
 
-  defp entry_change_title(:correction), do: "Suggest a correction"
-  defp entry_change_title(:addition), do: "Add information"
-  defp entry_change_title(:example), do: "Add an example"
-  defp entry_change_title(:audio), do: "Add pronunciation audio"
-  defp entry_change_title(:image), do: "Add cultural images"
+  defp entry_change_title(:correction), do: gettext("Suggest a correction")
+  defp entry_change_title(:addition), do: gettext("Add information")
+  defp entry_change_title(:example), do: gettext("Add an example")
+  defp entry_change_title(:audio), do: gettext("Add pronunciation audio")
+  defp entry_change_title(:image), do: gettext("Add cultural images")
 
   defp media_items(public_ids) do
     public_ids
@@ -212,7 +228,7 @@ defmodule SkadWeb.ContributionController do
     |> Enum.reject(&is_nil/1)
   end
 
-  defp media_error(:audio), do: "Upload exactly one ready audio file and try again."
-  defp media_error(:image), do: "Upload between one and five ready images and try again."
-  defp media_error(_kind), do: "Media is not accepted for this contribution type."
+  defp media_error(:audio), do: gettext("Upload exactly one ready audio file and try again.")
+  defp media_error(:image), do: gettext("Upload between one and five ready images and try again.")
+  defp media_error(_kind), do: gettext("Media is not accepted for this contribution type.")
 end

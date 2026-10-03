@@ -14,8 +14,9 @@ defmodule SkadWeb.ModeratorSubmissionController do
       )
 
     render(conn, :index,
-      page_title: "Submission queue",
+      page_title: gettext("Submission queue"),
       submissions: page.submissions,
+      queue_after: params["after"],
       next_cursor: page.next_cursor
     )
   end
@@ -53,8 +54,8 @@ defmodule SkadWeb.ModeratorSubmissionController do
              ) do
           {:ok, submission} ->
             conn
-            |> put_flash(:info, "Proposal changes saved.")
-            |> redirect(to: ~p"/moderator/submissions/#{submission.public_id}")
+            |> put_flash(:info, gettext("Proposal changes saved."))
+            |> redirect(to: review_location(conn, submission.public_id))
 
           {:error, %Ecto.Changeset{} = changeset} ->
             conn
@@ -110,8 +111,8 @@ defmodule SkadWeb.ModeratorSubmissionController do
          {:ok, _item} <-
            Contributions.remove_submission_media(conn.assigns.current_scope, submission, item) do
       conn
-      |> put_flash(:info, "Media removed from the submission.")
-      |> redirect(to: ~p"/moderator/submissions/#{submission.public_id}")
+      |> put_flash(:info, gettext("Media removed from the submission."))
+      |> redirect(to: review_location(conn, submission.public_id))
     else
       nil ->
         send_resp(conn, :not_found, "Submission or media not found")
@@ -119,7 +120,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
       {:error, reason} ->
         conn
         |> put_flash(:error, error_message(reason))
-        |> redirect(to: ~p"/moderator/submissions/#{public_id}")
+        |> redirect(to: review_location(conn, public_id))
     end
   end
 
@@ -137,12 +138,18 @@ defmodule SkadWeb.ModeratorSubmissionController do
          ) do
       {:ok, %{entry: entry}} ->
         conn
-        |> put_flash(:info, "Submission approved and published.")
+        |> put_flash(:info, gettext("Submission approved and published."))
         |> redirect(to: ~p"/entries/#{entry.public_id}")
 
       {:error, reason} ->
         decision_error(conn, submission, params, reason)
     end
+  end
+
+  defp decide(conn, submission, %{"decision" => "rejected"} = params)
+       when not is_map_key(params, "confirm_rejection") or
+              :erlang.map_get("confirm_rejection", params) != "true" do
+    decision_error(conn, submission, params, :rejection_confirmation_required)
   end
 
   defp decide(conn, submission, %{"decision" => decision} = params)
@@ -158,7 +165,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
       {:ok, submission} ->
         conn
         |> put_flash(:info, decision_message(status))
-        |> redirect(to: ~p"/moderator/submissions/#{submission.public_id}")
+        |> redirect(to: review_location(conn, submission.public_id))
 
       {:error, reason} ->
         decision_error(conn, submission, params, reason)
@@ -214,8 +221,17 @@ defmodule SkadWeb.ModeratorSubmissionController do
         _other -> default_example_choices(example_suggestions)
       end
 
+    queue =
+      Contributions.page_submissions_for_review(
+        conn.assigns.current_scope,
+        conn.query_params["after"]
+      )
+
     render(conn, :show,
-      page_title: "Review submission",
+      queue_submissions: queue.submissions,
+      queue_after: conn.query_params["after"],
+      queue_next_cursor: queue.next_cursor,
+      page_title: gettext("Review submission"),
       submission: submission,
       target_entry: target_entry,
       form: Phoenix.Component.to_form(moderation_params, as: :moderation),
@@ -229,6 +245,10 @@ defmodule SkadWeb.ModeratorSubmissionController do
       example_match_error: example_match_error,
       media_items: Contributions.list_submission_media(conn.assigns.current_scope, submission)
     )
+  end
+
+  defp review_location(conn, public_id) do
+    ~p"/moderator/submissions/#{public_id}?#{Map.take(conn.query_params, ["after"])}"
   end
 
   defp attach_media_item(conn, submission, item, "replace") do
@@ -258,8 +278,8 @@ defmodule SkadWeb.ModeratorSubmissionController do
   defp example_suggestions(submission) do
     case Contributions.suggest_example_links(submission) do
       {:ok, suggestions} -> {suggestions, nil}
-      {:error, :example_too_long} -> {[], "Keep the example to 100 words or fewer."}
-      {:error, _reason} -> {[], "The example could not be matched."}
+      {:error, :example_too_long} -> {[], gettext("Keep the example to 100 words or fewer.")}
+      {:error, _reason} -> {[], gettext("The example could not be matched.")}
     end
   end
 
@@ -278,30 +298,47 @@ defmodule SkadWeb.ModeratorSubmissionController do
   defp decision_status("reviewing"), do: :reviewing
   defp decision_status("rejected"), do: :rejected
 
-  defp decision_message(:reviewing), do: "Submission marked as reviewing."
-  defp decision_message(:rejected), do: "Submission rejected."
+  defp decision_message(:reviewing), do: gettext("Submission marked as reviewing.")
+  defp decision_message(:rejected), do: gettext("Submission rejected.")
 
-  defp error_message(:review_note_required), do: "A note is required for this decision."
+  defp error_message(:rejection_confirmation_required),
+    do: gettext("Confirm rejection before continuing.")
+
+  defp error_message(:review_note_required), do: gettext("A note is required for this decision.")
 
   defp error_message(:invalid_transition),
-    do: "The submission status changed. Reload and try again."
+    do: gettext("The submission status changed. Reload and try again.")
 
-  defp error_message(:unsupported_payload), do: "This submission payload cannot be approved."
-  defp error_message(:target_not_found), do: "The target entry is no longer available."
-  defp error_message(:language_inactive), do: "This submission's language is not active."
-  defp error_message(:concept_not_found), do: "Choose an available concept or create a new one."
-  defp error_message(:example_focus_missing), do: "The example must contain the proposed word."
-  defp error_message(:invalid_example_links), do: "Choose valid entries for the example links."
-  defp error_message(:example_too_long), do: "Keep the example to 100 words or fewer."
-  defp error_message(:invalid_decision), do: "Choose a valid moderation decision."
-  defp error_message(:audio_already_attached), do: "Replace the existing audio instead."
-  defp error_message(:image_limit_reached), do: "A submission can have at most five images."
-  defp error_message(:invalid_media_kind), do: "Choose media of the expected type."
-  defp error_message(:invalid_media), do: "The uploaded media could not be attached."
-  defp error_message(:already_exists), do: "That content is already published on this entry."
+  defp error_message(:unsupported_payload),
+    do: gettext("This submission payload cannot be approved.")
+
+  defp error_message(:target_not_found), do: gettext("The target entry is no longer available.")
+  defp error_message(:language_inactive), do: gettext("This submission's language is not active.")
+
+  defp error_message(:concept_not_found),
+    do: gettext("Choose an available concept or create a new one.")
+
+  defp error_message(:example_focus_missing),
+    do: gettext("The example must contain the proposed word.")
+
+  defp error_message(:invalid_example_links),
+    do: gettext("Choose valid entries for the example links.")
+
+  defp error_message(:example_too_long), do: gettext("Keep the example to 100 words or fewer.")
+  defp error_message(:invalid_decision), do: gettext("Choose a valid moderation decision.")
+  defp error_message(:audio_already_attached), do: gettext("Replace the existing audio instead.")
+
+  defp error_message(:image_limit_reached),
+    do: gettext("A submission can have at most five images.")
+
+  defp error_message(:invalid_media_kind), do: gettext("Choose media of the expected type.")
+  defp error_message(:invalid_media), do: gettext("The uploaded media could not be attached.")
+
+  defp error_message(:already_exists),
+    do: gettext("That content is already published on this entry.")
 
   defp error_message(%Ecto.Changeset{}),
-    do: "Attached media must finish processing before approval."
+    do: gettext("Attached media must finish processing before approval.")
 
-  defp error_message(_reason), do: "The moderation decision could not be saved."
+  defp error_message(_reason), do: gettext("The moderation decision could not be saved.")
 end

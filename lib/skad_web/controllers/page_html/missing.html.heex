@@ -1,0 +1,14 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
+  <section id="archive-not-found" class="auth-panel">
+    <h1>{gettext("This page is unavailable")}</h1>
+    <p>{@message}</p>
+    <p>{gettext("The link may have changed. Search the archive to find the word again.")}</p>
+    <.link id="not-found-search" href={~p"/"}>{gettext("Back to search")}</.link>
+  </section>
+</Layouts.app>

@@ -12,7 +12,7 @@ defmodule SkadWeb.PageHTML do
 
   def primary_form_text(entry) do
     case primary_form(entry) do
-      nil -> "Untitled entry"
+      nil -> gettext("Untitled entry")
       form -> form.text
     end
   end
@@ -23,6 +23,30 @@ defmodule SkadWeb.PageHTML do
       [] -> nil
     end
   end
+
+  def definition_language(entry, languages) do
+    case entry.definitions do
+      [definition | _] -> content_language(definition.language, languages)
+      [] -> nil
+    end
+  end
+
+  # Localized archive text stores language slugs; assistive technology needs
+  # the corresponding language code. Keep the original slug in data-language.
+  def content_language(tag, languages) do
+    case Enum.find(languages, &(&1.slug == tag)) do
+      nil -> tag
+      language -> language.code || tag
+    end
+  end
+
+  def form_label(:spelling), do: gettext("Spelling")
+  def form_label(:alias), do: gettext("Local or alternative form")
+  def form_label(:transliteration), do: gettext("Transliteration")
+  def form_label(:historical), do: gettext("Historical form")
+
+  def audio_duration(nil), do: gettext("Duration not recorded")
+  def audio_duration(ms), do: gettext("Duration: %{seconds} seconds", seconds: div(ms, 1000))
 
   def equivalent_entries(entry) do
     Enum.reject(entry.concept.entries, &(&1.id == entry.id))
