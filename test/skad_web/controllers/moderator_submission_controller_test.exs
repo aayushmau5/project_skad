@@ -56,6 +56,40 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     assert response(missing_conn, 404) == "Submission not found"
   end
 
+  test "pages the submission queue twenty records at a time", %{conn: conn} do
+    submissions =
+      for offset <- 0..20 do
+        insert_submission(DateTime.add(~U[2026-01-01 00:00:00Z], offset, :second))
+      end
+
+    conn = log_in(conn)
+
+    first_page_conn = get(conn, ~p"/moderator/submissions")
+    first_page = first_page_conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(first_page, "next-submissions-page")) == 1
+
+    assert Enum.empty?(
+             LazyHTML.query_by_id(first_page, "submission-#{List.last(submissions).public_id}")
+           )
+
+    second_page =
+      first_page_conn
+      |> recycle()
+      |> get(~p"/moderator/submissions?after=#{Enum.at(submissions, 19).public_id}")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(
+             LazyHTML.query_by_id(
+               second_page,
+               "submission-#{List.last(submissions).public_id}"
+             )
+           ) == 1
+
+    assert Enum.empty?(LazyHTML.query_by_id(second_page, "next-submissions-page"))
+  end
+
   test "handles review and rejection decisions", %{conn: conn} do
     submission = create_submission()
     conn = log_in(conn)
@@ -502,6 +536,19 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       })
 
     Repo.get_by!(Submission, public_id: receipt.public_id)
+  end
+
+  defp insert_submission(received_at) do
+    %Submission{kind: :new_entry, received_at: received_at}
+    |> Submission.changeset(%{
+      client_submission_id: Ecto.UUID.generate(),
+      payload: %{
+        "language_slug" => "english",
+        "primary_form" => "Word",
+        "definition" => "Private proposed meaning"
+      }
+    })
+    |> Repo.insert!()
   end
 
   defp create_entry(form, definition) do

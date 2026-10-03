@@ -11,14 +11,14 @@ The first version supports one complete loop:
 3. Suggest a new word, more information, or a correction.
 4. Review the contribution before it becomes public.
 
-V0 is centrally hosted and designed to remain useful on slow or interrupted connections. It uses small server-rendered pages, browser caching, locally retained contribution drafts, and resumable media uploads. Downloadable offline dictionary packs are a possible v1 improvement.
+V0 is centrally hosted and designed to remain useful on slow connections. It uses small server-rendered pages and bounded direct media uploads. Locally retained contribution drafts, resumable uploads, and downloadable offline dictionary packs are deferred in [future work](docs/future.md).
 
 ## Technical direction
 
 - One Elixir/Phoenix application, maintained by one person.
 - SQLite in WAL mode, with indexed forms and FTS5 search.
 - Audio and images in S3-compatible object storage; only metadata and stable keys in SQLite.
-- Oban jobs in the same database for retryable media and maintenance work.
+- Bounded synchronous media handling; durable jobs are deferred until retries are demonstrably needed.
 - HTML first, with LiveView only where a connected interaction benefits from it.
 - One small Linux machine, Caddy, remote backups, and no required Docker setup.
 - A self-contained Burrito executable is the preferred packaging target, pending a representative build; a standard Mix release is the fallback.
@@ -27,9 +27,11 @@ V0 is centrally hosted and designed to remain useful on slow or interrupted conn
 
 | Document | What it owns |
 | --- | --- |
-| [product-decisions.md](product-decisions.md) | Product choices, rationale, constraints, open questions, and validation targets |
-| [architecture.md](architecture.md) | Runtime boundaries, deployment shape, failure handling, jobs, and media flow |
-| [data-model.md](data-model.md) | The v0 schema, relationships, worked example, indexes, and deferred data-model changes |
+| [Design.md](Design.md) | Actors, UX principles, multilingual behavior, visual system, interaction patterns, and interface review rules |
+| [product-decisions.md](docs/product-decisions.md) | Product choices, rationale, constraints, open questions, and validation targets |
+| [architecture.md](docs/architecture.md) | Current runtime boundaries, deployment shape, failure handling, and media flow |
+| [data-model.md](docs/data-model.md) | The v0 schema, relationships, worked example, and indexes |
+| [future.md](docs/future.md) | The deduplicated backlog of deliberately deferred work |
 
 These documents are the current source of truth. Avoid creating a new planning file when the information belongs in one of them.
 
@@ -133,7 +135,7 @@ refuses to overwrite an existing database or merge into a non-empty bucket.
 
 ## Current stage
 
-The first complete archive loop is working: new entries, corrections, additions, standalone examples, entry-targeted audio/images, moderation, atomic publication, search, and public reading. Audio approval replaces the current entry pronunciation, while image approval adds to the entry concept's gallery. Exact duplicates of existing canonical entry content are rejected; new-entry forms remain reviewable because identical spelling can represent distinct meanings. Upload completion verifies stored metadata, makes a synchronous server-side copy under a public key, and marks the quarantined media ready; only moderator approval makes it publicly reachable. [implementation-layers.md](docs/implementation-layers.md) records the deliberately deferred validation and background-processing hardening.
+The first complete archive loop is working: new entries, corrections, additions, standalone examples, entry-targeted audio/images, moderation, atomic publication, search, and public reading. Audio approval replaces the current entry pronunciation, while image approval adds to the entry concept's gallery. Exact duplicates of existing canonical entry content are rejected; new-entry forms remain reviewable because identical spelling can represent distinct meanings. Upload completion verifies stored metadata, makes a synchronous server-side copy under a public key, and marks the quarantined media ready; only moderator approval makes it publicly reachable. The moderator queue uses bounded keyset pages, and authenticated moderators can inspect the built-in LiveDashboard at `/moderator/dashboard`.
 
 The first operational recovery path is also available: a maintenance-window
 command snapshots SQLite and object storage together, verifies checksums and
@@ -142,7 +144,7 @@ and scheduled off-host retention remain deliberately separate work.
 
 ## Historical artifacts
 
-- [first-web.png](first-web.png) is an early interface sketch.
+- [first-web.png](docs/first-web.png) is an early interface sketch.
 - `mock/` contains an exploratory website prototype.
 
 They are useful references, but they do not define the product or architecture.

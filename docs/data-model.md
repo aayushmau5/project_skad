@@ -29,7 +29,7 @@ It does not attempt to model every future linguistic, editorial, or community fe
 | --- | --- |
 | SQLite | Text, relationships, submissions, revisions, and media metadata |
 | Object storage | Audio, images, and derived media files |
-| Browser storage | Unsent drafts, pending uploads, and cached pages; v1 may add offline dictionary packs |
+| Browser storage | Normal browser cache; retained contribution drafts and offline packs are deferred |
 
 ## The ten domain tables
 
@@ -59,7 +59,7 @@ The ten tables are:
 9. **moderator_accounts**
 10. **revisions**
 
-Phoenix authentication tokens, Oban jobs, SQLite internals, and the FTS5 virtual table are infrastructure tables rather than product-domain tables.
+Phoenix authentication tokens, SQLite internals, and the FTS5 virtual table are infrastructure tables rather than product-domain tables.
 
 ## Relationship diagram
 
@@ -495,7 +495,7 @@ They must not contain:
 
 - Published entries, concepts, examples, and media are archived rather than casually deleted.
 - Media withdrawal immediately removes affected media from public queries; cached clients reconcile on their next successful refresh.
-- Object deletion occurs asynchronously after the retention policy allows it.
+- Withdrawn objects enter `pending_deletion`; physical object cleanup is deferred until the retention policy and cleanup path are implemented.
 - Submissions and quarantined uploads follow a separate retention policy that remains open.
 - Revisions remain append-only except when law or safety requires removal of private information.
 
@@ -508,9 +508,9 @@ The following happen inside one SQLite transaction:
 - Change an example and replace all confirmed links.
 - Withdraw or archive media and create its revision.
 
-Long-running object-storage operations may later be recorded as intended state
-and completed by retryable background jobs. The current bounded upload path
-performs its server-side copy synchronously before canonical publication.
+The current bounded upload path performs its server-side copy synchronously
+before canonical publication. Durable retries may be added later if operating
+experience shows they are needed.
 
 ## Indexes to create initially
 

@@ -1,5 +1,10 @@
 This is a web application written using the Phoenix web framework.
 
+## Product design
+
+- Read [`Design.md`](Design.md) before changing any user-facing interface, content hierarchy, interaction, or translated copy.
+- Treat `Design.md` as the canonical visual and UX direction. Preserve its actor-specific public, contribution, and moderator patterns unless the task explicitly changes that direction.
+
 ## Project guidelines
 
 - Use `mix precommit` alias when you are done with all changes and fix any pending issues

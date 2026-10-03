@@ -1,6 +1,7 @@
 defmodule SkadWeb.Router do
   use SkadWeb, :router
 
+  import Phoenix.LiveDashboard.Router
   import SkadWeb.ModeratorAuth
 
   pipeline :browser do
@@ -58,6 +59,13 @@ defmodule SkadWeb.Router do
     pipe_through [:browser, :require_authenticated_moderator]
 
     get "/", ModeratorController, :home
+
+    live_dashboard "/dashboard",
+      metrics: SkadWeb.Telemetry,
+      home_app: {"Skad", :skad},
+      ecto_repos: [Skad.Repo],
+      on_mount: [{SkadWeb.ModeratorAuth, :ensure_authenticated}]
+
     get "/concepts", ModeratorConceptController, :index
     post "/concepts", ModeratorConceptController, :create
     get "/concepts/:public_id", ModeratorConceptController, :show
@@ -103,19 +111,11 @@ defmodule SkadWeb.Router do
   #   pipe_through :api
   # end
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
+  # Enable the Swoosh mailbox preview in development.
   if Application.compile_env(:skad, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
-
     scope "/dev" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: SkadWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end

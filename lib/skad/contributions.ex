@@ -17,6 +17,7 @@ defmodule Skad.Contributions do
 
   @submitted_media_key "media_public_ids"
   @entry_change_kinds [:correction, :addition, :example, :audio, :image]
+  @review_page_size 20
 
   @review_transitions %{
     pending: [:reviewing, :clarification_needed, :rejected],
@@ -165,20 +166,34 @@ defmodule Skad.Contributions do
     end
   end
 
-  def list_submissions_for_review(%Scope{
-        moderator_account: %ModeratorAccount{active: true}
-      }) do
-    Submission
-    |> where(
-      [submission],
-      submission.status in [:pending, :reviewing, :clarification_needed]
-    )
-    |> order_by([submission], asc: submission.received_at, asc: submission.id)
-    |> preload(:reviewed_by_account)
-    |> Repo.all()
+  def page_submissions_for_review(scope, after_public_id \\ nil)
+
+  def page_submissions_for_review(
+        %Scope{moderator_account: %ModeratorAccount{active: true}},
+        after_public_id
+      ) do
+    rows =
+      Submission
+      |> where(
+        [submission],
+        submission.status in [:pending, :reviewing, :clarification_needed]
+      )
+      |> after_review_cursor(after_public_id)
+      |> order_by([submission], asc: submission.received_at, asc: submission.id)
+      |> limit(^(@review_page_size + 1))
+      |> preload(:reviewed_by_account)
+      |> Repo.all()
+
+    {submissions, extra} = Enum.split(rows, @review_page_size)
+
+    %{
+      submissions: submissions,
+      next_cursor: if(extra == [], do: nil, else: List.last(submissions).public_id)
+    }
   end
 
-  def list_submissions_for_review(_scope), do: []
+  def page_submissions_for_review(_scope, _after_public_id),
+    do: %{submissions: [], next_cursor: nil}
 
   def get_submission_for_review(
         %Scope{moderator_account: %ModeratorAccount{active: true}},
@@ -195,6 +210,22 @@ defmodule Skad.Contributions do
   end
 
   def get_submission_for_review(_scope, _public_id), do: nil
+
+  defp after_review_cursor(query, nil), do: query
+
+  defp after_review_cursor(query, public_id) do
+    with {:ok, public_id} <- Ecto.UUID.cast(public_id),
+         %Submission{} = cursor <- Repo.get_by(Submission, public_id: public_id) do
+      where(
+        query,
+        [submission],
+        submission.received_at > ^cursor.received_at or
+          (submission.received_at == ^cursor.received_at and submission.id > ^cursor.id)
+      )
+    else
+      _ -> query
+    end
+  end
 
   def list_submission_media(
         %Scope{moderator_account: %ModeratorAccount{active: true}},

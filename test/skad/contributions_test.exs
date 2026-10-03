@@ -159,15 +159,42 @@ defmodule Skad.ContributionsTest do
     |> Ecto.Changeset.change(status: :rejected)
     |> Repo.update!()
 
-    assert Enum.map(Contributions.list_submissions_for_review(scope), & &1.id) == [first.id]
+    page = Contributions.page_submissions_for_review(scope)
+    assert Enum.map(page.submissions, & &1.id) == [first.id]
+    assert page.next_cursor == nil
 
     assert Contributions.get_submission_for_review(scope, first.public_id).payload ==
              first.payload
 
     inactive_scope = Scope.for_moderator(%{moderator | active: false})
-    assert Contributions.list_submissions_for_review(inactive_scope) == []
+
+    assert Contributions.page_submissions_for_review(inactive_scope) == %{
+             submissions: [],
+             next_cursor: nil
+           }
+
     assert Contributions.get_submission_for_review(inactive_scope, first.public_id) == nil
     assert Contributions.get_submission_for_review(scope, "not-a-uuid") == nil
+  end
+
+  test "pages the review queue with a stable keyset cursor" do
+    scope = Scope.for_moderator(insert_moderator())
+
+    submissions =
+      for offset <- 0..20 do
+        insert_submission(DateTime.add(~U[2026-01-01 00:00:00Z], offset, :second))
+      end
+
+    first_page = Contributions.page_submissions_for_review(scope)
+
+    assert Enum.map(first_page.submissions, & &1.id) ==
+             Enum.map(Enum.take(submissions, 20), & &1.id)
+
+    assert first_page.next_cursor == Enum.at(submissions, 19).public_id
+
+    second_page = Contributions.page_submissions_for_review(scope, first_page.next_cursor)
+    assert Enum.map(second_page.submissions, & &1.id) == [List.last(submissions).id]
+    assert second_page.next_cursor == nil
   end
 
   test "authorizes moderator management and private previews of submission media" do

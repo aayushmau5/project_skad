@@ -55,6 +55,32 @@ defmodule SkadWeb.ModeratorSessionControllerTest do
 
     assert Enum.count(LazyHTML.query_by_id(document, "moderator-display-name")) == 1
     assert Enum.count(LazyHTML.query_by_id(document, "moderator-log-out")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "moderator-dashboard-link")) == 1
+  end
+
+  test "protects the system dashboard with the moderator session", %{conn: conn} do
+    conn = get(conn, ~p"/moderator/dashboard")
+
+    assert redirected_to(conn) == ~p"/moderator/log-in"
+    assert get_session(conn, :moderator_return_to) == ~p"/moderator/dashboard"
+
+    account = create_account()
+
+    conn =
+      conn
+      |> recycle()
+      |> post(~p"/moderator/log-in", %{
+        "moderator" => %{"email" => account.email, "password" => @password}
+      })
+
+    assert redirected_to(conn) == ~p"/moderator/dashboard"
+
+    dashboard_conn = conn |> recycle() |> get(~p"/moderator/dashboard")
+    dashboard_home = redirected_to(dashboard_conn)
+    assert dashboard_home == ~p"/moderator/dashboard/home"
+
+    dashboard_conn = dashboard_conn |> recycle() |> get(dashboard_home)
+    assert html_response(dashboard_conn, 200)
   end
 
   test "logout revokes the database session", %{conn: conn} do

@@ -6,10 +6,17 @@ defmodule SkadWeb.ModeratorSubmissionController do
   alias Skad.Media
   alias Skad.Media.Item
 
-  def index(conn, _params) do
+  def index(conn, params) do
+    page =
+      Contributions.page_submissions_for_review(
+        conn.assigns.current_scope,
+        params["after"]
+      )
+
     render(conn, :index,
       page_title: "Submission queue",
-      submissions: Contributions.list_submissions_for_review(conn.assigns.current_scope)
+      submissions: page.submissions,
+      next_cursor: page.next_cursor
     )
   end
 

@@ -59,6 +59,14 @@ defmodule SkadWeb.ModeratorAuth do
     end
   end
 
+  def on_mount(:ensure_authenticated, _params, session, socket) do
+    if Accounts.get_moderator_account_by_session_token(session["moderator_session_token"]) do
+      {:cont, socket}
+    else
+      {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/moderator/log-in")}
+    end
+  end
+
   defp renew_session(conn) do
     delete_csrf_token()
 

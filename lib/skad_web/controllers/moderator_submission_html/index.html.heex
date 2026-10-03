@@ -25,5 +25,14 @@
         </p>
       </li>
     </ol>
+
+    <p :if={@next_cursor}>
+      <.link
+        id="next-submissions-page"
+        href={~p"/moderator/submissions?after=#{@next_cursor}"}
+      >
+        Next submissions
+      </.link>
+    </p>
   </section>
 </Layouts.app>

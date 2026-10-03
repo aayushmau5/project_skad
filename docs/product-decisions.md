@@ -41,7 +41,7 @@ Clarity, development speed, low cost, backup, and recovery take priority over th
 
 - **Status:** Accepted
 
-One Phoenix application serves public pages, search, contributions, moderation, media coordination, background jobs, and the few JSON endpoints the product needs.
+One Phoenix application serves public pages, search, contributions, moderation, media coordination, and the few JSON endpoints the product needs.
 
 The code boundaries are `Archive`, `Contributions`, `Media`, and `Accounts`. They are contexts, not services or permanent processes. V0 has no microservices, distributed Erlang, Kubernetes, Redis, separate frontend application, or GraphQL layer.
 
@@ -49,7 +49,7 @@ The code boundaries are `Archive`, `Contributions`, `Media`, and `Accounts`. The
 
 - **Status:** Accepted
 
-SQLite through Ecto is the canonical database. WAL supports the read-heavy single-node workload; FTS5 handles full-text search; indexed entry_forms rows handle exact and prefix lookup. Oban uses the same database for durable jobs.
+SQLite through Ecto is the canonical database. WAL supports the read-heavy single-node workload; FTS5 handles full-text search; indexed entry_forms rows handle exact and prefix lookup. If durable jobs become necessary, they must use the same database rather than introduce another service by default.
 
 Move to Postgres only when several application nodes must write, measured write contention harms users, high availability becomes mandatory, or the representative workload misses its targets after query and index fixes.
 
@@ -61,7 +61,7 @@ Production media uses Cloudflare R2 through its S3-compatible API. Local
 development uses RustFS against the same application configuration shape.
 SQLite stores stable object keys and metadata, not audio or image bytes.
 Private/quarantine and public media are separate. Browsers upload directly with
-short-lived signed instructions; large files use resumable multipart upload.
+short-lived signed instructions and bounded single-object uploads.
 
 Preserve originals, check stored size and declared content type, create the
 public object with a synchronous server-side copy, and make it reachable only
@@ -71,15 +71,15 @@ upload volume or observed failures justify them.
 
 ## PD-010 — Never lose an in-progress contribution
 
-- **Status:** Accepted
+- **Status:** Accepted; implementation deferred
 
-Contribution fields and selected media remain locally saved until the server acknowledges receipt. Failed sends remain visible and retryable. Background Sync may enhance this behavior but cannot be its only mechanism.
+Contribution fields, the client submission UUID, and selected media should remain locally saved until the server acknowledges receipt. Failed sends should remain visible and retryable. This guarantee is not implemented yet and is tracked in [future.md](future.md).
 
 ## PD-011 — Use HTML first and LiveView selectively
 
 - **Status:** Accepted
 
-Phoenix renders essential public content as HTML with progressive enhancement. Useful reading and navigation do not require JavaScript or a persistent socket. LiveView is appropriate for connected moderation and administrative interactions; local draft persistence protects contribution pages when a socket disconnects.
+Phoenix renders essential public content as HTML with progressive enhancement. Useful reading and navigation do not require JavaScript or a persistent socket. LiveView is appropriate where a connected moderator or administrative interaction benefits from it.
 
 ## PD-012 — Enforce a low-bandwidth budget
 
@@ -101,7 +101,7 @@ These are measured budgets, not reasons to remove accessibility or failure handl
 
 - **Status:** Accepted
 
-Production begins with one Phoenix release, Caddy for TLS, SQLite on local persistent storage, retained remote backups, S3-compatible media storage, Oban, structured logs, a health endpoint, and backup-failure monitoring.
+Production begins with one Phoenix release, Caddy for TLS, SQLite on local persistent storage, S3-compatible media storage, standard application logs, and health/readiness endpoints. Scheduled encrypted off-host retention and backup-failure alerts remain required operational safeguards in [future.md](future.md).
 
 Start with 2 GB RAM until the smaller target in PD-014 is proven. Deployment is incomplete until a fresh machine can restore the database and reconnect the media inventory.
 
@@ -157,15 +157,15 @@ Every hot query must be checked with `EXPLAIN QUERY PLAN`. Common paths use boun
 
 - **Status:** Accepted
 
-SQLite and object storage hold durable truth. BEAM processes provide request/job isolation, supervision, controlled concurrency, PubSub notifications, graceful shutdown, and observability.
+SQLite and object storage hold durable truth. BEAM processes provide request isolation, supervision, controlled concurrency, PubSub notifications, graceful shutdown, and live diagnostics.
 
-The initial supervision tree contains Ecto Repo, Phoenix PubSub, Oban, and the Endpoint. Oban starts with one media worker and one maintenance worker. Contexts remain ordinary modules; there are no per-entry GenServers, in-memory durable queues, speculative ETS caches, unsupervised tasks, or distributed nodes. See [architecture.md](architecture.md).
+The supervision tree contains Ecto Repo, the release migrator, Phoenix PubSub, and the Endpoint. Contexts remain ordinary modules; there are no per-entry GenServers, in-memory durable queues, speculative ETS caches, unsupervised tasks, or distributed nodes. See [architecture.md](architecture.md).
 
 ## PD-021 — Build v0 for slow networks; defer offline packs to v1
 
 - **Status:** Accepted
 
-V0 is centrally hosted and optimized for slow or interrupted connections. It includes small server-rendered pages, browser caching, useful failure states, local contribution drafts, and resumable media uploads. Search remains online.
+V0 is centrally hosted and optimized for slow connections. It includes small server-rendered pages and bounded direct media uploads. Search remains online. Local contribution drafts and resumable media uploads are deferred until real use justifies them.
 
 V1 may add versioned, checksummed language packs in IndexedDB with atomic replacement and exact/prefix lookup over forms and transliterations. Contribution drafts remain isolated from pack updates; media stays optional. Delta synchronization and offline full-text search are deferred until measured need justifies their complexity.
 
@@ -188,17 +188,8 @@ V1 may add versioned, checksummed language packs in IndexedDB with atomic replac
 - Public licenses for text, recordings, images, and exports.
 - Whether v1 requires offline full-text search.
 
-## Architecture validation milestone
+## Remaining work
 
-Before implementation choices are considered proven:
-
-1. Import approximately 100 reviewed entries for an end-to-end slice.
-2. Search every supported language and common spelling variants over a throttled connection.
-3. Retain a contribution across restart and disconnection, then submit it after reconnection.
-4. Interrupt and resume a direct recording upload.
-5. Moderate and publish the contribution with provenance, revision, media processing, and transactional job insertion intact.
-6. Submit an example, resolve an ambiguous automatic link, and publish confirmed definitions.
-7. Meet PD-018 query-plan and latency targets on a 1-vCPU, 1 GB machine; observe the same workload on 512 MB.
-8. Build x86-64 and ARM64 packages.
-9. Restore database, search index, jobs, and media references on a fresh machine.
-10. Test cold, repeat, slow, interrupted, and reconnected use on real low-end phones.
+The deduplicated backlog and its completion boundaries live in
+[future.md](future.md). Completed behavior is described in the README and
+[architecture.md](architecture.md).

@@ -8,15 +8,10 @@ defmodule Skad.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      SkadWeb.Telemetry,
       Skad.Repo,
       {Ecto.Migrator,
        repos: Application.fetch_env!(:skad, :ecto_repos), skip: skip_migrations?()},
-      {DNSCluster, query: Application.get_env(:skad, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Skad.PubSub},
-      # Start a worker by calling: Skad.Worker.start_link(arg)
-      # {Skad.Worker, arg},
-      # Start to serve requests, typically the last entry
       SkadWeb.Endpoint
     ]
 
