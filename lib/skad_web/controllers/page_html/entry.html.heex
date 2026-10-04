@@ -19,7 +19,7 @@
         {Enum.join(
           Enum.reject(
             [
-              @entry.language.name,
+              language_label(@entry.language),
               @entry.variety_label,
               @entry.place_label,
               @entry.part_of_speech
@@ -124,7 +124,7 @@
             lang={equivalent.language.code || equivalent.language.slug}
             dir={to_string(equivalent.language.direction)}
           >{primary_form_text(equivalent)}</span>
-          — {equivalent.language.name}</.link>
+          — {language_label(equivalent.language)}</.link>
         </li>
       </ul>
     </section>

@@ -34,6 +34,8 @@ defmodule SkadWeb.Layouts do
   attr :locale, :string, default: "hi"
   attr :language_links, :map, default: %{"hi" => "/?ui_language=hi", "en" => "/?ui_language=en"}
   attr :moderator, :boolean, default: false
+  attr :entry_count, :integer, default: nil
+  slot :footer_invitation
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -43,6 +45,15 @@ defmodule SkadWeb.Layouts do
       <a id="site-wordmark" class="wordmark" href={~p"/"}>Skad<span :if={@moderator}> / {gettext(
         "Moderator"
       )}</span></a>
+      <nav
+        :if={!@moderator}
+        id="public-navigation"
+        class="site-nav public-nav"
+        aria-label={gettext("Main navigation")}
+      >
+        <.link id="home-link" href={~p"/"}>{gettext("Home")}</.link>
+        <.link id="header-contribute-link" href={~p"/contribute"}>{gettext("Contribute")}</.link>
+      </nav>
       <nav
         :if={@moderator && @current_scope}
         id="moderator-navigation"
@@ -87,11 +98,24 @@ defmodule SkadWeb.Layouts do
       {render_slot(@inner_block)}
     </main>
     <footer id="site-footer" class="site-footer">
-      <p>{gettext("A living archive of Kinnaur’s languages")}</p>
-      <.link :if={!@moderator} id="contribute-link" href={~p"/contribute"}>{gettext("Suggest a word")}</.link>
-      <.link :if={!@moderator} id="moderator-login-link" href={~p"/moderator/log-in"}>{gettext(
-        "Moderator log in"
-      )}</.link>
+      <div :if={@footer_invitation != [] or is_integer(@entry_count)} class="footer-primary">
+        {render_slot(@footer_invitation)}
+        <p :if={is_integer(@entry_count)} id="archive-entry-count" class="footer-entry-count">
+          {gettext("Across all languages")}:
+          <strong>{ngettext(
+            "%{count} entry",
+            "%{count} entries",
+            @entry_count
+          )}</strong>
+        </p>
+      </div>
+      <div class="footer-meta">
+        <p>{gettext("A living archive of Kinnaur’s languages")}</p>
+        <p id="creator-credit">{gettext("Made by zed.tells")}</p>
+        <.link :if={!@moderator} id="moderator-login-link" href={~p"/moderator/log-in"}>{gettext(
+          "Moderator log in"
+        )}</.link>
+      </div>
     </footer>
     """
   end

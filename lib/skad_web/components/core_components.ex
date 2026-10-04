@@ -90,6 +90,7 @@ defmodule SkadWeb.CoreComponents do
   attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
+  attr :description, :string, default: nil
   attr :value, :any
 
   attr :type, :string,
@@ -196,18 +197,21 @@ defmodule SkadWeb.CoreComponents do
     <div class="fieldset">
       <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
-        <textarea
-          id={@id}
-          aria-invalid={if @errors != [], do: "true"}
-          aria-describedby={error_description(@id, @errors, @rest)}
-          name={@name}
-          class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
-          ]}
-          {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
-        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
+      <p :if={@description} id={"#{@id}-description"} class="input-description help-text">
+        {@description}
+      </p>
+      <textarea
+        id={@id}
+        aria-invalid={if @errors != [], do: "true"}
+        aria-describedby={error_description(@id, @errors, @rest, @description)}
+        name={@name}
+        class={[
+          @class || "w-full textarea",
+          @errors != [] && (@error_class || "textarea-error")
+        ]}
+        {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
+      >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       <div :if={@errors != []} id={"#{@id}-errors"} class="field-errors">
         <p :for={msg <- @errors}>{msg}</p>
       </div>
@@ -221,27 +225,88 @@ defmodule SkadWeb.CoreComponents do
     <div class="fieldset">
       <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          aria-invalid={if @errors != [], do: "true"}
-          aria-describedby={error_description(@id, @errors, @rest)}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          multiple={@multiple}
-          class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
-          ]}
-          {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
-        />
       </label>
+      <p :if={@description} id={"#{@id}-description"} class="input-description help-text">
+        {@description}
+      </p>
+      <input
+        type={@type}
+        name={@name}
+        id={@id}
+        aria-invalid={if @errors != [], do: "true"}
+        aria-describedby={error_description(@id, @errors, @rest, @description)}
+        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        multiple={@multiple}
+        class={[
+          @class || "w-full input",
+          @errors != [] && (@error_class || "input-error")
+        ]}
+        {Map.drop(@rest, [:"aria-describedby", :"aria-invalid"])}
+      />
       <div :if={@errors != []} id={"#{@id}-errors"} class="field-errors">
         <p :for={msg <- @errors}>{msg}</p>
       </div>
     </div>
     """
   end
+
+  attr :field, Phoenix.HTML.FormField, required: true
+  attr :label, :string, required: true
+  attr :languages, :list, required: true
+  attr :include_all, :boolean, default: false
+
+  def language_chips(assigns) do
+    errors = if Phoenix.Component.used_input?(assigns.field), do: assigns.field.errors, else: []
+    assigns = assign(assigns, :errors, Enum.map(errors, &translate_error/1))
+
+    ~H"""
+    <fieldset
+      id={@field.id}
+      class="language-choices"
+      aria-invalid={if @errors != [], do: "true"}
+      aria-describedby={if @errors != [], do: "#{@field.id}-errors"}
+    >
+      <legend class="label">{@label}</legend>
+      <div class="language-chips">
+        <label :if={@include_all} class="language-chip">
+          <input
+            type="radio"
+            id={"#{@field.id}_all"}
+            name={@field.name}
+            value=""
+            checked={@field.value in [nil, ""]}
+          />
+          <span>{gettext("All languages")}</span>
+        </label>
+        <label :for={language <- @languages} class="language-chip">
+          <input
+            type="radio"
+            id={"#{@field.id}_#{language.slug}"}
+            name={@field.name}
+            value={language.slug}
+            checked={@field.value == language.slug}
+            required={!@include_all}
+            aria-invalid={if @errors != [], do: "true"}
+            aria-describedby={if @errors != [], do: "#{@field.id}-errors"}
+          />
+          <span>{language_label(language)}</span>
+        </label>
+      </div>
+      <p :if={@languages == [] && !@include_all} class="help-text">
+        {gettext("No languages are available right now. Please try again later.")}
+      </p>
+      <div :if={@errors != []} id={"#{@field.id}-errors"} class="field-errors">
+        <p :for={message <- @errors}>{message}</p>
+      </div>
+    </fieldset>
+    """
+  end
+
+  def language_label(%{name: "Hindi"}), do: gettext("Hindi")
+  def language_label(%{name: "Hamskad"}), do: gettext("Hamskad")
+  def language_label(%{name: "Navaskad"}), do: gettext("Navaskad")
+  def language_label(%{name: "Pahari Kinnauri"}), do: gettext("Pahari Kinnauri")
+  def language_label(%{name: name}), do: name
 
   attr :form, Phoenix.HTML.Form, required: true
   attr :id, :string, required: true
@@ -254,8 +319,12 @@ defmodule SkadWeb.CoreComponents do
     """
   end
 
-  defp error_description(id, errors, rest) do
-    [rest[:"aria-describedby"], if(errors != [], do: "#{id}-errors")]
+  defp error_description(id, errors, rest, description \\ nil) do
+    [
+      rest[:"aria-describedby"],
+      if(description, do: "#{id}-description"),
+      if(errors != [], do: "#{id}-errors")
+    ]
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
     |> case do

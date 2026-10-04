@@ -13,7 +13,7 @@ defmodule Skad.Archive.Search do
 
   def full_text_lookup(query, language_id) when is_binary(query) and query != "" do
     sql = """
-    SELECT entry_id
+    SELECT entry_id, forms, definitions, notes, examples
     FROM entry_search
     WHERE entry_search MATCH ?
     AND rank MATCH 'bm25(0.0, 0.0, 10.0, 5.0, 2.0, 1.0)'
@@ -27,11 +27,12 @@ defmodule Skad.Archive.Search do
         do: [fts_query(query), language_id, @limit],
         else: [fts_query(query), @limit]
 
-    entry_ids =
+    matches =
       sql
       |> Repo.query!(params)
       |> Map.fetch!(:rows)
-      |> List.flatten()
+
+    entry_ids = Enum.map(matches, &hd/1)
 
     entries_by_id =
       Entry
@@ -44,10 +45,27 @@ defmodule Skad.Archive.Search do
       |> Repo.preload([:language, :concept, forms: forms_query()])
       |> Map.new(&{&1.id, &1})
 
-    Enum.flat_map(entry_ids, fn entry_id ->
+    Enum.flat_map(matches, fn [entry_id, forms, definitions, notes, examples] ->
       case Map.fetch(entries_by_id, entry_id) do
-        {:ok, entry} -> [%{entry: entry, matched_form: nil}]
-        :error -> []
+        {:ok, entry} ->
+          {source, excerpt} = match_source(query, forms, definitions, notes, examples)
+
+          matched_form =
+            if source == :form,
+              do: Enum.find(entry.forms, &matches_text?(&1.text, query)),
+              else: nil
+
+          [
+            %{
+              entry: entry,
+              matched_form: matched_form,
+              match_source: source,
+              match_excerpt: excerpt
+            }
+          ]
+
+        :error ->
+          []
       end
     end)
   end
@@ -168,7 +186,29 @@ defmodule Skad.Archive.Search do
     |> String.split()
     |> Enum.map_join(" AND ", fn term ->
       escaped = String.replace(term, "\"", "\"\"")
-      "\"#{escaped}\""
+      "\"#{escaped}\"*"
     end)
   end
+
+  defp match_source(query, forms, definitions, notes, examples) do
+    [form: forms, meaning: definitions, example: examples, context: notes]
+    |> Enum.find_value({:related, nil}, fn {source, text} ->
+      if line = matching_line(text, query), do: {source, line}
+    end)
+  end
+
+  defp matching_line(text, query) when is_binary(text) do
+    text
+    |> String.split("\n", trim: true)
+    |> Enum.find(&matches_text?(&1, query))
+  end
+
+  defp matching_line(_text, _query), do: nil
+
+  defp matches_text?(text, query) when is_binary(text) do
+    text = String.downcase(text)
+    Enum.all?(String.split(query), &String.contains?(text, &1))
+  end
+
+  defp matches_text?(_text, _query), do: false
 end

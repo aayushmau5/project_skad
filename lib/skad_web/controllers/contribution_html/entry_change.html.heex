@@ -13,7 +13,7 @@
         lang={@entry.language.code || @entry.language.slug}
         dir={to_string(@entry.language.direction)}
       >{primary_form_text(@entry)}</span>
-      · {@entry.language.name}
+      · {language_label(@entry.language)}
     </p>
     <p>{gettext("Your suggestion will be reviewed before it appears in the archive.")}</p>
     <.form
@@ -48,12 +48,18 @@
               field={@form[:part_of_speech]}
               type="text"
               label={gettext("Part of speech")}
+              description={
+                gettext(
+                  "For example: noun (a person or thing), verb (an action), or adjective (a description)."
+                )
+              }
               class="auth-input"
             />
             <.input
               field={@form[:usage_note]}
               type="textarea"
               label={gettext("Usage note")}
+              description={gettext("When, where, or how people use this word.")}
               class="auth-input"
               rows="3"
             />
@@ -61,6 +67,9 @@
               field={@form[:cultural_note]}
               type="textarea"
               label={gettext("Cultural context")}
+              description={
+                gettext("Any story, custom, or local tradition connected to this word.")
+              }
               class="auth-input"
               rows="3"
             />

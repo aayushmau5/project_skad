@@ -4,7 +4,19 @@
   locale={@locale}
   language_links={@language_links}
   moderator={@moderator_workspace?}
+  entry_count={@entry_count}
 >
+  <:footer_invitation>
+    <section
+      id="search-contribution"
+      class="footer-invitation"
+      aria-labelledby="search-contribution-heading"
+    >
+      <h2 id="search-contribution-heading">{gettext("Help keep these languages alive")}</h2>
+      <p>{gettext("Share a word you know. You don’t need an account.")}</p>
+      <.link id="suggest-new-word" href={~p"/contribute"}>{gettext("Suggest a word")}</.link>
+    </section>
+  </:footer_invitation>
   <section class="page-intro" aria-labelledby="search-heading">
     <h1 id="search-heading">{gettext("What word are you looking for?")}</h1>
     <p>{gettext("Find a word, a spelling, or a meaning in Kinnaur’s languages.")}</p>
@@ -17,8 +29,16 @@
     id="archive-search"
     class="search-form"
     role="search"
+    data-live-search
+    data-results-url={~p"/search/results"}
+    data-searching={gettext("Searching…")}
+    data-results-ready={gettext("Results updated.")}
+    data-no-results={gettext("No matches yet.")}
+    data-search-error={
+      gettext("Results could not update. Check your connection, then press Search to try again.")
+    }
   >
-    <div class="search-primary">
+    <div class="search-fields">
       <.input
         field={@search_form[:q]}
         type="search"
@@ -26,83 +46,24 @@
         class="search-input"
         placeholder={gettext("Try a word or meaning")}
         aria-describedby="search-help"
+        maxlength="120"
         required
+      />
+      <.language_chips
+        field={@search_form[:language]}
+        label={gettext("Narrow by language (optional)")}
+        languages={@languages}
+        include_all
       />
       <button type="submit" id="search-submit" class="search-button">{gettext("Search")}</button>
     </div>
     <p id="search-help" class="help-text">
       {gettext("You can also try a different spelling or transliteration.")}
     </p>
-    <div class="search-refinement">
-      <.input
-        field={@search_form[:language]}
-        type="select"
-        label={gettext("Narrow by language (optional)")}
-        class="search-select"
-        prompt={gettext("All languages")}
-        options={Enum.map(@languages, &{&1.name, &1.slug})}
-      />
-    </div>
   </.form>
 
-  <section
-    :if={@searched?}
-    id="search-results"
-    class="search-results"
-    aria-labelledby="results-heading"
-  >
-    <h2 id="results-heading">{gettext("Results")}</h2>
-    <div :if={@results == []} id="no-search-results">
-      <p>
-        {gettext("We haven’t found this word yet. Try another spelling or search by meaning.")}
-      </p>
-      <.link id="contribute-missing-word" href={~p"/contribute"}>{gettext(
-        "Know this word? Share it for review"
-      )}</.link>
-    </div>
-    <ol :if={@results != []} class="result-list">
-      <li
-        :for={result <- @results}
-        id={"search-result-#{result.entry.public_id}"}
-        class="result-card"
-      >
-        <.link
-          href={~p"/entries/#{result.entry.public_id}"}
-          class="result-link"
-          lang={result.entry.language.code || result.entry.language.slug}
-          dir={to_string(result.entry.language.direction)}
-        >
-          {primary_form_text(result.entry)}
-        </.link>
-        <p class="result-meta">
-          {Enum.join(
-            Enum.reject(
-              [result.entry.language.name, result.entry.variety_label, result.entry.place_label],
-              &is_nil/1
-            ),
-            " · "
-          )}
-        </p>
-        <p
-          :if={first_definition(result.entry)}
-          lang={definition_language(result.entry, @languages)}
-          dir="auto"
-        >
-          {first_definition(result.entry)}
-        </p>
-        <p :if={result.matched_form && !result.matched_form.is_primary} class="result-meta">
-          {gettext("Matched form:")}
-          <span
-            lang={result.entry.language.code || result.entry.language.slug}
-            dir={to_string(result.entry.language.direction)}
-          >{result.matched_form.text}</span>
-        </p>
-      </li>
-    </ol>
-  </section>
-  <section :if={!@searched?} id="search-contribution" class="entry-section">
-    <h2>{gettext("Help keep these languages alive")}</h2>
-    <p>{gettext("Share a word you know. You don’t need an account.")}</p>
-    <.link id="suggest-new-word" href={~p"/contribute"}>{gettext("Suggest a word")}</.link>
-  </section>
+  <p id="search-status" class="search-status help-text" role="status" hidden></p>
+  <div id="search-output" aria-busy="false">
+    <.search_results :if={@searched?} results={@results} languages={@languages} />
+  </div>
 </Layouts.app>

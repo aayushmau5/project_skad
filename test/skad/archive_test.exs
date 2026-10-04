@@ -522,6 +522,67 @@ defmodule Skad.ArchiveTest do
     assert Archive.search("water") == []
   end
 
+  test "searches partial meanings, linked examples, transliterations, and concepts with language filtering" do
+    {:ok, english} = create_language()
+
+    {:ok, water} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "HYDRATION", editorial_note: "private-marker"},
+        entry: %{
+          definitions: [%{language: "english", text: "A clear liquid for drinking."}],
+          usage_note: "Often used at the riverside."
+        },
+        forms: [
+          %{text: "Water", kind: :spelling, is_primary: true},
+          %{text: "Watur", kind: :transliteration, is_primary: false}
+        ]
+      })
+
+    {:ok, hindi} =
+      Archive.create_language(%{slug: "hindi", code: "hi", name: "Hindi", direction: :ltr})
+
+    {:ok, hindi_water} =
+      Archive.publish_equivalent(water, hindi, %{
+        entry: %{definitions: [%{language: "hindi", text: "पीने का तरल।"}]},
+        forms: [%{text: "पानी", kind: :spelling, is_primary: true}]
+      })
+
+    assert {:ok, _example} =
+             Archive.publish_usage_example(english, %{
+               example: %{text: "Water fills the vessel.", translations: []},
+               links: [
+                 %{
+                   entry_public_id: water.public_id,
+                   start_offset: 0,
+                   end_offset: byte_size("Water"),
+                   role: :focus
+                 }
+               ]
+             })
+
+    water_id = water.id
+    hindi_water_id = hindi_water.id
+
+    assert [%{entry: %{id: ^water_id}, match_source: :meaning}] = Archive.search("liqu", english)
+    assert [%{entry: %{id: ^water_id}, match_source: :example}] = Archive.search("vess", english)
+    assert [%{entry: %{id: ^water_id}, match_source: :context}] = Archive.search("river", english)
+
+    assert [%{entry: %{id: ^water_id}, matched_form: %{kind: :transliteration}}] =
+             Archive.search("watu", english)
+
+    assert [%{entry: %{id: ^hindi_water_id}, match_source: :concept}] =
+             Archive.search("water", hindi)
+
+    assert [%{entry: %{id: ^water_id}, match_source: :spelling} | _] =
+             Archive.search("water", english)
+
+    assert [%{entry: %{id: ^hindi_water_id}, match_source: :concept}] =
+             Archive.search("liqu", hindi)
+
+    assert Archive.search("hydr") == []
+    assert Archive.search("private-marker") == []
+  end
+
   defp create_language do
     Archive.create_language(%{
       slug: "english",

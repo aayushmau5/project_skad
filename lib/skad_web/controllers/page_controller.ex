@@ -5,16 +5,7 @@ defmodule SkadWeb.PageController do
   alias Skad.Media
 
   def home(conn, params) do
-    languages = Archive.list_active_languages()
-    query = params |> Map.get("q", "") |> String.trim()
-    language = Enum.find(languages, &(&1.slug == params["language"]))
-
-    results =
-      if query == "" do
-        []
-      else
-        Archive.search(query, language)
-      end
+    {languages, language, query, results} = search_data(params)
 
     search_form =
       Phoenix.Component.to_form(
@@ -29,9 +20,24 @@ defmodule SkadWeb.PageController do
       page_title: gettext("Search"),
       search_form: search_form,
       languages: languages,
+      entry_count: Archive.count_public_entries(),
       results: results,
       searched?: query != ""
     )
+  end
+
+  def results(conn, params) do
+    case search_data(params) do
+      {_languages, _language, "", _results} ->
+        send_resp(conn, :no_content, "")
+
+      {languages, _language, _query, results} ->
+        conn
+        |> put_root_layout(false)
+        |> put_layout(false)
+        |> put_resp_header("cache-control", "private, no-store")
+        |> render(:results, languages: languages, results: results)
+    end
   end
 
   def entry(conn, %{"public_id" => public_id}) do
@@ -55,5 +61,13 @@ defmodule SkadWeb.PageController do
     |> put_status(:not_found)
     |> put_view(SkadWeb.PageHTML)
     |> render(:missing, page_title: gettext("Page unavailable"), message: message)
+  end
+
+  defp search_data(params) do
+    languages = Archive.list_active_languages()
+    query = params |> Map.get("q", "") |> String.trim()
+    language = Enum.find(languages, &(&1.slug == params["language"]))
+    results = if query == "", do: [], else: Archive.search(query, language)
+    {languages, language, query, results}
   end
 end

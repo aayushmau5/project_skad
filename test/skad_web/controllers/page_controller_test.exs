@@ -52,6 +52,7 @@ defmodule SkadWeb.PageControllerTest do
     document = conn |> html_response(200) |> LazyHTML.from_document()
     result = LazyHTML.query_by_id(document, "search-result-#{water.public_id}")
 
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "archive-entry-count")) =~ "2"
     assert Enum.count(result) == 1
     assert LazyHTML.text(result) =~ "Water"
 
@@ -60,6 +61,35 @@ defmodule SkadWeb.PageControllerTest do
            ]
 
     assert Enum.empty?(LazyHTML.query_by_id(document, "search-result-#{hindi_water.public_id}"))
+
+    fragment_conn =
+      conn
+      |> recycle()
+      |> get(~p"/search/results?q=drink+water&language=english")
+
+    fragment = fragment_conn |> html_response(200) |> LazyHTML.from_fragment()
+    assert Enum.count(LazyHTML.query_by_id(fragment, "search-result-#{water.public_id}")) == 1
+    assert Enum.empty?(LazyHTML.query(fragment, "html"))
+
+    example_match = LazyHTML.query(fragment, "#search-result-#{water.public_id} .result-match")
+    assert LazyHTML.text(example_match) =~ "उदाहरण में मिला:"
+    assert LazyHTML.text(example_match) =~ "Drink water."
+    assert LazyHTML.attribute(LazyHTML.query(example_match, "span"), "lang") == ["en"]
+
+    filtered_fragment =
+      conn
+      |> recycle()
+      |> get(~p"/search/results?q=drink+water&language=hindi")
+      |> html_response(200)
+      |> LazyHTML.from_fragment()
+
+    assert Enum.count(
+             LazyHTML.query_by_id(filtered_fragment, "search-result-#{hindi_water.public_id}")
+           ) == 1
+
+    assert Enum.empty?(
+             LazyHTML.query_by_id(filtered_fragment, "search-result-#{water.public_id}")
+           )
 
     conn = get(recycle(conn), ~p"/entries/#{water.public_id}")
     document = conn |> html_response(200) |> LazyHTML.from_document()
@@ -85,6 +115,11 @@ defmodule SkadWeb.PageControllerTest do
              LazyHTML.query(document, "#equivalent-entry-#{hindi_water.public_id} span"),
              "lang"
            ) == ["hi"]
+
+    assert LazyHTML.text(
+             LazyHTML.query_by_id(document, "equivalent-entry-#{hindi_water.public_id}")
+           ) =~
+             "हिंदी"
 
     assert LazyHTML.text(LazyHTML.query_by_id(document, "example-#{example.public_id}")) =~
              "Drink water."
@@ -132,6 +167,119 @@ defmodule SkadWeb.PageControllerTest do
     document = conn |> html_response(404) |> LazyHTML.from_document()
     assert Enum.count(LazyHTML.query_by_id(document, "archive-not-found")) == 1
     assert Enum.count(LazyHTML.query_by_id(document, "not-found-search")) == 1
+  end
+
+  test "live results keep the selected archive language and offer a full-page fallback", %{
+    conn: conn
+  } do
+    {:ok, english} = create_language("english", "en", "English")
+    {:ok, hindi} = create_language("hindi", "hi", "Hindi")
+
+    {:ok, english_entry} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "HYDRATION"},
+        entry: %{definitions: [%{language: "en", text: "Water"}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    {:ok, hindi_entry} =
+      Archive.publish_equivalent(english_entry, hindi, %{
+        entry: %{definitions: [%{language: "hi", text: "पानी"}]},
+        forms: [%{text: "पानी", kind: :spelling, is_primary: true}]
+      })
+
+    path = ~p"/search/results?q=water&language=hindi&ui_language=en"
+    fragment = conn |> get(path) |> html_response(200) |> LazyHTML.from_fragment()
+
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(fragment, "search-results"),
+             "data-result-count"
+           ) ==
+             ["1"]
+
+    assert Enum.count(LazyHTML.query_by_id(fragment, "search-result-#{hindi_entry.public_id}")) ==
+             1
+
+    assert Enum.empty?(LazyHTML.query_by_id(fragment, "search-result-#{english_entry.public_id}"))
+
+    assert LazyHTML.text(LazyHTML.query_by_id(fragment, "search-result-#{hindi_entry.public_id}")) =~
+             "Related meaning"
+
+    assert LazyHTML.attribute(
+             LazyHTML.query(fragment, "#search-result-#{hindi_entry.public_id} .result-link"),
+             "lang"
+           ) == ["hi"]
+
+    hindi_fragment =
+      conn
+      |> recycle()
+      |> get(~p"/search/results?q=water&language=hindi")
+      |> html_response(200)
+      |> LazyHTML.from_fragment()
+
+    assert LazyHTML.text(
+             LazyHTML.query_by_id(hindi_fragment, "search-result-#{hindi_entry.public_id}")
+           ) =~
+             "संबंधित अर्थ"
+
+    assert LazyHTML.text(
+             LazyHTML.query(
+               hindi_fragment,
+               "#search-result-#{hindi_entry.public_id} .result-meta"
+             )
+           ) =~ "हिंदी"
+
+    full_page =
+      conn
+      |> recycle()
+      |> get(~p"/?q=water&language=hindi&ui_language=en")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(full_page, "search-result-#{hindi_entry.public_id}")) ==
+             1
+
+    assert conn |> recycle() |> get(~p"/search/results") |> response(204) == ""
+  end
+
+  test "home total excludes archived entries and archived concepts", %{conn: conn} do
+    {:ok, english} = create_language("english", "en", "English")
+
+    {:ok, entry} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "WATER"},
+        entry: %{definitions: [%{language: "en", text: "Water"}]},
+        forms: [%{text: "Water", kind: :spelling, is_primary: true}]
+      })
+
+    document = conn |> get(~p"/") |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "archive-entry-count")) =~
+             "सभी भाषाओं में:"
+
+    assert LazyHTML.text(LazyHTML.query(document, "#archive-entry-count strong")) ==
+             "1 प्रविष्टि"
+
+    entry
+    |> Ecto.Changeset.change(archived_at: DateTime.utc_now(:second))
+    |> Skad.Repo.update!()
+
+    document = conn |> recycle() |> get(~p"/") |> html_response(200) |> LazyHTML.from_document()
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "archive-entry-count")) =~ "0"
+
+    {:ok, second_entry} =
+      Archive.publish_new_meaning(english, %{
+        concept: %{editorial_label: "RIVER"},
+        entry: %{definitions: [%{language: "en", text: "River"}]},
+        forms: [%{text: "River", kind: :spelling, is_primary: true}]
+      })
+
+    second_entry.concept
+    |> Ecto.Changeset.change(archived_at: DateTime.utc_now(:second))
+    |> Skad.Repo.update!()
+
+    document = conn |> recycle() |> get(~p"/") |> html_response(200) |> LazyHTML.from_document()
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "archive-entry-count")) =~ "0"
   end
 
   defp create_language(slug, code, name) do

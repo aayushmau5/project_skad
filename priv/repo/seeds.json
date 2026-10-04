@@ -17,6 +17,17 @@
       "code": "",
       "name": "Hamskad",
       "direction": "ltr"
+    },
+    {
+      "slug": "navaskad",
+      "name": "Navaskad",
+      "direction": "ltr"
+    },
+    {
+      "slug": "pahari-kinnauri",
+      "code": "kjo",
+      "name": "Pahari Kinnauri",
+      "direction": "ltr"
     }
   ],
   "meanings": [

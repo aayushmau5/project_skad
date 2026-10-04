@@ -25,6 +25,7 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/skad"
 import topbar from "../vendor/topbar"
 import {initializeMediaUploads} from "./media_uploads"
+import {initializeLiveSearch} from "./live_search"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
@@ -41,6 +42,7 @@ window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 initializeMediaUploads()
+initializeLiveSearch()
 const connectionStatus = document.querySelector("[data-connection-status]")
 const updateConnection = () => { if (connectionStatus) connectionStatus.hidden = navigator.onLine }
 window.addEventListener("online", updateConnection)

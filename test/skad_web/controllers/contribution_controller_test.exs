@@ -13,7 +13,12 @@ defmodule SkadWeb.ContributionControllerTest do
     form = LazyHTML.query_by_id(document, "new-entry-contribution-form")
 
     assert Enum.count(form) == 1
-    assert Enum.count(LazyHTML.query(form, "option[value=english]")) == 1
+
+    assert Enum.count(
+             LazyHTML.query(form, "#contribution_language_slug input[type=radio][value=english]")
+           ) == 1
+
+    assert Enum.empty?(LazyHTML.query(form, "#contribution_language_slug input[value='']"))
     assert Enum.count(LazyHTML.query(form, "#contribution_example")) == 1
     assert Enum.count(LazyHTML.query_by_id(document, "contribution-media")) == 1
     assert Enum.count(LazyHTML.query_by_id(document, "contribution-audio-upload")) == 1
@@ -30,6 +35,46 @@ defmodule SkadWeb.ContributionControllerTest do
       |> LazyHTML.attribute("value")
 
     assert {:ok, _client_submission_id} = Ecto.UUID.cast(client_submission_id)
+  end
+
+  test "language choices show an empty state and required errors", %{conn: conn} do
+    document = conn |> get(~p"/contribute") |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "contribution_language_slug")) =~
+             "अभी चुनने के लिए कोई भाषा उपलब्ध नहीं है"
+
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(document, "new-entry-contribution-submit"),
+             "disabled"
+           ) == [""]
+
+    create_language()
+
+    document =
+      conn
+      |> recycle()
+      |> post(~p"/contributions", %{
+        "contribution" => %{
+          "client_submission_id" => Ecto.UUID.generate(),
+          "language_slug" => "",
+          "primary_form" => "Water",
+          "definition" => "A clear liquid."
+        }
+      })
+      |> html_response(422)
+      |> LazyHTML.from_document()
+
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(document, "contribution_language_slug"),
+             "aria-invalid"
+           ) == ["true"]
+
+    assert LazyHTML.attribute(
+             LazyHTML.query_by_id(document, "contribution_language_slug_english"),
+             "aria-describedby"
+           ) == ["contribution_language_slug-errors"]
+
+    assert Enum.count(LazyHTML.query_by_id(document, "contribution_language_slug-errors")) == 1
   end
 
   test "submits a proposal and renders its safe receipt", %{conn: conn} do
@@ -141,6 +186,15 @@ defmodule SkadWeb.ContributionControllerTest do
     assert LazyHTML.attribute(LazyHTML.query(form, "#contribution_primary_form"), "value") == [
              "Water"
            ]
+
+    assert LazyHTML.text(LazyHTML.query(form, "label[for=contribution_part_of_speech] .label")) ==
+             "शब्द का प्रकार"
+
+    assert form
+           |> LazyHTML.query_by_id("contribution_part_of_speech-description")
+           |> LazyHTML.text()
+           |> String.trim() ==
+             "उदाहरण: संज्ञा (व्यक्ति या चीज़ का नाम), क्रिया (कोई काम), या विशेषण (कोई गुण)।"
 
     conn =
       post(recycle(conn), ~p"/entries/#{entry.public_id}/corrections", %{

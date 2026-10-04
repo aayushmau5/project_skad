@@ -20,14 +20,10 @@
       <.input field={@form[:client_submission_id]} type="hidden" />
       <fieldset id="contribution-content" class="form-stage">
         <legend>{gettext("2. Share it with context")}</legend>
-        <.input
+        <.language_chips
           field={@form[:language_slug]}
-          type="select"
           label={gettext("Language")}
-          class="auth-input"
-          prompt={gettext("Choose a language")}
-          options={Enum.map(@languages, &{&1.name, &1.slug})}
-          required
+          languages={@languages}
         />
         <.input
           field={@form[:primary_form]}
@@ -55,12 +51,18 @@
             field={@form[:part_of_speech]}
             type="text"
             label={gettext("Part of speech")}
+            description={
+              gettext(
+                "For example: noun (a person or thing), verb (an action), or adjective (a description)."
+              )
+            }
             class="auth-input"
           />
           <.input
             field={@form[:usage_note]}
             type="textarea"
             label={gettext("Usage note")}
+            description={gettext("When, where, or how people use this word.")}
             class="auth-input"
             rows="3"
           />
@@ -68,6 +70,7 @@
             field={@form[:cultural_note]}
             type="textarea"
             label={gettext("Cultural context")}
+            description={gettext("Any story, custom, or local tradition connected to this word.")}
             class="auth-input"
             rows="3"
           />
@@ -162,7 +165,12 @@
             "Your suggestion will be reviewed before publication. Keep the receipt to check its status."
           )}
         </p>
-        <button type="submit" id="new-entry-contribution-submit" class="auth-button">
+        <button
+          type="submit"
+          id="new-entry-contribution-submit"
+          class="auth-button"
+          disabled={@languages == []}
+        >
           {gettext("Send for review")}
         </button>
       </fieldset>

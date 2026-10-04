@@ -18,6 +18,8 @@ defmodule Skad.SeedsTest do
     apply(Module.concat(["Skad", "Seeds"]), :run, [])
 
     assert Repo.aggregate(Language, :count) == length(seed_data["languages"])
+    assert Archive.get_language_by_slug("navaskad").name == "Navaskad"
+    assert Archive.get_language_by_slug("pahari-kinnauri").code == "kjo"
     assert Repo.aggregate(Concept, :count) == length(seed_data["meanings"])
     assert Repo.aggregate(Entry, :count) == length(entries)
     assert Repo.aggregate(EntryForm, :count) == Enum.sum(Enum.map(entries, &length(&1["forms"])))

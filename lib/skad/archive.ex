@@ -22,6 +22,13 @@ defmodule Skad.Archive do
     |> Repo.all()
   end
 
+  def count_public_entries do
+    Entry
+    |> join(:inner, [entry], concept in assoc(entry, :concept))
+    |> where([entry, concept], is_nil(entry.archived_at) and is_nil(concept.archived_at))
+    |> Repo.aggregate(:count, :id)
+  end
+
   def get_language_by_slug(slug) when is_binary(slug) do
     Repo.get_by(Language, slug: slug)
   end
@@ -85,9 +92,10 @@ defmodule Skad.Archive do
   def search(query, language \\ nil) do
     with normalized when is_binary(normalized) and normalized != "" <- normalize_text(query),
          {:ok, language_id} <- lookup_language_id(language) do
-      (exact_lookup(normalized, language) ++
-         prefix_lookup(normalized, language) ++
-         Search.full_text_lookup(normalized, language_id))
+      direct = direct_search(normalized, language, language_id)
+      concept_sources = if language_id, do: direct_search(normalized, nil, nil), else: direct
+
+      (direct ++ related_entries(concept_sources, language_id))
       |> Enum.uniq_by(& &1.entry.id)
       |> Enum.take(@lookup_limit)
     else
@@ -96,6 +104,14 @@ defmodule Skad.Archive do
   end
 
   def rebuild_search_index, do: Search.rebuild()
+
+  defp direct_search(query, language, language_id) do
+    (exact_lookup(query, language) ++
+       prefix_lookup(query, language) ++
+       Search.full_text_lookup(query, language_id))
+    |> Enum.uniq_by(& &1.entry.id)
+    |> Enum.take(@lookup_limit)
+  end
 
   defp lookup(query, language, match) do
     with normalized when is_binary(normalized) and normalized != "" <- normalize_text(query),
@@ -138,11 +154,49 @@ defmodule Skad.Archive do
       |> Repo.preload([:language, :concept, forms: forms_query])
       |> Enum.map(fn entry ->
         matched_form = best_matching_form(entry.forms, normalized, match)
-        %{entry: entry, matched_form: matched_form}
+
+        %{
+          entry: entry,
+          matched_form: matched_form,
+          match_source: matched_form.kind,
+          match_excerpt: nil
+        }
       end)
     else
       _invalid_query_or_language -> []
     end
+  end
+
+  defp related_entries([], _language_id), do: []
+
+  defp related_entries(matches, language_id) do
+    concept_ids = matches |> Enum.map(& &1.entry.concept_id) |> Enum.uniq()
+    forms_query = from form in EntryForm, order_by: [desc: form.is_primary, asc: form.id]
+
+    entries =
+      Entry
+      |> join(:inner, [entry], concept in assoc(entry, :concept))
+      |> where(
+        [entry, concept],
+        entry.concept_id in ^concept_ids and is_nil(entry.archived_at) and
+          is_nil(concept.archived_at)
+      )
+      |> maybe_filter_entry_language(language_id)
+      |> order_by([entry], asc: entry.id)
+      |> limit(@lookup_limit)
+      |> Repo.all()
+      |> Repo.preload([:language, :concept, forms: forms_query])
+
+    Enum.map(
+      entries,
+      &%{entry: &1, matched_form: nil, match_source: :concept, match_excerpt: nil}
+    )
+  end
+
+  defp maybe_filter_entry_language(query, nil), do: query
+
+  defp maybe_filter_entry_language(query, language_id) do
+    where(query, [entry], entry.language_id == ^language_id)
   end
 
   def publish_new_meaning(%Language{} = language, attrs) when is_map(attrs) do
