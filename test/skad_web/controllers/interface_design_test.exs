@@ -280,6 +280,9 @@ defmodule SkadWeb.InterfaceDesignTest do
   } do
     document = conn |> get(~p"/contribute") |> html_response(200) |> LazyHTML.from_document()
 
+    assert Enum.count(LazyHTML.query_by_id(document, "media_context_place_label")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(document, "media_context_variety_label"))
+
     assert Enum.count(
              LazyHTML.query(
                document,

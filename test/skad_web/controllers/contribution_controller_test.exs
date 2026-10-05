@@ -292,6 +292,7 @@ defmodule SkadWeb.ContributionControllerTest do
       |> LazyHTML.from_document()
 
     assert Enum.count(LazyHTML.query_by_id(audio_document, "entry-audio-upload")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(audio_document, "media_context_variety_label"))
     assert Enum.empty?(LazyHTML.query_by_id(audio_document, "entry-image-uploads"))
 
     image_document =
@@ -302,6 +303,7 @@ defmodule SkadWeb.ContributionControllerTest do
       |> LazyHTML.from_document()
 
     assert Enum.count(LazyHTML.query_by_id(image_document, "entry-image-uploads")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(image_document, "media_context_variety_label"))
 
     assert LazyHTML.attribute(
              LazyHTML.query_by_id(image_document, "entry-image-uploads"),

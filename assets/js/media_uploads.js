@@ -21,7 +21,6 @@ const uploadObject = async (root, file, kind, onProgress) => {
   const instructions = await requestJSON(root.dataset.prepareUrl, {
     kind, mime_type: file.type, byte_size: file.size, sha256: await sha256(file),
     place_label: root.querySelector("[data-media-place]")?.value,
-    variety_label: root.querySelector("[data-media-variety]")?.value,
     attribution_text: root.querySelector("[data-media-attribution]")?.value,
   })
   await new Promise((resolve, reject) => {

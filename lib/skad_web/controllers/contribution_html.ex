@@ -22,13 +22,6 @@ defmodule SkadWeb.ContributionHTML do
         data-media-place
       />
       <.input
-        field={@form[:variety_label]}
-        type="text"
-        label={gettext("Local language variety (optional)")}
-        class="auth-input"
-        data-media-variety
-      />
-      <.input
         field={@form[:attribution_text]}
         type="text"
         label={gettext("Speaker or photographer credit (optional, public)")}
