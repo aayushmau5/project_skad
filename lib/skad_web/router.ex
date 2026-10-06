@@ -30,6 +30,7 @@ defmodule SkadWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/archive", PageController, :archive
     get "/search/results", PageController, :results
     get "/entries/:public_id", PageController, :entry
     get "/entries/:public_id/correct", ContributionController, :correct

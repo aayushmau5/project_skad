@@ -4,6 +4,19 @@ defmodule SkadWeb.PageController do
   alias Skad.Archive
   alias Skad.Media
 
+  def archive(conn, params) do
+    languages = Archive.list_active_languages()
+    language = Enum.find(languages, &(&1.slug == params["language"]))
+    archive = Archive.list_public_entries(language, params["page"])
+
+    render(conn, :archive,
+      page_title: gettext("Archive"),
+      languages: languages,
+      language: language,
+      archive: archive
+    )
+  end
+
   def home(conn, params) do
     {languages, language, query, results} = search_data(params)
 

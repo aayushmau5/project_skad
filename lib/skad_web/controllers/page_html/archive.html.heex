@@ -1,0 +1,95 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+>
+  <section class="page-intro" aria-labelledby="archive-heading">
+    <h1 id="archive-heading">{gettext("Archive")}</h1>
+    <p>{gettext("Browse words and meanings in Kinnaur’s languages.")}</p>
+  </section>
+
+  <nav id="archive-filters" class="archive-filters" aria-label={gettext("Filter by language")}>
+    <.link
+      id="archive-filter-all"
+      href={archive_path(nil, 1, @locale)}
+      aria-current={if(is_nil(@language), do: "true")}
+    >{gettext("All")}</.link>
+    <.link
+      :for={language <- @languages}
+      id={"archive-filter-#{language.slug}"}
+      href={archive_path(language, 1, @locale)}
+      aria-current={if(@language && @language.id == language.id, do: "true")}
+    >{language_label(language)}</.link>
+  </nav>
+
+  <p id="archive-word-count" class="help-text">
+    {ngettext("%{count} word", "%{count} words", @archive.total_count)}
+  </p>
+
+  <div :if={@archive.entries == []} id="archive-empty">
+    <p>{gettext("No words have been published here yet.")}</p>
+    <.link id="archive-suggest-word" href={~p"/contribute"}>{gettext("Suggest a word")}</.link>
+  </div>
+
+  <ol :if={@archive.entries != []} id="archive-words" class="result-list">
+    <li
+      :for={entry <- @archive.entries}
+      id={"archive-word-#{entry.public_id}"}
+      class="result-card"
+    >
+      <div class="archive-word-heading">
+        <.link
+          href={~p"/entries/#{entry.public_id}"}
+          class="result-link"
+          lang={entry.language.code || entry.language.slug}
+          dir={to_string(entry.language.direction)}
+        >{primary_form_text(entry)}</.link>
+        <span :if={is_nil(@language)} class="archive-language-pill">
+          {language_label(entry.language)}
+        </span>
+      </div>
+      <p
+        :if={entry.part_of_speech || entry.variety_label || entry.place_label}
+        class="result-meta"
+      >
+        {Enum.join(
+          Enum.reject([entry.part_of_speech, entry.variety_label, entry.place_label], &is_nil/1),
+          " · "
+        )}
+      </p>
+      <p :if={first_definition(entry)} lang={definition_language(entry, @languages)} dir="auto">
+        {first_definition(entry)}
+      </p>
+    </li>
+  </ol>
+
+  <nav
+    :if={@archive.total_count > 0}
+    id="archive-pagination"
+    class="archive-pagination"
+    aria-label={gettext("Archive pages")}
+  >
+    <.link
+      :if={@archive.page > 1}
+      id="archive-previous"
+      href={archive_path(@language, @archive.page - 1, @locale)}
+      rel="prev"
+    >{gettext("Previous")}</.link>
+    <span :if={@archive.page == 1} id="archive-previous" aria-disabled="true">
+      {gettext("Previous")}
+    </span>
+    <span id="archive-page-number" aria-current="page">
+      {gettext("Page %{page} of %{pages}", page: @archive.page, pages: @archive.page_count)}
+    </span>
+    <.link
+      :if={@archive.page < @archive.page_count}
+      id="archive-next"
+      href={archive_path(@language, @archive.page + 1, @locale)}
+      rel="next"
+    >{gettext("Next")}</.link>
+    <span :if={@archive.page == @archive.page_count} id="archive-next" aria-disabled="true">
+      {gettext("Next")}
+    </span>
+  </nav>
+</Layouts.app>

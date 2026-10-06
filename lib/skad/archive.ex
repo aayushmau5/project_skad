@@ -14,6 +14,7 @@ defmodule Skad.Archive do
 
   @lookup_limit 20
   @concept_limit 20
+  @archive_page_size 20
 
   def list_active_languages do
     Language
@@ -23,11 +24,47 @@ defmodule Skad.Archive do
   end
 
   def count_public_entries do
+    public_entries_query()
+    |> Repo.aggregate(:count, :id)
+  end
+
+  def list_public_entries(language \\ nil, page \\ 1) do
+    query =
+      public_entries_query()
+      |> maybe_filter_entry_language(if(language, do: language.id))
+
+    total_count = Repo.aggregate(query, :count, :id)
+    page_count = max(1, div(total_count + @archive_page_size - 1, @archive_page_size))
+    page = page |> archive_page() |> min(page_count)
+
+    entries =
+      query
+      |> join(:inner, [entry], form in assoc(entry, :forms), on: form.is_primary)
+      |> order_by([entry, _concept, form], asc: form.normalized_text, asc: entry.id)
+      |> limit(@archive_page_size)
+      |> offset(^((page - 1) * @archive_page_size))
+      |> Repo.all()
+      |> Repo.preload([:language, :forms])
+
+    %{entries: entries, page: page, page_count: page_count, total_count: total_count}
+  end
+
+  defp public_entries_query do
     Entry
     |> join(:inner, [entry], concept in assoc(entry, :concept))
     |> where([entry, concept], is_nil(entry.archived_at) and is_nil(concept.archived_at))
-    |> Repo.aggregate(:count, :id)
   end
+
+  defp archive_page(page) when is_integer(page) and page > 0, do: page
+
+  defp archive_page(page) when is_binary(page) do
+    case Integer.parse(page) do
+      {number, ""} when number > 0 -> number
+      _invalid -> 1
+    end
+  end
+
+  defp archive_page(_page), do: 1
 
   def get_language_by_slug(slug) when is_binary(slug) do
     Repo.get_by(Language, slug: slug)

@@ -52,6 +52,7 @@ defmodule SkadWeb.Layouts do
         aria-label={gettext("Main navigation")}
       >
         <.link id="home-link" href={~p"/"}>{gettext("Home")}</.link>
+        <.link id="header-archive-link" href={~p"/archive"}>{gettext("Archive")}</.link>
         <.link id="header-contribute-link" href={~p"/contribute"}>{gettext("Contribute")}</.link>
       </nav>
       <nav

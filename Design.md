@@ -175,6 +175,7 @@ Do not add hosted fonts. They cost bandwidth and can fail on poor connections.
 - Avoid card borders around every section. Most groups should be separated by spacing or a rule.
 - A subtle shadow is allowed only for a bounded phone/form surface or the moderator workspace shell.
 - Do not use rounded pills for navigation, status, filters, or buttons.
+- Archive glossary rows use a small rounded language pill when **All** languages is selected, as explicitly requested for this page. This identifies the language of each word in a mixed list; language filters remain square.
 
 ### Spacing and size
 

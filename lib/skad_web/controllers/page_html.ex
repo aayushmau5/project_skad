@@ -8,6 +8,12 @@ defmodule SkadWeb.PageHTML do
 
   embed_templates "page_html/*"
 
+  def archive_path(language, page, locale) do
+    params = %{page: page, ui_language: locale}
+    params = if language, do: Map.put(params, :language, language.slug), else: params
+    ~p"/archive?#{params}"
+  end
+
   attr :results, :list, required: true
   attr :languages, :list, required: true
 

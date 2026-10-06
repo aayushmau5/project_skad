@@ -1472,3 +1472,59 @@ msgstr "लोग इस शब्द का इस्तेमाल कब, �
 
 msgid "Any story, custom, or local tradition connected to this word."
 msgstr "इस शब्द से जुड़ी कोई कहानी, रिवाज़ या स्थानीय परंपरा।"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "%{count} word"
+msgid_plural "%{count} words"
+msgstr[0] "%{count} शब्द"
+msgstr[1] "%{count} शब्द"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:17
+#, elixir-autogen, elixir-format
+msgid "All"
+msgstr "सभी"
+
+#: lib/skad_web/components/layouts.ex:55
+#: lib/skad_web/controllers/page_controller.ex:13
+#: lib/skad_web/controllers/page_html/archive.html.heex:8
+#, elixir-autogen, elixir-format
+msgid "Archive"
+msgstr "संग्रह"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:67
+#, elixir-autogen, elixir-format
+msgid "Archive pages"
+msgstr "संग्रह के पृष्ठ"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:9
+#, elixir-autogen, elixir-format
+msgid "Browse words and meanings in Kinnaur’s languages."
+msgstr "किन्नौर की भाषाओं के शब्द और उनके अर्थ देखें।"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Filter by language"
+msgstr "भाषा चुनें"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:86
+#: lib/skad_web/controllers/page_html/archive.html.heex:88
+#, elixir-autogen, elixir-format
+msgid "Next"
+msgstr "अगला"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:31
+#, elixir-autogen, elixir-format
+msgid "No words have been published here yet."
+msgstr "यहाँ अभी कोई शब्द प्रकाशित नहीं हुआ है।"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:79
+#, elixir-autogen, elixir-format
+msgid "Page %{page} of %{pages}"
+msgstr "पृष्ठ %{page} / %{pages}"
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:74
+#: lib/skad_web/controllers/page_html/archive.html.heex:76
+#, elixir-autogen, elixir-format
+msgid "Previous"
+msgstr "पिछला"

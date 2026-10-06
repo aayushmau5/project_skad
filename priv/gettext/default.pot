@@ -1488,3 +1488,59 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "When, where, or how people use this word."
 msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "%{count} word"
+msgid_plural "%{count} words"
+msgstr[0] ""
+msgstr[1] ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:17
+#, elixir-autogen, elixir-format
+msgid "All"
+msgstr ""
+
+#: lib/skad_web/components/layouts.ex:55
+#: lib/skad_web/controllers/page_controller.ex:13
+#: lib/skad_web/controllers/page_html/archive.html.heex:8
+#, elixir-autogen, elixir-format
+msgid "Archive"
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:67
+#, elixir-autogen, elixir-format
+msgid "Archive pages"
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:9
+#, elixir-autogen, elixir-format
+msgid "Browse words and meanings in Kinnaur’s languages."
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Filter by language"
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:86
+#: lib/skad_web/controllers/page_html/archive.html.heex:88
+#, elixir-autogen, elixir-format
+msgid "Next"
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:31
+#, elixir-autogen, elixir-format
+msgid "No words have been published here yet."
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:79
+#, elixir-autogen, elixir-format
+msgid "Page %{page} of %{pages}"
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/archive.html.heex:74
+#: lib/skad_web/controllers/page_html/archive.html.heex:76
+#, elixir-autogen, elixir-format
+msgid "Previous"
+msgstr ""
