@@ -40,116 +40,125 @@
           rows="4"
           required
         />
-        <details
-          id="contribution-optional-details"
-          open={
-            Enum.any?([:part_of_speech, :usage_note, :cultural_note], &(@form[&1].errors != []))
-          }
-        >
-          <summary>{gettext("Add usage or cultural context (optional)")}</summary>
-          <.input
-            field={@form[:part_of_speech]}
-            type="text"
-            label={gettext("Part of speech")}
-            description={
-              gettext(
-                "For example: noun (a person or thing), verb (an action), or adjective (a description)."
-              )
+        <div id="contribution-options">
+          <details
+            id="contribution-optional-details"
+            open={
+              Enum.any?([:part_of_speech, :usage_note, :cultural_note], &(@form[&1].errors != []))
             }
-            class="auth-input"
-          />
-          <.input
-            field={@form[:usage_note]}
-            type="textarea"
-            label={gettext("Usage note")}
-            description={gettext("When, where, or how people use this word.")}
-            class="auth-input"
-            rows="3"
-          />
-          <.input
-            field={@form[:cultural_note]}
-            type="textarea"
-            label={gettext("Cultural context")}
-            description={gettext("Any story, custom, or local tradition connected to this word.")}
-            class="auth-input"
-            rows="3"
-          />
-        </details>
-        <details id="contribution-optional-media" open={@media_items != []}>
-          <summary>{gettext("Add a recording or images (optional)")}</summary>
-          <section
-            id="contribution-media"
-            class="media-uploader"
-            data-media-uploader
-            data-prepare-url={~p"/media/uploads"}
-            data-complete-url={~p"/media/uploads/complete"}
-            data-max-images="5"
           >
-            <h2>{gettext("Pronunciation and cultural images")}</h2>
-            <.media_context form={@media_context_form} id="new-word-media-context" />
-            <p>
-              {gettext(
-                "Add one pronunciation recording and up to five images. Both are optional."
-              )}
-            </p>
-
-            <button
-              type="button"
-              id="record-contribution-audio"
-              class="secondary-button"
-              data-record-audio
-              hidden
+            <summary>{gettext("Add usage or cultural context (optional)")}</summary>
+            <.input
+              field={@form[:part_of_speech]}
+              type="text"
+              label={gettext("Part of speech")}
+              description={
+                gettext(
+                  "For example: noun (a person or thing), verb (an action), or adjective (a description)."
+                )
+              }
+              class="auth-input"
+            />
+            <.input
+              field={@form[:usage_note]}
+              type="textarea"
+              label={gettext("Usage note")}
+              description={gettext("When, where, or how people use this word.")}
+              class="auth-input"
+              rows="3"
+            />
+            <.input
+              field={@form[:cultural_note]}
+              type="textarea"
+              label={gettext("Cultural context")}
+              description={
+                gettext("Any story, custom, or local tradition connected to this word.")
+              }
+              class="auth-input"
+              rows="3"
+            />
+          </details>
+          <details id="contribution-optional-media" open={@media_items != []}>
+            <summary>{gettext("Add a recording or images (optional)")}</summary>
+            <section
+              id="contribution-media"
+              class="media-uploader"
+              data-media-uploader
+              data-prepare-url={~p"/media/uploads"}
+              data-complete-url={~p"/media/uploads/complete"}
+              data-max-images="5"
             >
-              {gettext("Record pronunciation")}
-            </button>
-            <.input
-              type="file"
-              name="audio_upload"
-              id="contribution-audio-upload"
-              value={nil}
-              label={gettext("Upload pronunciation audio")}
-              accept="audio/*"
-              class="auth-input"
-              data-audio-input
-              disabled
-            />
-            <.input
-              type="file"
-              name="image_uploads"
-              id="contribution-image-uploads"
-              value={nil}
-              label={gettext("Upload cultural images")}
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              class="auth-input"
-              data-image-input
-              disabled
-            />
+              <h2>{gettext("Pronunciation and cultural images")}</h2>
+              <.media_context form={@media_context_form} id="new-word-media-context" />
+              <p>
+                {gettext(
+                  "Add one pronunciation recording and up to five images. Both are optional."
+                )}
+              </p>
 
-            <ul id="contribution-media-list" class="media-list" data-media-list>
-              <li
-                :for={item <- @media_items}
-                id={"contribution-media-#{item.public_id}"}
-                class="media-card"
-                data-media-item
-                data-kind={item.kind}
+              <button
+                type="button"
+                id="record-contribution-audio"
+                class="secondary-button"
+                data-record-audio
+                hidden
               >
-                <span>{if item.kind == :audio,
-                  do: gettext("Pronunciation audio"),
-                  else: gettext("Cultural image")}</span>
-                <.input
-                  type="hidden"
-                  id={"contribution-media-id-#{item.public_id}"}
-                  name="contribution[media_public_ids][]"
-                  value={item.public_id}
-                />
-                <button type="button" class="link-button" data-remove-upload>{gettext("Remove")}</button>
-              </li>
-            </ul>
-            <p id="contribution-media-status" class="result-meta" role="status" data-upload-status>
-            </p>
-          </section>
-        </details>
+                {gettext("Record pronunciation")}
+              </button>
+              <.input
+                type="file"
+                name="audio_upload"
+                id="contribution-audio-upload"
+                value={nil}
+                label={gettext("Upload pronunciation audio")}
+                accept="audio/*"
+                class="auth-input"
+                data-audio-input
+                disabled
+              />
+              <.input
+                type="file"
+                name="image_uploads"
+                id="contribution-image-uploads"
+                value={nil}
+                label={gettext("Upload cultural images")}
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                class="auth-input"
+                data-image-input
+                disabled
+              />
+
+              <ul id="contribution-media-list" class="media-list" data-media-list>
+                <li
+                  :for={item <- @media_items}
+                  id={"contribution-media-#{item.public_id}"}
+                  class="media-card"
+                  data-media-item
+                  data-kind={item.kind}
+                >
+                  <span>{if item.kind == :audio,
+                    do: gettext("Pronunciation audio"),
+                    else: gettext("Cultural image")}</span>
+                  <.input
+                    type="hidden"
+                    id={"contribution-media-id-#{item.public_id}"}
+                    name="contribution[media_public_ids][]"
+                    value={item.public_id}
+                  />
+                  <button type="button" class="link-button" data-remove-upload>{gettext("Remove")}</button>
+                </li>
+              </ul>
+              <p
+                id="contribution-media-status"
+                class="result-meta"
+                role="status"
+                data-upload-status
+              >
+              </p>
+            </section>
+          </details>
+        </div>
         <.input
           field={@form[:example]}
           type="textarea"

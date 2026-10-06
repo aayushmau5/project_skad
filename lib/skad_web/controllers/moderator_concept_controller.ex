@@ -10,7 +10,42 @@ defmodule SkadWeb.ModeratorConceptController do
 
   def index(conn, params) do
     query = get_in(params, ["search", "query"]) || ""
-    render_index(conn, query)
+
+    render(conn, :index,
+      page_title: gettext("Manage concepts"),
+      concept_page: Archive.list_concepts(query, params["page"]),
+      query: query,
+      search_form: Phoenix.Component.to_form(%{"query" => query}, as: :search)
+    )
+  end
+
+  def new(conn, params) do
+    changeset =
+      Contributions.change_concept(
+        conn.assigns.current_scope,
+        %Concept{},
+        params["concept"] || %{}
+      )
+
+    render_new(conn, changeset)
+  end
+
+  def matches(conn, params) do
+    label = params["label"] || ""
+
+    conn
+    |> put_root_layout(false)
+    |> put_layout(false)
+    |> put_resp_header("cache-control", "private, no-store")
+    |> render(:matches,
+      matches: Archive.concept_matches(label),
+      checked?: String.trim(label) != ""
+    )
+  end
+
+  def create(conn, %{"intent" => "check", "concept" => attrs}) do
+    changeset = Contributions.change_concept(conn.assigns.current_scope, %Concept{}, attrs)
+    render_new(conn, changeset)
   end
 
   def create(conn, %{"concept" => attrs}) do
@@ -23,7 +58,7 @@ defmodule SkadWeb.ModeratorConceptController do
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render_index("", changeset)
+        |> render_new(changeset)
 
       {:error, _reason} ->
         send_resp(conn, :unprocessable_entity, "Concept could not be created")
@@ -117,14 +152,13 @@ defmodule SkadWeb.ModeratorConceptController do
     end
   end
 
-  defp render_index(conn, query, changeset \\ nil) do
-    changeset =
-      changeset || Contributions.change_concept(conn.assigns.current_scope, %Concept{})
+  defp render_new(conn, changeset) do
+    label = Ecto.Changeset.get_field(changeset, :editorial_label) || ""
 
-    render(conn, :index,
-      page_title: gettext("Manage concepts"),
-      concepts: Archive.search_concepts(query),
-      search_form: Phoenix.Component.to_form(%{"query" => query}, as: :search),
+    render(conn, :new,
+      page_title: gettext("Create concept"),
+      matches: Archive.concept_matches(label),
+      checked?: String.trim(label) != "",
       concept_form: Phoenix.Component.to_form(changeset, as: :concept)
     )
   end

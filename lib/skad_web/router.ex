@@ -70,6 +70,8 @@ defmodule SkadWeb.Router do
       on_mount: [{SkadWeb.ModeratorAuth, :ensure_authenticated}]
 
     get "/concepts", ModeratorConceptController, :index
+    get "/concepts/new", ModeratorConceptController, :new
+    get "/concepts/matches", ModeratorConceptController, :matches
     post "/concepts", ModeratorConceptController, :create
     get "/concepts/:public_id", ModeratorConceptController, :show
     patch "/concepts/:public_id", ModeratorConceptController, :update

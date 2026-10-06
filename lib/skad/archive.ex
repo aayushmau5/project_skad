@@ -94,31 +94,83 @@ defmodule Skad.Archive do
   def search_concepts(query) do
     case normalize_text(query) do
       query when is_binary(query) and query != "" ->
-        entry_concept_ids =
-          query
-          |> search()
-          |> Enum.map(& &1.entry.concept_id)
-          |> Enum.uniq()
-
-        Concept
-        |> where(
-          [concept],
-          is_nil(concept.archived_at) and
-            (concept.id in ^entry_concept_ids or
-               fragment("instr(lower(?), ?) > 0", concept.editorial_label, ^query) or
-               fragment(
-                 "instr(lower(coalesce(?, '')), ?) > 0",
-                 concept.editorial_note,
-                 ^query
-               ))
-        )
-        |> order_by([concept], asc: concept.editorial_label, asc: concept.id)
+        query
+        |> concept_search_query()
         |> limit(@concept_limit)
         |> Repo.all()
         |> preload_concepts()
 
       _empty_query ->
         []
+    end
+  end
+
+  def list_concepts(query \\ "", page \\ 1) do
+    query = concept_search_query(query)
+    total_count = Repo.aggregate(query, :count, :id)
+    page_count = max(1, div(total_count + @concept_limit - 1, @concept_limit))
+    page = page |> archive_page() |> min(page_count)
+
+    concepts =
+      query
+      |> limit(@concept_limit)
+      |> offset(^((page - 1) * @concept_limit))
+      |> Repo.all()
+      |> preload_concepts()
+
+    %{concepts: concepts, page: page, page_count: page_count, total_count: total_count}
+  end
+
+  def find_duplicate_concepts(label) do
+    case normalize_text(label) do
+      label when is_binary(label) and label != "" ->
+        # scan labels for Unicode equality; index a normalized label if this grows large.
+        Concept
+        |> where([concept], is_nil(concept.archived_at))
+        |> select(
+          [concept],
+          struct(concept, [:id, :public_id, :editorial_label, :editorial_note])
+        )
+        |> Repo.all()
+        |> Enum.filter(&(normalize_text(&1.editorial_label) == label))
+
+      _empty_label ->
+        []
+    end
+  end
+
+  def concept_matches(label) do
+    duplicates = find_duplicate_concepts(label)
+
+    concepts =
+      (duplicates ++ search_concepts(label))
+      |> Enum.uniq_by(& &1.id)
+      |> Enum.take(@concept_limit)
+      |> preload_concepts()
+
+    %{concepts: concepts, exact?: duplicates != []}
+  end
+
+  defp concept_search_query(query) do
+    concepts =
+      Concept
+      |> where([concept], is_nil(concept.archived_at))
+      |> order_by([concept], asc: concept.editorial_label, asc: concept.id)
+
+    case normalize_text(query) do
+      query when is_binary(query) and query != "" ->
+        entry_concept_ids = query |> search() |> Enum.map(& &1.entry.concept_id) |> Enum.uniq()
+
+        where(
+          concepts,
+          [concept],
+          concept.id in ^entry_concept_ids or
+            fragment("instr(lower(?), ?) > 0", concept.editorial_label, ^query) or
+            fragment("instr(lower(coalesce(?, '')), ?) > 0", concept.editorial_note, ^query)
+        )
+
+      _empty_query ->
+        concepts
     end
   end
 

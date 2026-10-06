@@ -7,7 +7,12 @@
 >
   <section id="moderator-concepts">
     <p><.link href={~p"/moderator"}>{gettext("Back to moderator workspace")}</.link></p>
-    <h1>{gettext("Concepts")}</h1>
+    <header class="workspace-heading">
+      <h1>{gettext("Concepts")}</h1>
+      <.link id="new-concept-link" href={~p"/moderator/concepts/new"} class="secondary-button">
+        {gettext("Create concept")}
+      </.link>
+    </header>
 
     <.form
       for={@search_form}
@@ -16,21 +21,40 @@
       id="concept-search-form"
       class="search-form"
     >
-      <.input
-        field={@search_form[:query]}
-        type="search"
-        label={gettext("Search concepts or entries")}
-        class="search-input"
-      />
-      <button type="submit" id="search-concepts" class="search-button">{gettext("Search")}</button>
+      <.input type="hidden" name="ui_language" value={@locale} />
+      <div class="search-fields">
+        <.input
+          field={@search_form[:query]}
+          type="search"
+          label={gettext("Search concepts or entries")}
+          class="search-input"
+        />
+        <button type="submit" id="search-concepts" class="search-button">{gettext("Search")}</button>
+      </div>
+      <.link
+        :if={String.trim(@query) != ""}
+        id="clear-concept-search"
+        href={concepts_path("", 1, @locale)}
+      >
+        {gettext("Show all concepts")}
+      </.link>
     </.form>
 
-    <p :if={@concepts == []} id="empty-concept-search">
-      {gettext("No concepts found. Try another word or create a concept below.")}
+    <p id="concept-count" class="help-text">
+      {ngettext("%{count} concept", "%{count} concepts", @concept_page.total_count)}
+    </p>
+    <p :if={@concept_page.concepts == []} id="empty-concept-search">
+      {if String.trim(@query) == "",
+        do: gettext("No concepts yet. Create one to start grouping words by meaning."),
+        else: gettext("No concepts found. Try another search.")}
     </p>
 
-    <ul :if={@concepts != []} id="concept-search-results" class="result-list">
-      <li :for={concept <- @concepts} id={"concept-#{concept.public_id}"} class="result-card">
+    <ul :if={@concept_page.concepts != []} id="concept-search-results" class="result-list">
+      <li
+        :for={concept <- @concept_page.concepts}
+        id={"concept-#{concept.public_id}"}
+        class="result-card"
+      >
         <.link href={~p"/moderator/concepts/#{concept.public_id}"} class="result-link">
           {concept.editorial_label}
         </.link>
@@ -39,30 +63,40 @@
       </li>
     </ul>
 
-    <section id="new-concept" class="entry-section auth-panel">
-      <h2>{gettext("Create concept")}</h2>
-      <.form
-        for={@concept_form}
-        action={~p"/moderator/concepts"}
-        id="new-concept-form"
-        class="auth-form"
+    <nav
+      :if={@concept_page.page_count > 1}
+      id="concept-pagination"
+      class="archive-pagination"
+      aria-label={gettext("Concept pages")}
+    >
+      <.link
+        :if={@concept_page.page > 1}
+        id="concept-previous"
+        href={concepts_path(@query, @concept_page.page - 1, @locale)}
+        rel="prev"
+      >{gettext("Previous")}</.link>
+      <span :if={@concept_page.page == 1} id="concept-previous" aria-disabled="true">
+        {gettext("Previous")}
+      </span>
+      <span id="concept-page-number" aria-current="page">
+        {gettext("Page %{page} of %{pages}",
+          page: @concept_page.page,
+          pages: @concept_page.page_count
+        )}
+      </span>
+      <.link
+        :if={@concept_page.page < @concept_page.page_count}
+        id="concept-next"
+        href={concepts_path(@query, @concept_page.page + 1, @locale)}
+        rel="next"
+      >{gettext("Next")}</.link>
+      <span
+        :if={@concept_page.page == @concept_page.page_count}
+        id="concept-next"
+        aria-disabled="true"
       >
-        <.input
-          field={@concept_form[:editorial_label]}
-          type="text"
-          label={gettext("Editorial label")}
-          class="auth-input"
-          required
-        />
-        <.input
-          field={@concept_form[:editorial_note]}
-          type="textarea"
-          label={gettext("Private editorial note")}
-          class="auth-input"
-          rows="4"
-        />
-        <button type="submit" id="create-concept" class="auth-button">{gettext("Create concept")}</button>
-      </.form>
-    </section>
+        {gettext("Next")}
+      </span>
+    </nav>
   </section>
 </Layouts.app>

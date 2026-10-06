@@ -98,7 +98,7 @@ defmodule SkadWeb.Layouts do
       <.flash_group flash={@flash} />
       {render_slot(@inner_block)}
     </main>
-    <footer id="site-footer" class="site-footer">
+    <footer id="site-footer" class={["site-footer", @moderator && "moderator-footer"]}>
       <div :if={@footer_invitation != [] or is_integer(@entry_count)} class="footer-primary">
         {render_slot(@footer_invitation)}
         <p :if={is_integer(@entry_count)} id="archive-entry-count" class="footer-entry-count">

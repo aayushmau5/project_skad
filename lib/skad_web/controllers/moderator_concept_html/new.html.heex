@@ -1,0 +1,63 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
+  <section id="new-concept">
+    <p>
+      <.link id="new-concept-back" href={~p"/moderator/concepts"}>{gettext("Back to concepts")}</.link>
+    </p>
+    <header class="entry-header">
+      <h1>{gettext("Create concept")}</h1>
+      <p class="help-text">
+        {gettext(
+          "Use a name that describes the shared meaning. Existing concepts will appear as you type."
+        )}
+      </p>
+    </header>
+    <div class="auth-panel">
+      <.form
+        for={@concept_form}
+        action={~p"/moderator/concepts"}
+        id="new-concept-form"
+        class="auth-form entry-section"
+        data-concept-check
+        data-matches-url={~p"/moderator/concepts/matches?#{%{ui_language: @locale}}"}
+        data-search-error={
+          gettext("Could not check existing concepts. Try again; what you entered is still here.")
+        }
+        data-searching={gettext("Searching…")}
+      >
+        <.input
+          field={@concept_form[:editorial_label]}
+          type="text"
+          label={gettext("Concept name")}
+          class="auth-input"
+          required
+          maxlength="255"
+        />
+        <div id="concept-check-output" aria-live="polite" hidden={!@checked?}>
+          <.concept_matches matches={@matches} checked?={@checked?} />
+        </div>
+        <button
+          type="submit"
+          id="check-concept"
+          class="secondary-button"
+          name="intent"
+          value="check"
+        >{gettext("Check existing concepts")}</button>
+        <.input
+          field={@concept_form[:editorial_note]}
+          type="textarea"
+          label={gettext("Notes")}
+          description={gettext("Only moderators can see these notes.")}
+          class="auth-input"
+          rows="4"
+        />
+        <button type="submit" id="create-concept" class="auth-button">{gettext("Create concept")}</button>
+      </.form>
+    </div>
+  </section>
+</Layouts.app>

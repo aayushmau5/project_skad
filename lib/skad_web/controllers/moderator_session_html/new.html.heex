@@ -5,10 +5,20 @@
   language_links={@language_links}
   moderator={@moderator_workspace?}
 >
-  <section id="moderator-login" class="auth-panel">
-    <h1>{gettext("Moderator log in")}</h1>
+  <section id="moderator-login">
+    <header class="entry-header">
+      <h1>{gettext("Moderator log in")}</h1>
+      <p class="help-text">
+        {gettext("Log in to review contributions and manage published words.")}
+      </p>
+    </header>
 
-    <.form for={@form} action={~p"/moderator/log-in"} id="moderator-login-form" class="auth-form">
+    <.form
+      for={@form}
+      action={~p"/moderator/log-in"}
+      id="moderator-login-form"
+      class="auth-form entry-section"
+    >
       <.input
         field={@form[:email]}
         type="email"

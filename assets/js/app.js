@@ -26,6 +26,7 @@ import {hooks as colocatedHooks} from "phoenix-colocated/skad"
 import topbar from "../vendor/topbar"
 import {initializeMediaUploads} from "./media_uploads"
 import {initializeLiveSearch} from "./live_search"
+import {initializeConceptCheck} from "./concept_check"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
@@ -43,6 +44,7 @@ window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 liveSocket.connect()
 initializeMediaUploads()
 initializeLiveSearch()
+initializeConceptCheck()
 const connectionStatus = document.querySelector("[data-connection-status]")
 const updateConnection = () => { if (connectionStatus) connectionStatus.hidden = navigator.onLine }
 window.addEventListener("online", updateConnection)

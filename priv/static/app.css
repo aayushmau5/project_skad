@@ -28,7 +28,7 @@ code { font-size: .875rem; overflow-wrap: anywhere; }
 .site-header { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; padding: .5rem max(1rem, calc((100% - 48rem) / 2)); border-bottom: 1px solid var(--skad-line); background: var(--skad-surface); }
 .site-header a { text-decoration: none; }
 .wordmark { color: var(--skad-ink); font: 500 1.25rem Georgia, serif; }
-.wordmark span { font: 500 .875rem system-ui, sans-serif; }
+.wordmark span { margin-inline-start: .25rem; font: 500 .875rem system-ui, sans-serif; }
 .language-switch, .site-nav { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .language-switch a, .site-nav a, .site-header > a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .language-switch [aria-current] { text-decoration: underline; font-weight: 500; }
@@ -77,6 +77,7 @@ button:disabled, input:disabled { cursor: not-allowed; opacity: .65; }
 .form-stage legend { padding: 0 .5rem 0 0; font-weight: 500; }
 .input-description { margin: 0 0 .25rem; }
 details { margin: .5rem 0; }
+#contribution-options details { margin: 0; }
 summary { cursor: pointer; min-height: 2.75rem; padding-block: .5rem; color: var(--skad-action); }
 details .fieldset { margin: .75rem 0; }
 .input-error, .select-error, .textarea-error, [aria-invalid=true] { border-color: var(--skad-error); }
@@ -116,11 +117,16 @@ dd { margin: 0 0 .75rem; }
 .review-queue { border-bottom: 1px solid var(--skad-line); }
 .review-queue a { display: block; padding: .5rem; }
 .review-queue [aria-current] { background: var(--skad-action-soft); border-inline-start: 3px solid var(--skad-action); }
-.moderator-header { padding-inline: 1rem; }
+.moderator-header, .moderator-footer { padding-inline: max(1rem, calc((100% - 76rem) / 2 + 1rem)); }
 .moderator-header .site-nav { order: 3; flex-basis: 100%; }
 .moderator-main { max-width: 76rem; width: 100%; }
 .moderator-main .auth-panel { max-width: 32rem; margin-inline: 0; }
+.workspace-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
+.workspace-heading h1 { margin: 0; }
+.workspace-heading a { text-decoration: none; }
 .moderator-main h1 { font-family: system-ui, sans-serif; font-size: 1.5rem; }
+#moderator-login h1, #moderator-home h1 { font: 500 1.625rem/1.4 Georgia, "Noto Serif Devanagari", serif; }
+#moderator-login .auth-button { width: 100%; }
 .moderator-main .auth-form { gap: .75rem; }
 .moderator-main .entry-section { margin-top: 1rem; padding-top: .75rem; }
 .moderator-main .result-card { padding-block: .5rem; }

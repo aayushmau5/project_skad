@@ -258,6 +258,52 @@ defmodule Skad.ArchiveTest do
     assert Archive.search_concepts("drinking-related") == []
   end
 
+  test "pages the concept list and filtered results while excluding archived concepts" do
+    concepts =
+      for number <- 1..22 do
+        %Concept{}
+        |> Archive.change_concept(%{
+          editorial_label: "Concept #{String.pad_leading(to_string(number), 2, "0")}"
+        })
+        |> Repo.insert!()
+      end
+
+    archived =
+      %Concept{} |> Archive.change_concept(%{editorial_label: "Archived"}) |> Repo.insert!()
+
+    archived |> Changeset.change(archived_at: DateTime.utc_now(:second)) |> Repo.update!()
+
+    first = Archive.list_concepts()
+    second = Archive.list_concepts("", "2")
+    assert first.total_count == 22
+    assert first.page_count == 2
+    assert Enum.map(first.concepts ++ second.concepts, & &1.id) == Enum.map(concepts, & &1.id)
+    assert length(first.concepts) == 20
+    assert length(second.concepts) == 2
+    assert Archive.list_concepts("", "999").page == 2
+    assert Archive.list_concepts("", "invalid").page == 1
+    assert Archive.list_concepts("Concept 22").total_count == 1
+    assert Archive.list_concepts("missing").concepts == []
+  end
+
+  test "matches Unicode labels exactly and keeps related concepts as suggestions" do
+    concept = %Concept{} |> Archive.change_concept(%{editorial_label: "CAFÉ"}) |> Repo.insert!()
+
+    related =
+      %Concept{} |> Archive.change_concept(%{editorial_label: "CAFÉ CULTURE"}) |> Repo.insert!()
+
+    assert [%{id: id}] = Archive.find_duplicate_concepts(" cafe\u0301 ")
+    assert id == concept.id
+    assert Archive.find_duplicate_concepts("CAFE") == []
+    assert Archive.find_duplicate_concepts("") == []
+    assert %{exact?: true, concepts: [%{id: ^id} | _]} = Archive.concept_matches(" café ")
+    assert %{exact?: false, concepts: matches} = Archive.concept_matches("CAF")
+    assert Enum.map(matches, & &1.id) == [concept.id, related.id]
+
+    concept |> Changeset.change(archived_at: DateTime.utc_now(:second)) |> Repo.update!()
+    assert Archive.find_duplicate_concepts("CAFÉ") == []
+  end
+
   test "rejects unavailable languages and meanings without adding an entry" do
     {:ok, english} = create_language()
 

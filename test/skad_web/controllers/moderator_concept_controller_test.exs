@@ -17,6 +17,94 @@ defmodule SkadWeb.ModeratorConceptControllerTest do
 
     assert redirected_to(conn) == ~p"/moderator/log-in"
     assert get_session(conn, :moderator_return_to) == ~p"/moderator/concepts"
+
+    for path <- [~p"/moderator/concepts/new", ~p"/moderator/concepts/matches?label=WATER"] do
+      assert redirected_to(get(recycle(conn), path)) == ~p"/moderator/log-in"
+    end
+  end
+
+  test "lists concepts by default and opens creation on a separate page", %{conn: conn} do
+    concept = %Concept{} |> Concept.changeset(%{editorial_label: "WATER"}) |> Repo.insert!()
+    conn = log_in(conn)
+
+    document =
+      conn |> get(~p"/moderator/concepts") |> html_response(200) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "concept-#{concept.public_id}")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "concept-search-form")) == 1
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "new-concept-link"), "href") ==
+             [~p"/moderator/concepts/new"]
+
+    assert Enum.count(LazyHTML.query_by_id(document, "new-concept-form")) == 0
+
+    document =
+      conn |> get(~p"/moderator/concepts/new") |> html_response(200) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "new-concept-form")) == 1
+    assert Enum.count(LazyHTML.query_by_id(document, "concept-search-form")) == 0
+  end
+
+  test "checks for duplicates without JavaScript and preserves the note", %{conn: conn} do
+    concept = %Concept{} |> Concept.changeset(%{editorial_label: "WATER"}) |> Repo.insert!()
+
+    document =
+      conn
+      |> log_in()
+      |> post(~p"/moderator/concepts", %{
+        "intent" => "check",
+        "concept" => %{"editorial_label" => "water", "editorial_note" => "Keep this note."}
+      })
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "matching-concept-#{concept.public_id}")) ==
+             1
+
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "concept_editorial_note")) ==
+             "Keep this note."
+
+    assert Repo.aggregate(Concept, :count) == 1
+    assert Repo.aggregate(Revision, :count) == 0
+  end
+
+  test "rejects a duplicate label and links to its existing record", %{conn: conn} do
+    concept = %Concept{} |> Concept.changeset(%{editorial_label: "WATER"}) |> Repo.insert!()
+
+    conn =
+      conn
+      |> log_in()
+      |> post(~p"/moderator/concepts", %{
+        "concept" => %{"editorial_label" => " water ", "editorial_note" => "Keep this note."}
+      })
+
+    document = conn |> html_response(422) |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "matching-concept-#{concept.public_id}")) ==
+             1
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "concept_editorial_label"), "value") ==
+             ["water"]
+
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "concept_editorial_note")) ==
+             "Keep this note."
+
+    assert Repo.aggregate(Concept, :count) == 1
+    assert Repo.aggregate(Revision, :count) == 0
+  end
+
+  test "returns localized duplicate matches as an uncached fragment", %{conn: conn} do
+    concept = %Concept{} |> Concept.changeset(%{editorial_label: "WATER"}) |> Repo.insert!()
+
+    conn = conn |> log_in() |> get(~p"/moderator/concepts/matches?label=water&ui_language=hi")
+    document = conn |> html_response(200) |> LazyHTML.from_fragment()
+
+    assert Enum.count(LazyHTML.query_by_id(document, "matching-concept-#{concept.public_id}")) ==
+             1
+
+    assert Enum.count(LazyHTML.query_by_id(document, "site-header")) == 0
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "concept-match-message")) =~ "पहले से मौजूद"
+    assert get_resp_header(conn, "cache-control") == ["private, no-store"]
   end
 
   test "creates, finds, and edits a concept", %{conn: conn} do

@@ -43,7 +43,16 @@ defmodule Skad.Contributions do
       )
       when is_map(attrs) do
     Multi.new()
-    |> Multi.insert(:concept, Archive.change_concept(%Concept{}, attrs))
+    |> Multi.insert(:concept, fn _changes ->
+      changeset = Archive.change_concept(%Concept{}, attrs)
+      label = Changeset.get_field(changeset, :editorial_label)
+
+      if changeset.valid? and Archive.find_duplicate_concepts(label) != [] do
+        Changeset.add_error(changeset, :editorial_label, "has already been taken")
+      else
+        changeset
+      end
+    end)
     |> Multi.insert(:revision, fn %{concept: concept} ->
       concept_revision(concept, :create, nil, moderator)
     end)

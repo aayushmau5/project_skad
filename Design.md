@@ -264,6 +264,10 @@ For all contributions:
 
 ### Moderator workspace
 
+The login and workspace landing pages share the archive's serif page heading, warm surfaces, and thin section rules. Header, content, and footer align to the wide moderator shell. The login form fills its content area; landing-page actions use compact text rows with a short explanation of each task.
+
+Concept management starts with search and an alphabetical, paginated list. Creation has its own page, which shows existing concepts while the moderator enters a name and links to their records. Forms use “Concept name” and “Notes,” with a short explanation that only moderators can see the notes. Exact name matches, ignoring case and surrounding whitespace, prevent accidental creation; related matches remain suggestions. Checking and creation also work without JavaScript and preserve the name and notes after errors.
+
 The default desktop pattern is a two-pane workspace:
 
 - a 240–280 px review queue on the left;

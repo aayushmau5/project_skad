@@ -10,7 +10,7 @@
 
     <header class="entry-header">
       <h1 id="concept-label">{@concept.editorial_label}</h1>
-      <p id="concept-note">{@concept.editorial_note || gettext("No editorial note.")}</p>
+      <p id="concept-note">{@concept.editorial_note || gettext("No notes yet.")}</p>
     </header>
 
     <section id="concept-entries" class="entry-section">
@@ -83,14 +83,15 @@
         <.input
           field={@form[:editorial_label]}
           type="text"
-          label={gettext("Editorial label")}
+          label={gettext("Concept name")}
           class="auth-input"
           required
         />
         <.input
           field={@form[:editorial_note]}
           type="textarea"
-          label={gettext("Private editorial note")}
+          label={gettext("Notes")}
+          description={gettext("Only moderators can see these notes.")}
           class="auth-input"
           rows="4"
         />

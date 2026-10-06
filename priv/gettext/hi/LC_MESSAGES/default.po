@@ -318,8 +318,8 @@ msgstr "सुझाव बदलें"
 #: lib/skad_web/controllers/moderator_concept_html/index.html.heex:53
 #: lib/skad_web/controllers/moderator_concept_html/show.html.heex:86
 #, elixir-autogen, elixir-format
-msgid "Editorial label"
-msgstr "संपादकीय नाम"
+msgid "Concept name"
+msgstr "अवधारणा का नाम"
 
 #: lib/skad_web/controllers/moderator_session_html/new.html.heex:15
 #, elixir-autogen, elixir-format
@@ -576,8 +576,8 @@ msgstr "अभी कोई निर्णय नहीं लिया गय�
 
 #: lib/skad_web/controllers/moderator_concept_html/show.html.heex:13
 #, elixir-autogen, elixir-format
-msgid "No editorial note."
-msgstr "कोई संपादकीय टिप्पणी नहीं है।"
+msgid "No notes yet."
+msgstr "अभी कोई नोट नहीं है।"
 
 #: lib/skad_web/controllers/moderator_concept_html/show.html.heex:18
 #, elixir-autogen, elixir-format
@@ -641,8 +641,8 @@ msgstr "पासवर्ड"
 #: lib/skad_web/controllers/moderator_concept_html/index.html.heex:60
 #: lib/skad_web/controllers/moderator_concept_html/show.html.heex:93
 #, elixir-autogen, elixir-format
-msgid "Private editorial note"
-msgstr "निजी संपादकीय टिप्पणी"
+msgid "Notes"
+msgstr "नोट्स"
 
 #: lib/skad_web/controllers/contribution_html/new.html.heex:81
 #: lib/skad_web/controllers/moderator_submission_html/show.html.heex:75
@@ -1528,3 +1528,86 @@ msgstr "पृष्ठ %{page} / %{pages}"
 #, elixir-autogen, elixir-format
 msgid "Previous"
 msgstr "पिछला"
+
+#: lib/skad_web/controllers/moderator_session_html/new.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Log in to review contributions and manage published words."
+msgstr "सुझावों की समीक्षा करने और प्रकाशित शब्द सँभालने के लिए प्रवेश करें।"
+
+#: lib/skad_web/controllers/moderator_html/home.html.heex:24
+#, elixir-autogen, elixir-format
+msgid "Review incoming suggestions before they are published."
+msgstr "प्रकाशित करने से पहले आए हुए सुझावों की समीक्षा करें।"
+
+#: lib/skad_web/controllers/moderator_html/home.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "Edit words, meanings, and links between languages."
+msgstr "शब्दों, अर्थों और भाषाओं के बीच जुड़े शब्दों में बदलाव करें।"
+
+#: lib/skad_web/controllers/moderator_html/home.html.heex:40
+#, elixir-autogen, elixir-format
+msgid "Check application health and performance."
+msgstr "ऐप की स्थिति और काम करने की गति देखें।"
+
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#, elixir-autogen, elixir-format
+msgid "Show all concepts"
+msgstr "सभी अवधारणाएँ देखें"
+
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#, elixir-autogen, elixir-format
+msgid "No concepts yet. Create one to start grouping words by meaning."
+msgstr "अभी कोई अवधारणा नहीं है। एक ही अर्थ वाले शब्दों को जोड़ने के लिए नई अवधारणा बनाएँ।"
+
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#, elixir-autogen, elixir-format
+msgid "No concepts found. Try another search."
+msgstr "कोई अवधारणा नहीं मिली। किसी दूसरे शब्द से खोजें।"
+
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#, elixir-autogen, elixir-format
+msgid "Concept pages"
+msgstr "अवधारणाओं के पृष्ठ"
+
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
+#, elixir-autogen, elixir-format
+msgid "Use a name that describes the shared meaning. Existing concepts will appear as you type."
+msgstr "अवधारणा का नाम उसके साझा अर्थ के अनुसार रखें। नाम लिखते समय पहले से मौजूद अवधारणाएँ दिखाई देंगी।"
+
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
+#, elixir-autogen, elixir-format
+msgid "Could not check existing concepts. Try again; what you entered is still here."
+msgstr "मौजूद अवधारणाएँ जाँच नहीं सके। फिर कोशिश करें; आपकी लिखी जानकारी सुरक्षित है।"
+
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
+#, elixir-autogen, elixir-format
+msgid "Check existing concepts"
+msgstr "मौजूद अवधारणाएँ जाँचें"
+
+#: lib/skad_web/controllers/moderator_concept_html.ex
+#, elixir-autogen, elixir-format
+msgid "A concept with this name already exists. Open it below instead of creating it again."
+msgstr "इस नाम की अवधारणा पहले से मौजूद है। इसे फिर से बनाने के बजाय नीचे दिए गए लिंक से खोलें।"
+
+#: lib/skad_web/controllers/moderator_concept_html.ex
+#, elixir-autogen, elixir-format
+msgid "These concepts may be related. Check them before creating a new one."
+msgstr "इन अवधारणाओं के अर्थ जुड़े हो सकते हैं। नई अवधारणा बनाने से पहले इन्हें देखें।"
+
+#: lib/skad_web/controllers/moderator_concept_html.ex
+#, elixir-autogen, elixir-format
+msgid "No matching concepts found."
+msgstr "इससे मिलती हुई कोई अवधारणा नहीं मिली।"
+
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#, elixir-autogen, elixir-format
+msgid "%{count} concept"
+msgid_plural "%{count} concepts"
+msgstr[0] "%{count} अवधारणा"
+msgstr[1] "%{count} अवधारणाएँ"
+
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#, elixir-autogen, elixir-format
+msgid "Only moderators can see these notes."
+msgstr "ये नोट्स केवल समीक्षक देख सकते हैं।"
