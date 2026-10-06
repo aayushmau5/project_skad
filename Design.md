@@ -1,7 +1,7 @@
 # Project Skad design direction
 
 - **Status:** Canonical for interface and UX decisions
-- **Last consolidated:** 2026-10-03
+- **Last consolidated:** 2026-10-07
 - **Product decisions:** [docs/product-decisions.md](docs/product-decisions.md)
 
 This document defines how Project Skad should look, behave, and communicate. It is the source of truth for public, contribution, and moderator interfaces. It does not silently expand the v0 feature scope: `docs/product-decisions.md` and `docs/future.md` still decide whether a capability exists now or later. When an implementation conflicts with this document, either bring the implementation back into alignment or update this document deliberately with the new decision and its reason.
@@ -184,7 +184,7 @@ Use a compact 4 px rhythm: `4, 8, 12, 16, 24, 32`.
 - Desktop buttons may be 36–40 px high.
 - Touch targets should be about 44 px high on coarse pointers even if the visible icon remains small.
 - Public reading content should usually stay within 44–48 rem.
-- Contribution forms should usually stay within 28–32 rem.
+- Public contribution forms, suggestion receipts, and recovery pages fill the same content width as the public reading pages, within the 48 rem page shell. This keeps headings, fields, and section rules aligned across the public flow; on narrow screens they use the available width.
 - Moderator workspaces may use the available desktop width.
 - Avoid generous padding used only to make the product look “premium.” Space must clarify grouping or improve touch use.
 
@@ -224,16 +224,16 @@ Moderator header:
 
 ### Entry page
 
-Order information by public usefulness:
+The entry page follows this reading order, agreed on 2026-10-07, so readers see the meaning before pronunciation and supporting record details after the word's context:
 
-1. word or expression;
-2. language, variety, place, and part of speech when known;
+1. word or expression, with language, variety, place, and part of speech when known;
+2. concise meaning;
 3. listen action;
-4. concise meaning;
-5. example and translation;
-6. review/source information;
-7. alternate forms and equivalents;
-8. usage and cultural context;
+4. examples and translations;
+5. usage;
+6. cultural context;
+7. other forms and spellings, followed by equivalents in other languages;
+8. about this record, including review/source information;
 9. contextual contribution actions.
 
 Do not present every database field with equal weight. Missing information should become a specific invitation such as **Record this pronunciation** or **Add the form used in your village**.

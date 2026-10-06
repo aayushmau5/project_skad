@@ -30,6 +30,18 @@
         )}
       </p>
     </header>
+    <section id="entry-definitions" class="entry-section">
+      <h2>{gettext("Meaning")}</h2>
+      <p
+        :for={definition <- @entry.definitions}
+        lang={content_language(definition.language, @languages)}
+        data-language={definition.language}
+        dir="auto"
+      >
+        {definition.text}
+      </p>
+      <p :if={@entry.definitions == []}>{gettext("The meaning has not been recorded yet.")}</p>
+    </section>
     <section id="entry-pronunciation" class="entry-section">
       <h2>{gettext("Listen to this word")}</h2>
       <%= if @audio do %>
@@ -62,18 +74,6 @@
         )}</.link>
       <% end %>
     </section>
-    <section id="entry-definitions" class="entry-section">
-      <h2>{gettext("Meaning")}</h2>
-      <p
-        :for={definition <- @entry.definitions}
-        lang={content_language(definition.language, @languages)}
-        data-language={definition.language}
-        dir="auto"
-      >
-        {definition.text}
-      </p>
-      <p :if={@entry.definitions == []}>{gettext("The meaning has not been recorded yet.")}</p>
-    </section>
     <section :if={examples(@entry) != []} id="entry-examples" class="entry-section">
       <h2>{gettext("Examples")}</h2>
       <article :for={example <- examples(@entry)} id={"example-#{example.public_id}"}>
@@ -91,42 +91,6 @@
           {translation.text}
         </p>
       </article>
-    </section>
-    <section id="entry-review" class="entry-section">
-      <h2>{gettext("About this record")}</h2>
-      <p class="trust-note">{gettext("Published in the community archive")}</p>
-      <p class="help-text">
-        {gettext("Detailed source and review information is not available here.")}
-      </p>
-      <p class="help-text">
-        {gettext("Local forms and pronunciations may vary. Share the form used in your village.")}
-      </p>
-    </section>
-    <section id="entry-forms" class="entry-section">
-      <h2>{gettext("Other forms and spellings")}</h2>
-      <ul>
-        <li :for={form <- @entry.forms} id={"entry-form-#{form.id}"}>
-          <span
-            lang={@entry.language.code || @entry.language.slug}
-            dir={to_string(@entry.language.direction)}
-          >{form.text}</span> <small>({form_label(form.kind)})</small>
-        </li>
-      </ul>
-    </section>
-    <section :if={equivalent_entries(@entry) != []} id="entry-equivalents" class="entry-section">
-      <h2>{gettext("Other languages")}</h2>
-      <ul>
-        <li
-          :for={equivalent <- equivalent_entries(@entry)}
-          id={"equivalent-entry-#{equivalent.public_id}"}
-        >
-          <.link href={~p"/entries/#{equivalent.public_id}"}><span
-            lang={equivalent.language.code || equivalent.language.slug}
-            dir={to_string(equivalent.language.direction)}
-          >{primary_form_text(equivalent)}</span>
-          — {language_label(equivalent.language)}</.link>
-        </li>
-      </ul>
     </section>
     <section :if={@entry.usage_note} id="entry-usage-note" class="entry-section">
       <h2>{gettext("Usage")}</h2>
@@ -160,6 +124,42 @@
           <figcaption :if={image.attribution_text}>{image.attribution_text}</figcaption>
         </figure>
       </div>
+    </section>
+    <section id="entry-forms" class="entry-section">
+      <h2>{gettext("Other forms and spellings")}</h2>
+      <ul>
+        <li :for={form <- @entry.forms} id={"entry-form-#{form.id}"}>
+          <span
+            lang={@entry.language.code || @entry.language.slug}
+            dir={to_string(@entry.language.direction)}
+          >{form.text}</span> <small>({form_label(form.kind)})</small>
+        </li>
+      </ul>
+    </section>
+    <section :if={equivalent_entries(@entry) != []} id="entry-equivalents" class="entry-section">
+      <h2>{gettext("Other languages")}</h2>
+      <ul>
+        <li
+          :for={equivalent <- equivalent_entries(@entry)}
+          id={"equivalent-entry-#{equivalent.public_id}"}
+        >
+          <.link href={~p"/entries/#{equivalent.public_id}"}><span
+            lang={equivalent.language.code || equivalent.language.slug}
+            dir={to_string(equivalent.language.direction)}
+          >{primary_form_text(equivalent)}</span>
+          — {language_label(equivalent.language)}</.link>
+        </li>
+      </ul>
+    </section>
+    <section id="entry-review" class="entry-section">
+      <h2>{gettext("About this record")}</h2>
+      <p class="trust-note">{gettext("Published in the community archive")}</p>
+      <p class="help-text">
+        {gettext("Detailed source and review information is not available here.")}
+      </p>
+      <p class="help-text">
+        {gettext("Local forms and pronunciations may vary. Share the form used in your village.")}
+      </p>
     </section>
     <section id="entry-contributions" class="entry-section">
       <h2>{gettext("Share what you know")}</h2>

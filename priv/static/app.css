@@ -72,8 +72,7 @@ input[type=checkbox] { width: 1.25rem; height: 1.25rem; accent-color: var(--skad
 .link-button { border-color: transparent; background: transparent; color: var(--skad-action); text-decoration: underline; }
 button:disabled, input:disabled { cursor: not-allowed; opacity: .65; }
 .danger-button { background: var(--skad-error); border-color: var(--skad-error); }
-.auth-panel { width: 100%; max-width: 32rem; margin-inline: auto; }
-#new-entry-contribution { max-width: none; }
+.auth-panel { width: 100%; }
 .form-stage { border: 0; border-top: 1px solid var(--skad-line); padding: 1rem 0 0; margin: 0; min-width: 0; display: grid; gap: 1rem; }
 .form-stage legend { padding: 0 .5rem 0 0; font-weight: 500; }
 .input-description { margin: 0 0 .25rem; }
@@ -120,7 +119,7 @@ dd { margin: 0 0 .75rem; }
 .moderator-header { padding-inline: 1rem; }
 .moderator-header .site-nav { order: 3; flex-basis: 100%; }
 .moderator-main { max-width: 76rem; width: 100%; }
-.moderator-main .auth-panel { margin-inline: 0; }
+.moderator-main .auth-panel { max-width: 32rem; margin-inline: 0; }
 .moderator-main h1 { font-family: system-ui, sans-serif; font-size: 1.5rem; }
 .moderator-main .auth-form { gap: .75rem; }
 .moderator-main .entry-section { margin-top: 1rem; padding-top: .75rem; }
