@@ -1,7 +1,7 @@
 # Project Skad architecture
 
 - **Status:** Current v0 architecture
-- **Updated:** 2026-10-03
+- **Updated:** 2026-10-07
 - **Decision log:** [product-decisions.md](product-decisions.md)
 - **Data model:** [data-model.md](data-model.md)
 - **Deferred work:** [future.md](future.md)
@@ -117,6 +117,60 @@ maintaining server-side pagination state.
 
 Physical cleanup of abandoned or withdrawn objects and automatic retry of
 failed object-store operations are deferred.
+
+## Production object storage
+
+Local development storage is covered in the [contributing guide](../CONTRIBUTING.md#local-media-storage). Production uses Cloudflare R2 through its S3-compatible API. Configure these environment variables with your bucket's values:
+
+```sh
+export R2_ENDPOINT="https://your-account-id.r2.cloudflarestorage.com"
+export R2_REGION="auto"
+export R2_BUCKET="your-bucket-name"
+export R2_ACCESS_KEY_ID="your-access-key-id"
+export R2_SECRET_ACCESS_KEY="your-secret-access-key"
+```
+
+Use an R2 API token limited to Object Read & Write access on the intended bucket. Phoenix uses these credentials to issue short-lived upload instructions; they must not be exposed to the browser.
+
+Because the browser uploads directly, configure the bucket's CORS policy for the deployed application origin:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://your-skad-host.example"],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["Content-Type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+## Backup and restore
+
+`bin/skad-data` creates a checked backup containing one SQLite snapshot and a mirror of the complete object-storage bucket. It requires the AWS CLI, `sqlite3`, and either `sha256sum` or `shasum`. Backups use a maintenance window so the database and media cannot change while the bundle is assembled.
+
+Stop the application, set the storage variables above plus the durable database path, and acknowledge the maintenance window:
+
+```sh
+export DATABASE_PATH=/srv/skad-data/skad.sqlite3
+export SKAD_APP_STOPPED=1
+
+bin/skad-data backup /srv/skad-data/backups/2026-10-07T060000Z
+bin/skad-data verify /srv/skad-data/backups/2026-10-07T060000Z
+```
+
+Copy the completed directory to retained storage on another machine or provider. A backup left only on the application host does not protect against host loss. The bundle contains moderator password hashes and unpublished submissions; keep its restrictive permissions and encrypt remote copies.
+
+Restore only while the application is stopped, into a database path that does not exist and an already-created empty bucket:
+
+```sh
+export DATABASE_PATH=/srv/skad-restore/skad.sqlite3
+export R2_BUCKET=skad-restore-empty
+
+bin/skad-data restore /srv/skad-data/backups/2026-10-07T060000Z
+```
+
+Start the application against the restored database and bucket, then check search, a public word and its media, and moderator login. Restore refuses to overwrite an existing database or merge into a non-empty bucket.
 
 ## Moderator diagnostics
 

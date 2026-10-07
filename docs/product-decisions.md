@@ -191,5 +191,5 @@ V1 may add versioned, checksummed language packs in IndexedDB with atomic replac
 ## Remaining work
 
 The deduplicated backlog and its completion boundaries live in
-[future.md](future.md). Completed behavior is described in the README and
-[architecture.md](architecture.md).
+[future.md](future.md). Current behavior is described in
+[architecture.md](architecture.md) and [Design.md](../Design.md).

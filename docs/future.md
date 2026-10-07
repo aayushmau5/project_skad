@@ -1,8 +1,8 @@
 # Future work
 
 This is the single backlog for deliberately deferred work. Current behavior is
-documented in the README and architecture; completed implementation plans do
-not belong here.
+documented in [architecture.md](architecture.md) and [Design.md](../Design.md);
+completed implementation plans do not belong here.
 
 ## Archive stewardship
 
