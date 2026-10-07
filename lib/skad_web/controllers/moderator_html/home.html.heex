@@ -25,11 +25,21 @@
       </li>
       <li class="result-card">
         <h2>
+          <.link id="moderator-manage-words-link" href={~p"/moderator/words"}>{gettext(
+            "Manage words"
+          )}</.link>
+        </h2>
+        <p class="help-text">
+          {gettext("Find and edit words, meanings, examples, forms, and recordings.")}
+        </p>
+      </li>
+      <li class="result-card">
+        <h2>
           <.link id="moderator-concepts-link" href={~p"/moderator/concepts"}>{gettext(
             "Manage concepts"
           )}</.link>
         </h2>
-        <p class="help-text">{gettext("Edit words, meanings, and links between languages.")}</p>
+        <p class="help-text">{gettext("Group words with the same meaning across languages.")}</p>
       </li>
       <li class="result-card">
         <h2>

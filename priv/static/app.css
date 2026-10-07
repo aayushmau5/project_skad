@@ -124,6 +124,7 @@ dd { margin: 0 0 .75rem; }
 .workspace-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
 .workspace-heading h1 { margin: 0; }
 .workspace-heading a { text-decoration: none; }
+.localized-text-fields { display: grid; gap: .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--skad-line); }
 .moderator-main h1 { font-family: system-ui, sans-serif; font-size: 1.5rem; }
 #moderator-login h1, #moderator-home h1 { font: 500 1.625rem/1.4 Georgia, "Noto Serif Devanagari", serif; }
 #moderator-login .auth-button { width: 100%; }

@@ -34,3 +34,6 @@ msgstr "यह पहले से मौजूद है"
 
 msgid "must be accepted"
 msgstr "कृपया इसकी पुष्टि करें"
+
+msgid "matches another form of this word"
+msgstr "इस शब्द के किसी अन्य रूप से मेल खाता है"

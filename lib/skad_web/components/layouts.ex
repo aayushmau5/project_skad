@@ -63,7 +63,8 @@ defmodule SkadWeb.Layouts do
       >
         <.link id="moderator-workspace-link" href={~p"/moderator"}>{gettext("Workspace")}</.link>
         <.link id="moderator-queue-link" href={~p"/moderator/submissions"}>{gettext("Review queue")}</.link>
-        <.link id="moderator-published-link" href={~p"/moderator/concepts"}>{gettext("Published")}</.link>
+        <.link id="moderator-words-link" href={~p"/moderator/words"}>{gettext("Words")}</.link>
+        <.link id="moderator-concepts-nav-link" href={~p"/moderator/concepts"}>{gettext("Concepts")}</.link>
       </nav>
       <nav id="interface-language" class="language-switch" aria-label={gettext("Interface language")}>
         <a

@@ -18,7 +18,7 @@
       <p :if={@concept.entries == []}>{gettext("No entries use this concept yet.")}</p>
       <ul :if={@concept.entries != []}>
         <li :for={entry <- @concept.entries} id={"concept-entry-#{entry.public_id}"}>
-          <.link href={~p"/entries/#{entry.public_id}"}>{entry_label(entry)}</.link>
+          <.link href={~p"/moderator/entries/#{entry.public_id}"}>{entry_label(entry)}</.link>
         </li>
       </ul>
     </section>
@@ -47,14 +47,11 @@
             loading="lazy"
           />
           <p class="result-meta">{item.processing_state}</p>
-          <.link
-            href={~p"/moderator/concepts/#{@concept.public_id}/media/#{item.public_id}"}
-            method="delete"
-            id={"remove-concept-media-#{item.public_id}"}
-            class="link-button"
-          >
-            {gettext("Remove")}
-          </.link>
+          <.media_editor
+            item={item}
+            action={~p"/moderator/concepts/#{@concept.public_id}/media/#{item.public_id}"}
+            errors={@errors}
+          />
         </li>
       </ul>
       <.input
@@ -97,6 +94,19 @@
         />
         <button type="submit" id="update-concept" class="auth-button">{gettext("Save concept")}</button>
       </.form>
+    </section>
+    <section id="moderator-concept-deletion" class="entry-section">
+      <.deletion
+        id="delete-concept"
+        action={~p"/moderator/concepts/#{@concept.public_id}"}
+        errors={@errors}
+        label={gettext("Delete concept")}
+        message={
+          gettext(
+            "Only an empty concept can be deleted. Its images are removed from public pages and its history is kept."
+          )
+        }
+      />
     </section>
   </article>
 </Layouts.app>

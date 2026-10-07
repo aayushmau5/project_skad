@@ -240,7 +240,9 @@ defmodule SkadWeb.ModeratorConceptControllerTest do
     remove_conn =
       preview_conn
       |> recycle()
-      |> delete(~p"/moderator/concepts/#{concept.public_id}/media/#{media_public_id}")
+      |> delete(~p"/moderator/concepts/#{concept.public_id}/media/#{media_public_id}", %{
+        "deletion" => %{"reason" => "Image no longer relevant", "confirmed" => "true"}
+      })
 
     assert redirected_to(remove_conn) == detail_path
     assert Repo.get!(Item, item.id).visibility == :pending_deletion

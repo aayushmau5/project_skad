@@ -1611,3 +1611,410 @@ msgstr[1] "%{count} अवधारणाएँ"
 #, elixir-autogen, elixir-format
 msgid "Only moderators can see these notes."
 msgstr "ये नोट्स केवल समीक्षक देख सकते हैं।"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Reason for deletion"
+msgstr "हटाने का कारण"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "I confirm this deletion."
+msgstr "मैं इसे हटाने की पुष्टि करता/करती हूँ।"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Edit media details"
+msgstr "रिकॉर्डिंग या चित्र का विवरण बदलें"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Attribution"
+msgstr "श्रेय"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Language variety"
+msgstr "भाषा का स्थानीय रूप"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Village or place"
+msgstr "गाँव या स्थान"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Save media details"
+msgstr "विवरण सहेजें"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Delete media"
+msgstr "रिकॉर्डिंग या चित्र हटाएँ"
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "This removes the recording or image from public pages. Its history is kept."
+msgstr "इससे रिकॉर्डिंग या चित्र सार्वजनिक पृष्ठों से हट जाएगा। उसका इतिहास सुरक्षित रहेगा।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Word saved."
+msgstr "शब्द सहेजा गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Form saved."
+msgstr "शब्द का रूप सहेजा गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Form deleted."
+msgstr "शब्द का रूप हटाया गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Word deleted."
+msgstr "शब्द हटाया गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Review the word links, then save the example."
+msgstr "शब्दों के संबंध जाँचें, फिर उदाहरण सहेजें।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Example saved."
+msgstr "उदाहरण सहेजा गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Example deleted."
+msgstr "उदाहरण हटाया गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Media details saved."
+msgstr "रिकॉर्डिंग या चित्र का विवरण सहेजा गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Media deleted."
+msgstr "रिकॉर्डिंग या चित्र हटाया गया।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Edit word"
+msgstr "शब्द बदलें"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Edit example"
+msgstr "उदाहरण बदलें"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Word not found"
+msgstr "शब्द नहीं मिला"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Example not found"
+msgstr "उदाहरण नहीं मिला"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Media not found"
+msgstr "रिकॉर्डिंग या चित्र नहीं मिला"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Keep the primary word form. Edit it above instead."
+msgstr "शब्द का मुख्य रूप बनाए रखें। उसे ऊपर दिए गए फ़ॉर्म में बदलें।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "This example already exists for one of the selected words."
+msgstr "चुने गए शब्दों में से किसी एक के लिए यह उदाहरण पहले से मौजूद है।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "This example is too long to check. Shorten it and try again."
+msgstr "यह उदाहरण जाँचने के लिए बहुत लंबा है। इसे छोटा करके फिर कोशिश करें।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "This record is no longer available. Refresh the page."
+msgstr "यह रिकॉर्ड अब उपलब्ध नहीं है। पृष्ठ फिर से खोलें।"
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "The change could not be saved. Check the word links and try again."
+msgstr "बदलाव सहेजा नहीं जा सका। शब्दों के संबंध जाँचकर फिर कोशिश करें।"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Back to concept"
+msgstr "अवधारणा पर लौटें"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "View public word page"
+msgstr "शब्द का सार्वजनिक पृष्ठ देखें"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Meaning language"
+msgstr "अर्थ की भाषा"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Remove this meaning when saving"
+msgstr "सहेजते समय यह अर्थ हटाएँ"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Add another meaning"
+msgstr "एक और अर्थ जोड़ें"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Save word"
+msgstr "शब्द सहेजें"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "No examples yet."
+msgstr "अभी कोई उदाहरण नहीं है।"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Edit or delete example"
+msgstr "उदाहरण बदलें या हटाएँ"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "No other forms yet."
+msgstr "अभी कोई अन्य रूप नहीं है।"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Save form"
+msgstr "शब्द का रूप सहेजें"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete form"
+msgstr "शब्द का रूप हटाएँ"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "This removes only this alternate form. The word and its meaning remain."
+msgstr "इससे केवल यह वैकल्पिक रूप हटेगा। शब्द और उसका अर्थ बने रहेंगे।"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Listen"
+msgstr "सुनें"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete word"
+msgstr "शब्द हटाएँ"
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "This removes the word and its recording from public pages and search. Shared examples and other words in this concept remain. History is kept."
+msgstr "इससे शब्द और उसकी रिकॉर्डिंग सार्वजनिक पृष्ठों और खोज से हट जाएँगे। साझा उदाहरण और इस अवधारणा के अन्य शब्द बने रहेंगे। इतिहास सुरक्षित रहेगा।"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Back to word"
+msgstr "शब्द पर लौटें"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "An example may appear under several words. Saving changes updates it everywhere."
+msgstr "एक उदाहरण कई शब्दों के साथ दिख सकता है। सहेजने पर बदलाव हर जगह लागू होगा।"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Translations"
+msgstr "अनुवाद"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Translation language"
+msgstr "अनुवाद की भाषा"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Translation"
+msgstr "अनुवाद"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Remove this translation when saving"
+msgstr "सहेजते समय यह अनुवाद हटाएँ"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Add translation"
+msgstr "अनुवाद जोड़ें"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Word links"
+msgstr "शब्दों के संबंध"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Check the sentence after editing, then confirm which words it illustrates. At least one main word is required."
+msgstr "बदलाव के बाद वाक्य जाँचें और चुनें कि यह किन शब्दों का उदाहरण है। कम से कम एक मुख्य शब्द ज़रूरी है।"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Check word links"
+msgstr "शब्दों के संबंध जाँचें"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "No words could be linked. Include a recorded word, then check again."
+msgstr "कोई शब्द नहीं जोड़ा जा सका। संग्रह का कोई शब्द शामिल करके फिर जाँचें।"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Word"
+msgstr "शब्द"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Ignore this word"
+msgstr "इस शब्द को छोड़ें"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Use in this example"
+msgstr "इस उदाहरण में भूमिका"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Main word"
+msgstr "मुख्य शब्द"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Related word"
+msgstr "संबंधित शब्द"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Save example"
+msgstr "उदाहरण सहेजें"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete example"
+msgstr "उदाहरण हटाएँ"
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "This removes the example from every word where it appears and from search. Its history is kept."
+msgstr "इससे उदाहरण सभी संबंधित शब्दों और खोज से हट जाएगा। उसका इतिहास सुरक्षित रहेगा।"
+
+#: lib/skad_web/controllers/moderator_concept_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Concept deleted."
+msgstr "अवधारणा हटाई गई।"
+
+#: lib/skad_web/controllers/moderator_concept_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Delete this concept's words first. Other languages may still use them."
+msgstr "पहले इस अवधारणा के शब्द हटाएँ। अन्य भाषाओं में भी इससे जुड़े शब्द हो सकते हैं।"
+
+#: lib/skad_web/controllers/moderator_concept_controller.ex
+#, elixir-autogen, elixir-format
+msgid "The concept could not be deleted. Try again."
+msgstr "अवधारणा हटाई नहीं जा सकी। फिर कोशिश करें।"
+
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete concept"
+msgstr "अवधारणा हटाएँ"
+
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#, elixir-autogen, elixir-format
+msgid "Only an empty concept can be deleted. Its images are removed from public pages and its history is kept."
+msgstr "केवल खाली अवधारणा हटाई जा सकती है। उसके चित्र सार्वजनिक पृष्ठों से हट जाएँगे और इतिहास सुरक्षित रहेगा।"
+
+#, elixir-autogen, elixir-format
+msgid "Words"
+msgstr "शब्द"
+
+#, elixir-autogen, elixir-format
+msgid "Manage words"
+msgstr "शब्दों का प्रबंधन"
+
+#, elixir-autogen, elixir-format
+msgid "Find and edit words, meanings, examples, forms, and recordings."
+msgstr "शब्द, अर्थ, उदाहरण, अन्य रूप और रिकॉर्डिंग खोजें और बदलें।"
+
+#, elixir-autogen, elixir-format
+msgid "Group words with the same meaning across languages."
+msgstr "अलग-अलग भाषाओं के समान अर्थ वाले शब्दों को जोड़ें।"
+
+#, elixir-autogen, elixir-format
+msgid "Back to words"
+msgstr "शब्दों पर लौटें"
+
+#, elixir-autogen, elixir-format
+msgid "Find a word to edit its meaning, examples, forms, and recording."
+msgstr "किसी शब्द का अर्थ, उदाहरण, अन्य रूप और रिकॉर्डिंग बदलने के लिए उसे खोजें।"
+
+#, elixir-autogen, elixir-format
+msgid "Search words or meanings"
+msgstr "शब्द या अर्थ खोजें"
+
+#, elixir-autogen, elixir-format
+msgid "Show all words"
+msgstr "सभी शब्द दिखाएँ"
+
+#, elixir-autogen, elixir-format
+msgid "No words found. Try another search."
+msgstr "कोई शब्द नहीं मिला। किसी और शब्द से खोजें।"
+
+#, elixir-autogen, elixir-format
+msgid "Word pages"
+msgstr "शब्दों के पृष्ठ"
+
+#, elixir-autogen, elixir-format
+msgid "Remove meaning"
+msgstr "अर्थ हटाएँ"
+
+#, elixir-autogen, elixir-format
+msgid "Remove translation"
+msgstr "अनुवाद हटाएँ"
+
+#, elixir-autogen, elixir-format
+msgid "Keep at least one meaning."
+msgstr "कम से कम एक अर्थ बनाए रखें।"
+
+#, elixir-autogen, elixir-format
+msgid "English"
+msgstr "अंग्रेज़ी"
+
+#, elixir-autogen, elixir-format
+msgid "Example sentence (%{language})"
+msgstr "उदाहरण वाक्य (%{language})"
+
+#, elixir-autogen, elixir-format
+msgid "Write the sentence in %{language}. To add an example in another language, open a word in that language."
+msgstr "वाक्य %{language} में लिखें। किसी दूसरी भाषा में उदाहरण जोड़ने के लिए उस भाषा का शब्द खोलें।"
+
+#, elixir-autogen, elixir-format
+msgid "Translate this sentence into another language. Choose a language for each translation."
+msgstr "इस वाक्य का दूसरी भाषा में अनुवाद करें। हर अनुवाद की भाषा चुनें।"
+
+#, elixir-autogen, elixir-format
+msgid "Choose a language"
+msgstr "भाषा चुनें"

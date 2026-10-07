@@ -1,0 +1,179 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
+  <article id="moderator-example">
+    <p><.link id="example-back" href={@back_path}>{gettext("Back to word")}</.link></p>
+    <header class="entry-header">
+      <h1>{gettext("Edit example")}</h1>
+      <p class="help-text">
+        {gettext(
+          "An example may appear under several words. Saving changes updates it everywhere."
+        )}
+      </p>
+    </header>
+    <.form
+      for={@form}
+      action={~p"/moderator/examples/#{@example.public_id}"}
+      method="patch"
+      id="edit-example-form"
+      class="auth-form entry-section"
+    >
+      <.input
+        field={@form[:text]}
+        type="textarea"
+        label={
+          gettext("Example sentence (%{language})", language: language_name(@example.language))
+        }
+        description={
+          gettext(
+            "Write the sentence in %{language}. To add an example in another language, open a word in that language.",
+            language: language_name(@example.language)
+          )
+        }
+        lang={@example.language.code || @example.language.slug}
+        dir={to_string(@example.language.direction)}
+        class="auth-input"
+        rows="4"
+        required
+      />
+      <fieldset class="form-stage">
+        <legend>{gettext("Translations")}</legend>
+        <p class="help-text">
+          {gettext(
+            "Translate this sentence into another language. Choose a language for each translation."
+          )}
+        </p>
+        <.input
+          :if={@translation_count == 0}
+          type="hidden"
+          id="empty-example-translations"
+          name="example[translations]"
+          value=""
+        />
+        <.inputs_for :let={translation} field={@form[:translations]}>
+          <div id={"translation-#{translation.index}"} class="localized-text-fields">
+            <.input
+              field={translation[:language]}
+              type="select"
+              label={gettext("Translation language")}
+              prompt={gettext("Choose a language")}
+              options={translation_language_options(@languages, translation[:language].value)}
+              class="auth-input"
+              required
+            />
+            <.input
+              field={translation[:text]}
+              type="textarea"
+              label={gettext("Translation")}
+              class="auth-input"
+              rows="3"
+            />
+            <button
+              type="submit"
+              name="remove_translation"
+              id={"remove-translation-#{translation.index}"}
+              value={translation.index}
+              aria-label={gettext("Remove translation")}
+              formnovalidate
+              class="secondary-button"
+            >{gettext("Remove")}</button>
+          </div>
+        </.inputs_for>
+        <button
+          id="add-translation"
+          type="submit"
+          name="intent"
+          value="add_translation"
+          formnovalidate
+          class="secondary-button"
+        >{gettext("Add translation")}</button>
+      </fieldset>
+      <section id="example-word-links" class="entry-section">
+        <h2>{gettext("Word links")}</h2>
+        <p class="help-text">
+          {gettext(
+            "Check the sentence after editing, then confirm which words it illustrates. At least one main word is required."
+          )}
+        </p>
+        <button
+          id="check-example-links"
+          type="submit"
+          name="intent"
+          value="check_links"
+          formnovalidate
+          class="secondary-button"
+        >{gettext("Check word links")}</button>
+        <.input
+          type="hidden"
+          name="links_version"
+          id="example-links-version"
+          value={@links_version}
+        />
+        <p :if={@match_error || @suggestions == []} id="example-links-empty">
+          {gettext("No words could be linked. Include a recorded word, then check again.")}
+        </p>
+        <div
+          :for={{suggestion, index} <- Enum.with_index(@suggestions)}
+          id={"example-word-link-#{index}"}
+          class="result-card"
+        >
+          <p>{suggestion.surface_text}</p>
+          <.input
+            type="hidden"
+            name={"links[#{index}][start_offset]"}
+            id={"link-#{index}-start"}
+            value={suggestion.start_offset}
+          />
+          <.input
+            type="hidden"
+            name={"links[#{index}][end_offset]"}
+            id={"link-#{index}-end"}
+            value={suggestion.end_offset}
+          />
+          <.input
+            type="select"
+            name={"links[#{index}][entry_public_id]"}
+            id={"link-#{index}-word"}
+            value={selected_entry(suggestion, @choices)}
+            label={gettext("Word")}
+            prompt={gettext("Ignore this word")}
+            options={candidate_options(suggestion)}
+            class="auth-input"
+          />
+          <.input
+            type="select"
+            name={"links[#{index}][role]"}
+            id={"link-#{index}-role"}
+            value={selected_role(suggestion, @choices)}
+            label={gettext("Use in this example")}
+            options={[{gettext("Main word"), "focus"}, {gettext("Related word"), "reference"}]}
+            class="auth-input"
+          />
+        </div>
+      </section>
+      <button
+        id="save-example"
+        type="submit"
+        class="auth-button"
+        disabled={@match_error != nil || @suggestions == []}
+      >{gettext("Save example")}</button>
+    </.form>
+    <section id="moderator-example-deletion" class="entry-section">
+      <.deletion
+        id="delete-example"
+        action={~p"/moderator/examples/#{@example.public_id}"}
+        errors={@errors}
+        label={gettext("Delete example")}
+        message={
+          gettext(
+            "This removes the example from every word where it appears and from search. Its history is kept."
+          )
+        }
+      />
+    </section>
+  </article>
+</Layouts.app>

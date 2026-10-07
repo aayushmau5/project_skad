@@ -107,3 +107,6 @@ msgstr ""
 
 msgid "must be equal to %{number}"
 msgstr ""
+
+msgid "matches another form of this word"
+msgstr ""

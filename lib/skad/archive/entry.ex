@@ -12,6 +12,7 @@ defmodule Skad.Archive.Entry do
     field :usage_note, :string
     field :cultural_note, :string
     field :archived_at, :utc_datetime
+    field :primary_form, :string, virtual: true
 
     belongs_to :language, Skad.Archive.Language
     belongs_to :concept, Skad.Archive.Concept

@@ -302,6 +302,7 @@ defmodule SkadWeb.CoreComponents do
     """
   end
 
+  def language_label(%{name: "English"}), do: gettext("English")
   def language_label(%{name: "Hindi"}), do: gettext("Hindi")
   def language_label(%{name: "Hamskad"}), do: gettext("Hamskad")
   def language_label(%{name: "Navaskad"}), do: gettext("Navaskad")

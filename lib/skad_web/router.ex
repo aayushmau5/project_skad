@@ -75,6 +75,7 @@ defmodule SkadWeb.Router do
     post "/concepts", ModeratorConceptController, :create
     get "/concepts/:public_id", ModeratorConceptController, :show
     patch "/concepts/:public_id", ModeratorConceptController, :update
+    delete "/concepts/:public_id", ModeratorConceptController, :delete
     post "/concepts/:public_id/media/uploads", ModeratorConceptController, :prepare_media
 
     post "/concepts/:public_id/media/uploads/complete",
@@ -86,8 +87,31 @@ defmodule SkadWeb.Router do
         :preview_media
 
     delete "/concepts/:public_id/media/:media_public_id",
-           ModeratorConceptController,
-           :remove_media
+           ModeratorArchiveController,
+           :delete_concept_media
+
+    patch "/concepts/:public_id/media/:media_public_id",
+          ModeratorArchiveController,
+          :update_concept_media
+
+    get "/words", ModeratorArchiveController, :index
+    get "/entries/:public_id", ModeratorArchiveController, :entry
+    patch "/entries/:public_id", ModeratorArchiveController, :update_entry
+    delete "/entries/:public_id", ModeratorArchiveController, :delete_entry
+    patch "/entries/:public_id/forms/:form_id", ModeratorArchiveController, :update_form
+    delete "/entries/:public_id/forms/:form_id", ModeratorArchiveController, :delete_form
+
+    patch "/entries/:public_id/media/:media_public_id",
+          ModeratorArchiveController,
+          :update_entry_media
+
+    delete "/entries/:public_id/media/:media_public_id",
+           ModeratorArchiveController,
+           :delete_entry_media
+
+    get "/examples/:public_id", ModeratorArchiveController, :example
+    patch "/examples/:public_id", ModeratorArchiveController, :update_example
+    delete "/examples/:public_id", ModeratorArchiveController, :delete_example
 
     get "/submissions", ModeratorSubmissionController, :index
     get "/submissions/:public_id", ModeratorSubmissionController, :show

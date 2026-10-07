@@ -1,0 +1,145 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
+  <section id="moderator-words">
+    <header class="entry-header">
+      <h1>{gettext("Words")}</h1>
+      <p class="help-text">
+        {gettext("Find a word to edit its meaning, examples, forms, and recording.")}
+      </p>
+    </header>
+
+    <.form
+      for={@search_form}
+      action={~p"/moderator/words"}
+      method="get"
+      id="word-search-form"
+      class="search-form"
+    >
+      <.input type="hidden" name="ui_language" id="word-search-locale" value={@locale} />
+      <.input
+        :if={@language}
+        type="hidden"
+        name="language"
+        id="word-search-language"
+        value={@language.slug}
+      />
+      <div class="search-fields">
+        <.input
+          field={@search_form[:query]}
+          type="search"
+          label={gettext("Search words or meanings")}
+          class="search-input"
+        />
+        <button type="submit" id="search-words" class="search-button">{gettext("Search")}</button>
+      </div>
+      <.link
+        :if={String.trim(@query) != ""}
+        id="clear-word-search"
+        href={words_path("", @language, 1, @locale)}
+      >
+        {gettext("Show all words")}
+      </.link>
+    </.form>
+
+    <nav
+      id="word-language-filters"
+      class="archive-filters"
+      aria-label={gettext("Filter by language")}
+    >
+      <.link
+        id="word-filter-all"
+        href={words_path(@query, nil, 1, @locale)}
+        aria-current={if(is_nil(@language), do: "true")}
+      >
+        {gettext("All")}
+      </.link>
+      <.link
+        :for={language <- @languages}
+        id={"word-filter-#{language.slug}"}
+        href={words_path(@query, language, 1, @locale)}
+        aria-current={if(@language && @language.id == language.id, do: "true")}
+      >
+        {language_name(language)}
+      </.link>
+    </nav>
+
+    <p id="word-count" class="help-text">
+      {ngettext("%{count} word", "%{count} words", @word_page.total_count)}
+    </p>
+    <p :if={@word_page.entries == []} id="empty-word-search">
+      {if String.trim(@query) == "",
+        do: gettext("No words have been published here yet."),
+        else: gettext("No words found. Try another search.")}
+    </p>
+
+    <ul :if={@word_page.entries != []} id="word-search-results" class="result-list">
+      <li
+        :for={entry <- @word_page.entries}
+        id={"moderator-word-#{entry.public_id}"}
+        class="result-card"
+      >
+        <.link
+          id={"open-word-#{entry.public_id}"}
+          href={~p"/moderator/entries/#{entry.public_id}"}
+          class="result-link"
+          lang={entry.language.code || entry.language.slug}
+          dir={to_string(entry.language.direction)}
+        >
+          {word(entry)}
+        </.link>
+        <p class="result-meta">
+          {Enum.join(
+            Enum.reject(
+              [
+                language_name(entry.language),
+                entry.variety_label,
+                entry.place_label,
+                entry.concept.editorial_label
+              ],
+              &is_nil/1
+            ),
+            " · "
+          )}
+        </p>
+        <p :if={first_definition(entry)} lang={definition_language(entry, @languages)} dir="auto">
+          {first_definition(entry)}
+        </p>
+      </li>
+    </ul>
+
+    <nav
+      :if={@word_page.page_count > 1}
+      id="word-pagination"
+      class="archive-pagination"
+      aria-label={gettext("Word pages")}
+    >
+      <.link
+        :if={@word_page.page > 1}
+        id="word-previous"
+        href={words_path(@query, @language, @word_page.page - 1, @locale)}
+        rel="prev"
+      >{gettext("Previous")}</.link>
+      <span :if={@word_page.page == 1} id="word-previous" aria-disabled="true">{gettext(
+        "Previous"
+      )}</span>
+      <span id="word-page-number" aria-current="page">{gettext("Page %{page} of %{pages}",
+        page: @word_page.page,
+        pages: @word_page.page_count
+      )}</span>
+      <.link
+        :if={@word_page.page < @word_page.page_count}
+        id="word-next"
+        href={words_path(@query, @language, @word_page.page + 1, @locale)}
+        rel="next"
+      >{gettext("Next")}</.link>
+      <span :if={@word_page.page == @word_page.page_count} id="word-next" aria-disabled="true">{gettext(
+        "Next"
+      )}</span>
+    </nav>
+  </section>
+</Layouts.app>

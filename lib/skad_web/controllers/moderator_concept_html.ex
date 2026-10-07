@@ -1,6 +1,8 @@
 defmodule SkadWeb.ModeratorConceptHTML do
   use SkadWeb, :html
 
+  import SkadWeb.ModeratorArchiveHTML, only: [media_editor: 1, deletion: 1]
+
   embed_templates "moderator_concept_html/*"
 
   def entry_label(entry) do

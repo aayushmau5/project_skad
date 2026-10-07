@@ -7,6 +7,7 @@ defmodule SkadWeb.ModeratorConceptController do
   alias Skad.Media
   alias Skad.Media.Item
   alias Skad.Media.Storage
+  alias Skad.Moderation
 
   def index(conn, params) do
     query = get_in(params, ["search", "query"]) || ""
@@ -95,6 +96,41 @@ defmodule SkadWeb.ModeratorConceptController do
     end
   end
 
+  def delete(conn, %{"public_id" => id} = params) do
+    case Archive.get_concept(id) do
+      nil ->
+        send_resp(conn, :not_found, "Concept not found")
+
+      concept ->
+        case Moderation.delete_concept(
+               conn.assigns.current_scope,
+               concept,
+               params["deletion"] || %{}
+             ) do
+          {:ok, _concept} ->
+            conn
+            |> put_flash(:info, gettext("Concept deleted."))
+            |> redirect(to: ~p"/moderator/concepts")
+
+          {:error, %Ecto.Changeset{} = changeset} ->
+            conn |> put_status(422) |> render_show(concept, nil, %{"delete-concept" => changeset})
+
+          {:error, :concept_has_words} ->
+            conn
+            |> put_flash(
+              :error,
+              gettext("Delete this concept's words first. Other languages may still use them.")
+            )
+            |> redirect(to: ~p"/moderator/concepts/#{id}")
+
+          {:error, _reason} ->
+            conn
+            |> put_flash(:error, gettext("The concept could not be deleted. Try again."))
+            |> redirect(to: ~p"/moderator/concepts/#{id}")
+        end
+    end
+  end
+
   def prepare_media(conn, %{"public_id" => public_id} = params) do
     with %Concept{} = concept <- Archive.get_concept(public_id),
          {:ok, instructions} <- Media.prepare_image_upload(concept, params) do
@@ -134,24 +170,6 @@ defmodule SkadWeb.ModeratorConceptController do
     end
   end
 
-  def remove_media(conn, %{"public_id" => public_id, "media_public_id" => media_public_id}) do
-    with %Concept{} = concept <- Archive.get_concept(public_id),
-         %Item{} = item <- Media.get_item(media_public_id),
-         {:ok, _item} <- Media.remove_concept_image(concept, item) do
-      conn
-      |> put_flash(:info, gettext("Image removed from the concept."))
-      |> redirect(to: ~p"/moderator/concepts/#{concept.public_id}")
-    else
-      nil ->
-        send_resp(conn, :not_found, "Concept image not found")
-
-      {:error, _reason} ->
-        conn
-        |> put_flash(:error, gettext("The concept image could not be removed."))
-        |> redirect(to: ~p"/moderator/concepts/#{public_id}")
-    end
-  end
-
   defp render_new(conn, changeset) do
     label = Ecto.Changeset.get_field(changeset, :editorial_label) || ""
 
@@ -163,7 +181,7 @@ defmodule SkadWeb.ModeratorConceptController do
     )
   end
 
-  defp render_show(conn, concept, changeset \\ nil) do
+  defp render_show(conn, concept, changeset \\ nil, errors \\ %{}) do
     changeset =
       changeset || Contributions.change_concept(conn.assigns.current_scope, concept)
 
@@ -171,7 +189,8 @@ defmodule SkadWeb.ModeratorConceptController do
       page_title: concept.editorial_label,
       concept: concept,
       form: Phoenix.Component.to_form(changeset, as: :concept),
-      media_items: Media.list_concept_images(concept)
+      media_items: Media.list_concept_images(concept),
+      errors: errors
     )
   end
 end

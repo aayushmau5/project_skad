@@ -11,6 +11,8 @@ defmodule Skad.Archive.LocalizedText do
   def changeset(localized_text, attrs) do
     localized_text
     |> cast(attrs, [:language, :text])
+    |> update_change(:text, fn text -> if is_binary(text), do: String.trim(text), else: text end)
     |> validate_required([:language, :text])
+    |> validate_length(:text, max: 5_000)
   end
 end

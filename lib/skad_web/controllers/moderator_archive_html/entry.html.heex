@@ -1,0 +1,210 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+  locale={@locale}
+  language_links={@language_links}
+  moderator={@moderator_workspace?}
+>
+  <article id="moderator-word">
+    <p>
+      <.link id="word-back-to-list" href={~p"/moderator/words"}>{gettext("Back to words")}</.link>
+    </p>
+    <header class="entry-header">
+      <h1>{word(@entry)}</h1>
+      <p class="result-meta">
+        {language_name(@entry.language)} ·
+        <.link id="word-concept-link" href={~p"/moderator/concepts/#{@entry.concept.public_id}"}>{@entry.concept.editorial_label}</.link>
+      </p>
+      <.link id="view-public-word" href={~p"/entries/#{@entry.public_id}"}>{gettext(
+        "View public word page"
+      )}</.link>
+    </header>
+
+    <section id="edit-word" class="entry-section">
+      <h2>{gettext("Edit word")}</h2>
+      <.form
+        for={@form}
+        action={~p"/moderator/entries/#{@entry.public_id}"}
+        method="patch"
+        id="edit-word-form"
+        class="auth-form"
+      >
+        <.input
+          field={@form[:primary_form]}
+          label={gettext("Word or expression")}
+          class="auth-input"
+          required
+          maxlength="255"
+        />
+        <fieldset class="form-stage">
+          <legend>{gettext("Meaning")}</legend>
+          <div :if={@form[:definitions].errors != []} class="field-errors">
+            <p :for={error <- @form[:definitions].errors}>{translate_error(error)}</p>
+          </div>
+          <.inputs_for :let={definition} field={@form[:definitions]}>
+            <div id={"meaning-#{definition.index}"} class="localized-text-fields">
+              <.input
+                field={definition[:language]}
+                label={gettext("Meaning language")}
+                class="auth-input"
+              />
+              <.input
+                field={definition[:text]}
+                label={gettext("Meaning")}
+                type="textarea"
+                class="auth-input"
+                rows="3"
+              />
+              <button
+                type="submit"
+                name="remove_meaning"
+                id={"remove-meaning-#{definition.index}"}
+                value={definition.index}
+                aria-label={gettext("Remove meaning")}
+                disabled={@meaning_count <= 1}
+                formnovalidate
+                class="secondary-button"
+              >{gettext("Remove")}</button>
+            </div>
+          </.inputs_for>
+          <p :if={@meaning_count <= 1} class="help-text">
+            {gettext("Keep at least one meaning.")}
+          </p>
+          <button
+            id="add-meaning"
+            type="submit"
+            name="intent"
+            value="add_meaning"
+            formnovalidate
+            class="secondary-button"
+          >{gettext("Add another meaning")}</button>
+        </fieldset>
+        <.input
+          field={@form[:part_of_speech]}
+          label={gettext("Part of speech")}
+          class="auth-input"
+        />
+        <.input
+          field={@form[:variety_label]}
+          label={gettext("Language variety")}
+          class="auth-input"
+        />
+        <.input
+          field={@form[:place_label]}
+          label={gettext("Village or place")}
+          class="auth-input"
+        />
+        <.input
+          field={@form[:usage_note]}
+          type="textarea"
+          label={gettext("Usage")}
+          class="auth-input"
+          rows="3"
+        />
+        <.input
+          field={@form[:cultural_note]}
+          type="textarea"
+          label={gettext("Cultural context")}
+          class="auth-input"
+          rows="3"
+        />
+        <button id="save-word" type="submit" class="auth-button">{gettext("Save word")}</button>
+      </.form>
+    </section>
+
+    <section id="moderator-word-examples" class="entry-section">
+      <h2>{gettext("Examples")}</h2>
+      <p :if={@examples == []}>{gettext("No examples yet.")}</p>
+      <ul class="result-list">
+        <li
+          :for={example <- @examples}
+          id={"word-example-#{example.public_id}"}
+          class="result-card"
+        >
+          <p
+            lang={example.language.code || example.language.slug}
+            dir={to_string(example.language.direction)}
+          >
+            {example.text}
+          </p>
+          <.link
+            id={"edit-example-#{example.public_id}"}
+            href={~p"/moderator/examples/#{example.public_id}"}
+          >{gettext("Edit or delete example")}</.link>
+        </li>
+      </ul>
+    </section>
+
+    <section id="moderator-word-forms" class="entry-section">
+      <h2>{gettext("Other forms and spellings")}</h2>
+      <p :if={Enum.all?(@entry.forms, & &1.is_primary)}>{gettext("No other forms yet.")}</p>
+      <%= for alternate <- Enum.reject(@entry.forms, & &1.is_primary) do %>
+        <% alternate_form = word_form(alternate, @errors) %>
+        <div id={"alternate-form-#{alternate.id}"} class="result-card">
+          <.form
+            for={alternate_form}
+            action={~p"/moderator/entries/#{@entry.public_id}/forms/#{alternate.id}"}
+            method="patch"
+            id={"word-form-#{alternate.id}"}
+            class="auth-form"
+          >
+            <.input
+              field={alternate_form[:text]}
+              label={gettext("Alternate form")}
+              class="auth-input"
+              required
+            />
+            <.input
+              field={alternate_form[:kind]}
+              type="select"
+              label={gettext("Form type")}
+              options={form_options()}
+              class="auth-input"
+            />
+            <button id={"save-form-#{alternate.id}"} type="submit" class="auth-button">{gettext(
+              "Save form"
+            )}</button>
+          </.form>
+          <.deletion
+            id={"delete-form-#{alternate.id}"}
+            action={~p"/moderator/entries/#{@entry.public_id}/forms/#{alternate.id}"}
+            errors={@errors}
+            label={gettext("Delete form")}
+            message={
+              gettext("This removes only this alternate form. The word and its meaning remain.")
+            }
+          />
+        </div>
+      <% end %>
+    </section>
+
+    <section :if={@audio} id="moderator-word-audio" class="entry-section">
+      <h2>{gettext("Listen")}</h2>
+      <audio
+        controls
+        preload="none"
+        src={~p"/media/#{@audio.public_id}"}
+        aria-label={gettext("Pronunciation audio")}
+      ></audio>
+      <.media_editor
+        item={@audio}
+        action={~p"/moderator/entries/#{@entry.public_id}/media/#{@audio.public_id}"}
+        errors={@errors}
+      />
+    </section>
+
+    <section id="moderator-word-deletion" class="entry-section">
+      <.deletion
+        id="delete-word"
+        action={~p"/moderator/entries/#{@entry.public_id}"}
+        errors={@errors}
+        label={gettext("Delete word")}
+        message={
+          gettext(
+            "This removes the word and its recording from public pages and search. Shared examples and other words in this concept remain. History is kept."
+          )
+        }
+      />
+    </section>
+  </article>
+</Layouts.app>

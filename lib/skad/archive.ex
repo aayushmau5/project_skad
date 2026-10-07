@@ -28,10 +28,11 @@ defmodule Skad.Archive do
     |> Repo.aggregate(:count, :id)
   end
 
-  def list_public_entries(language \\ nil, page \\ 1) do
+  def list_public_entries(language \\ nil, page \\ 1, search \\ "") do
     query =
       public_entries_query()
       |> maybe_filter_entry_language(if(language, do: language.id))
+      |> Search.filter_entries(normalize_text(search))
 
     total_count = Repo.aggregate(query, :count, :id)
     page_count = max(1, div(total_count + @archive_page_size - 1, @archive_page_size))
@@ -44,7 +45,7 @@ defmodule Skad.Archive do
       |> limit(@archive_page_size)
       |> offset(^((page - 1) * @archive_page_size))
       |> Repo.all()
-      |> Repo.preload([:language, :forms])
+      |> Repo.preload([:language, :concept, :forms])
 
     %{entries: entries, page: page, page_count: page_count, total_count: total_count}
   end
@@ -385,6 +386,65 @@ defmodule Skad.Archive do
   def publish_usage_example(_language, _attrs),
     do: {:error, :invalid_attributes}
 
+  def get_example(public_id) do
+    with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
+      Example
+      |> where([example], example.public_id == ^public_id and is_nil(example.archived_at))
+      |> Repo.one()
+      |> case do
+        nil ->
+          nil
+
+        example ->
+          Repo.preload(example, [:language, links: [entry: [:language, :concept, :forms]]])
+      end
+    else
+      :error -> nil
+    end
+  end
+
+  def list_entry_examples(%Entry{id: entry_id}) do
+    Example
+    |> join(:inner, [example], link in assoc(example, :links))
+    |> where([example, link], link.entry_id == ^entry_id and is_nil(example.archived_at))
+    |> distinct(true)
+    |> order_by([example], asc: example.id)
+    |> Repo.all()
+    |> Repo.preload(:language)
+  end
+
+  @doc false
+  def replace_example_multi(multi, example, attrs, links_attrs) do
+    with :ok <- validate_link_set(links_attrs) do
+      {:ok,
+       multi
+       |> Multi.run(:example_duplicate, fn repo, _changes ->
+         reject_duplicate_example(
+           repo,
+           example.language,
+           normalize_text(attr(attrs, :text)),
+           links_attrs,
+           example.id
+         )
+       end)
+       |> Multi.update(:example, fn _changes ->
+         example
+         |> Example.changeset(attrs)
+         |> Ecto.Changeset.put_change(:normalized_text, normalize_text(attr(attrs, :text)))
+       end)
+       |> Multi.delete_all(
+         :old_links,
+         from(link in ExampleLink, where: link.example_id == ^example.id)
+       )
+       |> Multi.run(:example_links, fn repo, %{example: updated} ->
+         insert_example_links(repo, updated, links_attrs)
+       end)
+       |> Multi.run(:example_search_index, fn repo, %{example_links: links} ->
+         Search.refresh(repo, Enum.map(example.links ++ links, & &1.entry_id))
+       end)}
+    end
+  end
+
   @doc false
   def usage_example_multi(%Multi{} = multi, %Language{} = language, attrs)
       when is_map(attrs) do
@@ -556,6 +616,9 @@ defmodule Skad.Archive do
 
     links_query =
       from link in ExampleLink,
+        join: linked_entry in assoc(link, :entry),
+        join: linked_concept in assoc(linked_entry, :concept),
+        where: is_nil(linked_entry.archived_at) and is_nil(linked_concept.archived_at),
         order_by: [asc: link.start_offset, asc: link.id]
 
     Repo.preload(entry,
@@ -792,7 +855,7 @@ defmodule Skad.Archive do
 
   defp validate_link_set(_links), do: {:error, :invalid_links}
 
-  defp reject_duplicate_example(repo, language, normalized_text, links_attrs) do
+  defp reject_duplicate_example(repo, language, normalized_text, links_attrs, excluded_id \\ nil) do
     focus_entry_public_ids =
       for attrs <- links_attrs,
           focus_link?(attrs),
@@ -810,6 +873,7 @@ defmodule Skad.Archive do
           example.normalized_text == ^normalized_text and link.role == :focus and
           entry.public_id in ^focus_entry_public_ids and is_nil(example.archived_at)
       )
+      |> where([example], ^is_nil(excluded_id) or example.id != ^(excluded_id || -1))
       |> repo.exists?()
 
     if duplicate?, do: {:error, :already_exists}, else: {:ok, false}

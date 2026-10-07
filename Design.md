@@ -210,7 +210,7 @@ Public header:
 Moderator header:
 
 - `SKAD / Moderator` identity;
-- Review queue, Published, and People & sources as compact text navigation;
+- Workspace, Review queue, Words, and Concepts as compact text navigation;
 - interface language and account actions at the end.
 
 ### Search
@@ -267,6 +267,14 @@ For all contributions:
 The login and workspace landing pages share the archive's serif page heading, warm surfaces, and thin section rules. Header, content, and footer align to the wide moderator shell. The login form fills its content area; landing-page actions use compact text rows with a short explanation of each task.
 
 Concept management starts with search and an alphabetical, paginated list. Creation has its own page, which shows existing concepts while the moderator enters a name and links to their records. Forms use “Concept name” and “Notes,” with a short explanation that only moderators can see the notes. Exact name matches, ignoring case and surrounding whitespace, prevent accidental creation; related matches remain suggestions. Checking and creation also work without JavaScript and preserve the name and notes after errors.
+
+Words are a first-class section in the moderator navigation and workspace landing page. Its searchable, alphabetical, paginated list supports language filters and opens each word's editor directly. Word editing returns to the word list; its related concept is a secondary link. Concepts group words by meaning and can also link to their editors.
+
+Word pages allow editing spellings, all meanings, usage, cultural context, variety, and place. Related examples have a separate editor for the sentence, translations, and reviewed word links. A changed sentence requires another link check before saving; shared examples update everywhere. Recording and image details can be edited in place. Delete actions explain their reach and require a reason and confirmation. Published records are archived with moderator history, and search updates in the same transaction. Deleting a word returns to Words and keeps shared examples and the other words in its concept; a concept must be empty before deletion.
+
+Meaning and translation rows use a compact **Remove** button. It removes the row from the current form while keeping other unsaved edits; **Save word** or **Save example** commits the change. The last meaning cannot be removed, because every word needs at least one meaning.
+
+The example editor names the sentence's archive language separately from its translations. Translation languages use named choices for supported archive languages, English, and Hindi; new rows require an explicit choice. Interface language never supplies the content language. Existing language codes remain compatible and appear under their full language names.
 
 The default desktop pattern is a two-pane workspace:
 

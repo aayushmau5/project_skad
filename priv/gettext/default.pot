@@ -1627,3 +1627,410 @@ msgstr[1] ""
 #, elixir-autogen, elixir-format
 msgid "Only moderators can see these notes."
 msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Reason for deletion"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "I confirm this deletion."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Edit media details"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Attribution"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Language variety"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Village or place"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Save media details"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "Delete media"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html.ex
+#, elixir-autogen, elixir-format
+msgid "This removes the recording or image from public pages. Its history is kept."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Word saved."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Form saved."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Form deleted."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Word deleted."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Review the word links, then save the example."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Example saved."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Example deleted."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Media details saved."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Media deleted."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Edit word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Edit example"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Word not found"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Example not found"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Media not found"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Keep the primary word form. Edit it above instead."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "This example already exists for one of the selected words."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "This example is too long to check. Shorten it and try again."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "This record is no longer available. Refresh the page."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_controller.ex
+#, elixir-autogen, elixir-format
+msgid "The change could not be saved. Check the word links and try again."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Back to concept"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "View public word page"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Meaning language"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Remove this meaning when saving"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Add another meaning"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Save word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "No examples yet."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Edit or delete example"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "No other forms yet."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Save form"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete form"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "This removes only this alternate form. The word and its meaning remain."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Listen"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#, elixir-autogen, elixir-format
+msgid "This removes the word and its recording from public pages and search. Shared examples and other words in this concept remain. History is kept."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Back to word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "An example may appear under several words. Saving changes updates it everywhere."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Translations"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Translation language"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Translation"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Remove this translation when saving"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Add translation"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Word links"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Check the sentence after editing, then confirm which words it illustrates. At least one main word is required."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Check word links"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "No words could be linked. Include a recorded word, then check again."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Ignore this word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Use in this example"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Main word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Related word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Save example"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete example"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#, elixir-autogen, elixir-format
+msgid "This removes the example from every word where it appears and from search. Its history is kept."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_concept_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Concept deleted."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_concept_controller.ex
+#, elixir-autogen, elixir-format
+msgid "Delete this concept's words first. Other languages may still use them."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_concept_controller.ex
+#, elixir-autogen, elixir-format
+msgid "The concept could not be deleted. Try again."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#, elixir-autogen, elixir-format
+msgid "Delete concept"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#, elixir-autogen, elixir-format
+msgid "Only an empty concept can be deleted. Its images are removed from public pages and its history is kept."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Words"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Manage words"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Find and edit words, meanings, examples, forms, and recordings."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Group words with the same meaning across languages."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Back to words"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Find a word to edit its meaning, examples, forms, and recording."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Search words or meanings"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Show all words"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "No words found. Try another search."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Word pages"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Remove meaning"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Remove translation"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Keep at least one meaning."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "English"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Example sentence (%{language})"
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Write the sentence in %{language}. To add an example in another language, open a word in that language."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Translate this sentence into another language. Choose a language for each translation."
+msgstr ""
+
+#, elixir-autogen, elixir-format
+msgid "Choose a language"
+msgstr ""

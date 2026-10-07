@@ -11,6 +11,20 @@ defmodule Skad.Archive.Search do
 
   @limit 20
 
+  def filter_entries(entries, query) when is_binary(query) and query != "" do
+    where(
+      entries,
+      [entry],
+      fragment(
+        "? IN (SELECT entry_id FROM entry_search WHERE entry_search MATCH ?)",
+        entry.id,
+        ^fts_query(query)
+      )
+    )
+  end
+
+  def filter_entries(entries, _query), do: entries
+
   def full_text_lookup(query, language_id) when is_binary(query) and query != "" do
     sql = """
     SELECT entry_id, forms, definitions, notes, examples
