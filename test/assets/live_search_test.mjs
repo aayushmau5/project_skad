@@ -20,6 +20,7 @@ function setup(fetchResponse = async () => ({ok: true, text: async () => '<secti
     },
   }
   const status = {hidden: true, textContent: "", dataset: {}}
+  const recentWords = {hidden: false}
   const form = {
     dataset: {
       resultsUrl: "/search/results", searching: "Searching…", resultsReady: "Results updated.",
@@ -31,6 +32,7 @@ function setup(fetchResponse = async () => ({ok: true, text: async () => '<secti
   const nodes = {
     "[data-live-search]": form, "#search-output": output,
     "#search-status": status,
+    "#recent-words": recentWords,
   }
   const links = [
     {href: "http://localhost:4000/?ui_language=hi"},
@@ -55,7 +57,7 @@ function setup(fetchResponse = async () => ({ok: true, text: async () => '<secti
   )
 
   return {
-    query, language, output, status, requests, timers, links, location,
+    query, language, output, status, recentWords, requests, timers, links, location,
     emit: (target, event, detail = {}) => handlers.get(`${target}:${event}`)(detail),
     runTimer: async index => timers[index].cancelled ? undefined : timers[index].fn(),
   }
@@ -66,6 +68,7 @@ test("debounces typing and sends the selected archive language", async () => {
   ui.language.value = "hindi"
   ui.query.value = "wat"
   ui.emit("query", "input")
+  assert.equal(ui.recentWords.hidden, true)
   ui.query.value = "water"
   ui.emit("query", "input")
 
@@ -126,6 +129,7 @@ test("failure gives a recovery action, while clearing the query resets search", 
   ui.query.value = ""
   ui.emit("query", "input")
   assert.equal(ui.status.hidden, true)
+  assert.equal(ui.recentWords.hidden, false)
   assert.equal(ui.requests.length, 1)
   assert.equal(new URL(ui.location.href).searchParams.has("q"), false)
 })

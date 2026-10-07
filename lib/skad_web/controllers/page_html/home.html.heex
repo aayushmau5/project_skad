@@ -66,4 +66,39 @@
   <div id="search-output" aria-busy="false">
     <.search_results :if={@searched?} results={@results} languages={@languages} />
   </div>
+
+  <section
+    :if={@recent_entries != []}
+    id="recent-words"
+    class="entry-section"
+    aria-labelledby="recent-words-heading"
+    hidden={@searched?}
+  >
+    <div class="workspace-heading">
+      <h2 id="recent-words-heading">{gettext("Recently added")}</h2>
+      <.link id="recent-words-archive" href={archive_path(nil, 1, @locale)}>
+        {gettext("View all words")}
+      </.link>
+    </div>
+    <ol id="recent-word-list" class="recent-word-list">
+      <li
+        :for={entry <- @recent_entries}
+        id={"recent-word-#{entry.public_id}"}
+        class="result-card recent-word-card"
+      >
+        <h3>
+          <.link
+            href={~p"/entries/#{entry.public_id}"}
+            class="result-link"
+            lang={entry.language.code || entry.language.slug}
+            dir={to_string(entry.language.direction)}
+          >{primary_form_text(entry)}</.link>
+        </h3>
+        <p class="result-meta">{language_label(entry.language)}</p>
+        <p :if={first_definition(entry)} lang={definition_language(entry, @languages)} dir="auto">
+          {first_definition(entry)}
+        </p>
+      </li>
+    </ol>
+  </section>
 </Layouts.app>

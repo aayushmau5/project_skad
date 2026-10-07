@@ -4,6 +4,91 @@ defmodule SkadWeb.PageControllerTest do
   alias Skad.Archive
   alias Skad.Media
 
+  test "home shows the three newest public words with languages, meanings, and links", %{
+    conn: conn
+  } do
+    {:ok, english} = create_language("english", "en", "English")
+
+    {:ok, arabic} =
+      Archive.create_language(%{slug: "arabic", code: "ar", name: "Arabic", direction: :rtl})
+
+    entries =
+      for {language, word} <- [
+            {english, "Zebra"},
+            {english, "River"},
+            {arabic, "ماء"},
+            {english, "Apple"},
+            {english, "Archived word"},
+            {english, "Archived concept"}
+          ] do
+        {:ok, entry} =
+          Archive.publish_new_meaning(language, %{
+            concept: %{editorial_label: word},
+            entry: %{definitions: [%{language: "english", text: "Meaning of #{word}"}]},
+            forms: [%{text: word, kind: :spelling, is_primary: true}]
+          })
+
+        entry
+      end
+
+    [oldest, river, water, apple, archived_word, archived_concept] = entries
+
+    archived_word
+    |> Ecto.Changeset.change(archived_at: DateTime.utc_now(:second))
+    |> Skad.Repo.update!()
+
+    archived_concept.concept
+    |> Ecto.Changeset.change(archived_at: DateTime.utc_now(:second))
+    |> Skad.Repo.update!()
+
+    document = conn |> get(~p"/?ui_language=en") |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.attribute(LazyHTML.query(document, "#recent-word-list > li"), "id") ==
+             Enum.map([apple, water, river], &"recent-word-#{&1.public_id}")
+
+    assert Enum.empty?(LazyHTML.query_by_id(document, "recent-word-#{oldest.public_id}"))
+
+    assert LazyHTML.text(LazyHTML.query_by_id(document, "recent-words-heading")) ==
+             "Recently added"
+
+    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "recent-words-archive"), "href") ==
+             [~p"/archive?page=1&ui_language=en"]
+
+    water_card = LazyHTML.query_by_id(document, "recent-word-#{water.public_id}")
+
+    assert LazyHTML.attribute(LazyHTML.query(water_card, "a"), "href") == [
+             ~p"/entries/#{water.public_id}"
+           ]
+
+    assert LazyHTML.attribute(LazyHTML.query(water_card, "a"), "lang") == ["ar"]
+    assert LazyHTML.attribute(LazyHTML.query(water_card, "a"), "dir") == ["rtl"]
+    assert LazyHTML.text(LazyHTML.query(water_card, ".result-meta")) == "Arabic"
+
+    assert String.trim(LazyHTML.text(LazyHTML.query(water_card, "p[lang=en]"))) ==
+             "Meaning of ماء"
+
+    hindi = conn |> recycle() |> get(~p"/") |> html_response(200) |> LazyHTML.from_document()
+    assert LazyHTML.text(LazyHTML.query_by_id(hindi, "recent-words-heading")) == "हाल में जोड़े गए शब्द"
+
+    assert String.trim(LazyHTML.text(LazyHTML.query_by_id(hindi, "recent-words-archive"))) ==
+             "सभी शब्द देखें"
+
+    searching =
+      conn
+      |> recycle()
+      |> get(~p"/?q=river&ui_language=en")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert Enum.count(LazyHTML.query(searching, "#recent-words[hidden]")) == 1
+  end
+
+  test "home keeps search available when no words have been published", %{conn: conn} do
+    document = conn |> get(~p"/") |> html_response(200) |> LazyHTML.from_document()
+    assert Enum.count(LazyHTML.query_by_id(document, "archive-search")) == 1
+    assert Enum.empty?(LazyHTML.query_by_id(document, "recent-words"))
+  end
+
   test "searches the archive and opens an entry from the real database", %{conn: conn} do
     {:ok, english} = create_language("english", "en", "English")
     {:ok, hindi} = create_language("hindi", "hi", "Hindi")

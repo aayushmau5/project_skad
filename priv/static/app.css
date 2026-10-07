@@ -7,16 +7,18 @@
   --skad-line: #D8D3CA;
   --skad-wash: #EDEAF2;
   --skad-action: #4B4F96;
+  --skad-action-hover: #373B78;
   --skad-action-soft: #E6E6F4;
+  --skad-action-soft-hover: #DADBF0;
   --skad-trust: #3F6C5C;
   --skad-attention: #C26D3A;
   --skad-error: #A33131;
+  --skad-error-hover: #862727;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; color: var(--skad-ink); background: var(--skad-paper); font: 1rem/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow-wrap: anywhere; }
 a { color: var(--skad-action); text-underline-offset: .2em; }
-a:hover { text-decoration-thickness: 2px; }
 :focus-visible { outline: 3px solid var(--skad-action); outline-offset: 3px; }
 h1, h2, h3, p { margin: 0 0 .75rem; }
 h1 { font: 500 1.625rem/1.4 Georgia, "Noto Serif Devanagari", serif; }
@@ -100,6 +102,10 @@ audio, img { max-width: 100%; }
 .result-card { padding: .75rem 0; border-top: 1px solid var(--skad-line); }
 .result-link { display: inline-block; font: 500 1.25rem/1.5 Georgia, "Noto Serif Devanagari", serif; padding-block: .25rem; }
 .result-card p, .entry-section p { margin: .25rem 0; }
+.recent-word-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: .75rem; list-style: none; padding: 0; margin: .5rem 0 0; }
+.recent-word-card { min-width: 0; padding: .75rem; border: 1px solid var(--skad-line); background: var(--skad-surface); }
+.recent-word-card h3 { margin: 0; }
+.recent-word-card .result-link { min-height: 2.75rem; }
 .result-meta { color: var(--skad-muted); }
 .result-match span { color: var(--skad-ink); }
 .archive-filters { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: 1rem; }
@@ -134,6 +140,22 @@ dd { margin: 0 0 .75rem; }
 .moderator-main .result-card { padding-block: .5rem; }
 .moderator-main dd { margin-bottom: .25rem; }
 .moderator-main .result-link { font: 500 1rem/1.5 system-ui, sans-serif; }
+.site-header a[href]:focus-visible, .workspace-heading a[href]:focus-visible { text-decoration: underline; text-decoration-thickness: 2px; }
+input[type=file]:not(:disabled)::file-selector-button { cursor: pointer; }
+@media (hover: hover) and (pointer: fine) {
+  a[href]:not([aria-disabled=true]):hover { color: var(--skad-action-hover); text-decoration-thickness: 2px; }
+  .site-header a[href]:hover, .workspace-heading a[href]:hover { text-decoration: underline; }
+  .search-button:not(:disabled):not([aria-disabled=true]):hover, .auth-button:not(:disabled):not([aria-disabled=true]):hover { background: var(--skad-action-hover); border-color: var(--skad-action-hover); color: var(--skad-surface); }
+  .secondary-button:not(:disabled):not([aria-disabled=true]):hover { background: var(--skad-action-soft); color: var(--skad-action-hover); }
+  .danger-button:not(:disabled):not([aria-disabled=true]):hover { background: var(--skad-error-hover); border-color: var(--skad-error-hover); }
+  .link-button:not(:disabled):not([aria-disabled=true]):hover, summary:hover { color: var(--skad-action-hover); text-decoration: underline; text-decoration-thickness: 2px; }
+  .language-chip:hover input:not(:disabled):not([aria-invalid=true]) + span, .archive-filters a:not([aria-disabled=true]):hover { background: var(--skad-action-soft); border-color: var(--skad-action); color: var(--skad-action-hover); }
+  .language-chip:hover input:checked:not(:disabled):not([aria-invalid=true]) + span, .archive-filters a[aria-current]:hover { background: var(--skad-action-soft-hover); }
+  .review-queue a[href]:hover { background: var(--skad-wash); }
+  .review-queue a[aria-current]:hover { background: var(--skad-action-soft-hover); }
+  .search-input:not(:disabled):not([readonly]):not([aria-invalid=true]):hover, .auth-input:not(:disabled):not([readonly]):not([aria-invalid=true]):hover, .input:not(:disabled):not([readonly]):not([aria-invalid=true]):hover, .select:not(:disabled):not([aria-invalid=true]):hover, .textarea:not(:disabled):not([readonly]):not([aria-invalid=true]):hover { border-color: var(--skad-action); }
+  input[type=file]:not(:disabled)::file-selector-button:hover { background: var(--skad-action-soft); border-color: var(--skad-action); color: var(--skad-action-hover); }
+}
 @media (min-width: 40rem) {
   .public-nav { order: 0; flex-basis: auto; margin-inline-end: auto; }
   .search-fields { grid-template-columns: minmax(0, 1fr) auto; }

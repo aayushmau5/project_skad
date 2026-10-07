@@ -28,6 +28,14 @@ defmodule Skad.Archive do
     |> Repo.aggregate(:count, :id)
   end
 
+  def list_recent_public_entries do
+    public_entries_query()
+    |> order_by([entry], desc: entry.id)
+    |> limit(3)
+    |> Repo.all()
+    |> Repo.preload([:language, :forms])
+  end
+
   def list_public_entries(language \\ nil, page \\ 1, search \\ "") do
     query =
       public_entries_query()

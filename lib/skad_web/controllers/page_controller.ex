@@ -34,6 +34,7 @@ defmodule SkadWeb.PageController do
       search_form: search_form,
       languages: languages,
       entry_count: Archive.count_public_entries(),
+      recent_entries: Archive.list_recent_public_entries(),
       results: results,
       searched?: query != ""
     )

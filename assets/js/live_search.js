@@ -5,6 +5,7 @@ export function initializeLiveSearch() {
   const queryInput = form.querySelector("#q")
   const output = document.querySelector("#search-output")
   const status = document.querySelector("#search-status")
+  const recentWords = document.querySelector("#recent-words")
   let timer
   let controller
   let version = 0
@@ -41,6 +42,7 @@ export function initializeLiveSearch() {
     output.setAttribute("aria-busy", "false")
 
     const query = queryInput.value.trim()
+    if (recentWords) recentWords.hidden = query !== ""
     const language = form.querySelector('input[name="language"]:checked')?.value || ""
     syncAddress(query, language)
     if (!query) return

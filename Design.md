@@ -198,6 +198,8 @@ Use a compact 4 px rhythm: `4, 8, 12, 16, 24, 32`.
 
 ## Interaction patterns
 
+Shared controls have clear, restrained hover feedback on devices with a fine pointer. Navigation and plain text links underline; filled buttons darken within their existing action or error colour; secondary buttons, language choices, archive filters, and review queue rows gain a subtle background. Selected controls keep their selected styling, and disabled controls do not respond to hover. Keyboard focus retains a visible outline, with an underline on header navigation. These states do not move or resize controls, and touch devices do not depend on hover.
+
 ### Header
 
 Public header:
@@ -221,6 +223,8 @@ Moderator header:
 - Do not require a language selection before searching. Language is a refinement, not a gate.
 - Results show the form first, then language or variety, a short meaning, and why the result matched when useful.
 - Empty results should invite a spelling retry, voice search, or contribution—not end with “No results.”
+
+The home page shows up to three recently added words below search, newest first by publication order. Each compact, square card contains the word linked to its page, its language, and a short meaning, with a link to the full archive beside the section heading. These bounded cards are an explicit home-page exception to the general preference for plain rows. They stack on narrow screens, exclude archived words and concepts, and hide while searching so results keep the reader's attention.
 
 ### Entry page
 

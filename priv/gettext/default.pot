@@ -2038,3 +2038,13 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Choose a language"
 msgstr ""
+
+#: lib/skad_web/controllers/page_html/home.html.heex:78
+#, elixir-autogen, elixir-format
+msgid "Recently added"
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/home.html.heex:80
+#, elixir-autogen, elixir-format
+msgid "View all words"
+msgstr ""

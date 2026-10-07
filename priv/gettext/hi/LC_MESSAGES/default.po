@@ -2022,3 +2022,11 @@ msgstr "इस वाक्य का दूसरी भाषा में अ
 #, elixir-autogen, elixir-format
 msgid "Choose a language"
 msgstr "भाषा चुनें"
+
+#, elixir-autogen, elixir-format
+msgid "Recently added"
+msgstr "हाल में जोड़े गए शब्द"
+
+#, elixir-autogen, elixir-format
+msgid "View all words"
+msgstr "सभी शब्द देखें"
