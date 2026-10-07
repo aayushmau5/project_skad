@@ -266,6 +266,8 @@ For all contributions:
 
 The login and workspace landing pages share the archive's serif page heading, warm surfaces, and thin section rules. Header, content, and footer align to the wide moderator shell. The login form fills its content area; landing-page actions use compact text rows with a short explanation of each task.
 
+The **Review submissions** action shows a small count pill for all submissions still needing a decision, matching the review queue across all pages. Pending, in-review, and clarification-needed submissions count; completed decisions do not. An empty queue shows zero.
+
 Concept management starts with search and an alphabetical, paginated list. Creation has its own page, which shows existing concepts while the moderator enters a name and links to their records. Forms use “Concept name” and “Notes,” with a short explanation that only moderators can see the notes. Exact name matches, ignoring case and surrounding whitespace, prevent accidental creation; related matches remain suggestions. Checking and creation also work without JavaScript and preserve the name and notes after errors.
 
 Words are a first-class section in the moderator navigation and workspace landing page. Its searchable, alphabetical, paginated list supports language filters and opens each word's editor directly. Word editing returns to the word list; its related concept is a secondary link. Concepts group words by meaning and can also link to their editors.

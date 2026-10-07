@@ -15,9 +15,24 @@
     <ul id="moderator-workspace-actions" class="result-list">
       <li class="result-card">
         <h2>
-          <.link id="moderator-submissions-link" href={~p"/moderator/submissions"}>{gettext(
-            "Review submissions"
-          )}</.link>
+          <.link
+            id="moderator-submissions-link"
+            href={~p"/moderator/submissions"}
+            aria-label={
+              gettext("Review submissions: %{count} awaiting a decision",
+                count: @pending_review_count
+              )
+            }
+          >
+            {gettext("Review submissions")}
+            <span
+              id="moderator-pending-review-count"
+              class="moderator-review-count"
+              aria-hidden="true"
+            >
+              {@pending_review_count}
+            </span>
+          </.link>
         </h2>
         <p class="help-text">
           {gettext("Review incoming suggestions before they are published.")}

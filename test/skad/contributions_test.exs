@@ -162,6 +162,7 @@ defmodule Skad.ContributionsTest do
     page = Contributions.page_submissions_for_review(scope)
     assert Enum.map(page.submissions, & &1.id) == [first.id]
     assert page.next_cursor == nil
+    assert Contributions.count_submissions_for_review(scope) == 1
 
     assert Contributions.get_submission_for_review(scope, first.public_id).payload ==
              first.payload
@@ -174,6 +175,8 @@ defmodule Skad.ContributionsTest do
            }
 
     assert Contributions.get_submission_for_review(inactive_scope, first.public_id) == nil
+    assert Contributions.count_submissions_for_review(inactive_scope) == 0
+    assert Contributions.count_submissions_for_review(nil) == 0
     assert Contributions.get_submission_for_review(scope, "not-a-uuid") == nil
   end
 
@@ -186,6 +189,7 @@ defmodule Skad.ContributionsTest do
       end
 
     first_page = Contributions.page_submissions_for_review(scope)
+    assert Contributions.count_submissions_for_review(scope) == 21
 
     assert Enum.map(first_page.submissions, & &1.id) ==
              Enum.map(Enum.take(submissions, 20), & &1.id)

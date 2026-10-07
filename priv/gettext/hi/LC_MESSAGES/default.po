@@ -787,6 +787,10 @@ msgstr "सुझाव की समीक्षा करें"
 msgid "Review submissions"
 msgstr "सुझावों की समीक्षा करें"
 
+#, elixir-autogen, elixir-format
+msgid "Review submissions: %{count} awaiting a decision"
+msgstr "सुझावों की समीक्षा करें: %{count} पर निर्णय बाकी है"
+
 #: lib/skad_web/controllers/moderator_submission_html.ex:55
 #, elixir-autogen, elixir-format
 msgid "Reviewed proposal"

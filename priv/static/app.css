@@ -128,6 +128,7 @@ dd { margin: 0 0 .75rem; }
 .moderator-main h1 { font-family: system-ui, sans-serif; font-size: 1.5rem; }
 #moderator-login h1, #moderator-home h1 { font: 500 1.625rem/1.4 Georgia, "Noto Serif Devanagari", serif; }
 #moderator-login .auth-button { width: 100%; }
+.moderator-review-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.75rem; margin-inline-start: .375rem; padding: 0 .5rem; border-radius: 999px; background: var(--skad-action-soft); color: var(--skad-action); font-size: .875rem; line-height: 1.5; vertical-align: middle; font-variant-numeric: tabular-nums; }
 .moderator-main .auth-form { gap: .75rem; }
 .moderator-main .entry-section { margin-top: 1rem; padding-top: .75rem; }
 .moderator-main .result-card { padding-block: .5rem; }

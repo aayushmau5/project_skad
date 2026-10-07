@@ -789,6 +789,10 @@ msgstr ""
 msgid "Review submissions"
 msgstr ""
 
+#, elixir-autogen, elixir-format
+msgid "Review submissions: %{count} awaiting a decision"
+msgstr ""
+
 #: lib/skad_web/controllers/moderator_submission_html.ex:55
 #, elixir-autogen, elixir-format
 msgid "Reviewed proposal"

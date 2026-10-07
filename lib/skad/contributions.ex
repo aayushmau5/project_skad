@@ -18,6 +18,7 @@ defmodule Skad.Contributions do
   @submitted_media_key "media_public_ids"
   @entry_change_kinds [:correction, :addition, :example, :audio, :image]
   @review_page_size 20
+  @review_queue_statuses [:pending, :reviewing, :clarification_needed]
 
   @review_transitions %{
     pending: [:reviewing, :clarification_needed, :rejected],
@@ -175,6 +176,14 @@ defmodule Skad.Contributions do
     end
   end
 
+  def count_submissions_for_review(%Scope{moderator_account: %ModeratorAccount{active: true}}) do
+    Submission
+    |> where([submission], submission.status in ^@review_queue_statuses)
+    |> Repo.aggregate(:count)
+  end
+
+  def count_submissions_for_review(_scope), do: 0
+
   def page_submissions_for_review(scope, after_public_id \\ nil)
 
   def page_submissions_for_review(
@@ -185,7 +194,7 @@ defmodule Skad.Contributions do
       Submission
       |> where(
         [submission],
-        submission.status in [:pending, :reviewing, :clarification_needed]
+        submission.status in ^@review_queue_statuses
       )
       |> after_review_cursor(after_public_id)
       |> order_by([submission], asc: submission.received_at, asc: submission.id)
