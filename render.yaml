@@ -4,7 +4,7 @@ services:
     runtime: elixir
     plan: free
     region: singapore
-    branch: codex/review-deployment
+    branch: render-dev-deployment
     buildCommand: ./bin/build-review
     startCommand: _build/prod/rel/skad/bin/review
     healthCheckPath: /ready

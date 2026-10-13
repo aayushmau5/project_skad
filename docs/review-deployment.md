@@ -17,7 +17,7 @@ the release creates `reviewer@skad.example` using the password configured in
 
 ## Render configuration
 
-Deploy the `codex/review-deployment` branch from the existing GitHub repository.
+Deploy the `render-dev-deployment` branch from the existing GitHub repository.
 Use the Free plan in Singapore, build with `./bin/build-review`, and start with
 `_build/prod/rel/skad/bin/review`. Use `/ready` as the health check.
 
