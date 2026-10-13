@@ -6,6 +6,8 @@ Browse and search across languages, share what you know without an account, and 
 
 Built with Elixir, Phoenix, SQLite, and S3-compatible media storage.
 
+Made in collaboration with [Zed.tells](https://zedtells.com)
+
 ## Run locally
 
 Install the Erlang and Elixir versions in [`.tool-versions`](.tool-versions), then run:
