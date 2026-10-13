@@ -250,6 +250,7 @@ defmodule SkadWeb.ModeratorArchiveController do
     render(conn, :entry,
       page_title: gettext("Edit word"),
       entry: entry,
+      languages: Archive.list_active_languages(),
       form: Phoenix.Component.to_form(changeset, as: :entry),
       meaning_count: length(Changeset.get_field(changeset, :definitions)),
       examples: Archive.list_entry_examples(entry),

@@ -92,6 +92,68 @@
           ]
         }
       ]
+    },
+    {
+      "concept": {
+        "editorial_label": "RIVER BANK"
+      },
+      "entries": [
+        {
+          "key": "river-bank-en",
+          "language": "english",
+          "entry": {
+            "part_of_speech": "noun",
+            "definitions": [
+              {
+                "language": "english",
+                "text": "The land alongside a river."
+              },
+              {
+                "language": "hindi",
+                "text": "नदी का किनारा।"
+              }
+            ]
+          },
+          "forms": [
+            {
+              "text": "Bank",
+              "kind": "spelling",
+              "is_primary": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": {
+        "editorial_label": "FINANCIAL BANK"
+      },
+      "entries": [
+        {
+          "key": "financial-bank-en",
+          "language": "english",
+          "entry": {
+            "part_of_speech": "noun",
+            "definitions": [
+              {
+                "language": "english",
+                "text": "An institution that holds and lends money."
+              },
+              {
+                "language": "hindi",
+                "text": "पैसे जमा करने और उधार लेने की संस्था।"
+              }
+            ]
+          },
+          "forms": [
+            {
+              "text": "Bank",
+              "kind": "spelling",
+              "is_primary": true
+            }
+          ]
+        }
+      ]
     }
   ],
   "examples": [
@@ -111,6 +173,46 @@
           "entry": "water-en",
           "start_offset": 6,
           "end_offset": 11,
+          "role": "focus"
+        }
+      ]
+    },
+    {
+      "language": "english",
+      "example": {
+        "text": "The bank of the river was covered with grass.",
+        "translations": [
+          {
+            "language": "hindi",
+            "text": "नदी के किनारे पर घास थी।"
+          }
+        ]
+      },
+      "links": [
+        {
+          "entry": "river-bank-en",
+          "start_offset": 4,
+          "end_offset": 8,
+          "role": "focus"
+        }
+      ]
+    },
+    {
+      "language": "english",
+      "example": {
+        "text": "The bank keeps our savings safe.",
+        "translations": [
+          {
+            "language": "hindi",
+            "text": "बैंक हमारी बचत सुरक्षित रखता है।"
+          }
+        ]
+      },
+      "links": [
+        {
+          "entry": "financial-bank-en",
+          "start_offset": 4,
+          "end_offset": 8,
           "role": "focus"
         }
       ]

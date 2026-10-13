@@ -69,6 +69,10 @@ defmodule SkadWeb.ModeratorArchiveControllerTest do
       |> document(200)
 
     assert Enum.count(LazyHTML.query_by_id(preview, "meaning-2")) == 1
+
+    assert Enum.count(LazyHTML.query(preview, "#entry_definitions_2_language option[value='']")) ==
+             1
+
     assert value(preview, "entry_primary_form") == "Fresh water"
     assert Repo.get!(Entry, water.id).usage_note == "For drinking."
 
@@ -216,7 +220,12 @@ defmodule SkadWeb.ModeratorArchiveControllerTest do
       |> document(200)
 
     assert Enum.count(LazyHTML.query_by_id(preview, "meaning-1")) == 0
-    assert value(preview, "entry_definitions_0_language") == "hindi"
+
+    assert LazyHTML.attribute(
+             LazyHTML.query(preview, "#entry_definitions_0_language option[selected]"),
+             "value"
+           ) == ["hindi"]
+
     assert LazyHTML.text(LazyHTML.query_by_id(preview, "entry_definitions_0_text")) == "पीने का पानी"
     assert value(preview, "entry_primary_form") == "Fresh water"
     assert LazyHTML.text(LazyHTML.query_by_id(preview, "entry_usage_note")) == "For guests."

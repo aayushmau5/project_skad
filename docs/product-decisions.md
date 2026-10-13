@@ -1,6 +1,6 @@
 # Project Skad product decisions
 
-- **Last consolidated:** 2026-10-01
+- **Last consolidated:** 2026-10-10
 - **Architecture:** [architecture.md](architecture.md)
 - **Data model:** [data-model.md](data-model.md)
 
@@ -28,6 +28,8 @@ Quizzes, games, profiles, and advanced community features wait until this loop w
 - **Status:** Accepted
 
 A concept connects equivalent entries across languages. One entry represents one language-specific meaning. Its primary spelling, alternatives, transliterations, historical forms, and search aliases are indexed entry_forms rows.
+
+Public pages group entries sharing a language and normalized primary spelling into one word display with numbered meanings. Each meaning keeps its entry ID, concept, context, examples, and media. Definition rows are descriptions/translations of one meaning, not additional senses. Public submissions carry one meaning and an independent explanation-language choice; adding another meaning reuses new-entry review.
 
 Languages are records rather than fixed database columns. The complete physical schema and its worked WATER example are in [data-model.md](data-model.md).
 

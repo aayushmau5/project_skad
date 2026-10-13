@@ -78,6 +78,33 @@ defmodule Skad.Media do
 
   def get_public_entry_audio(_entry), do: nil
 
+  def public_word_meanings(entries) do
+    entry_ids = Enum.map(entries, & &1.id)
+    concept_ids = Enum.map(entries, & &1.concept_id)
+
+    items =
+      Item
+      |> where(
+        [item],
+        item.visibility == :public and is_nil(item.archived_at) and
+          ((item.kind == :audio and item.entry_id in ^entry_ids) or
+             (item.kind == :image and item.concept_id in ^concept_ids))
+      )
+      |> order_by([item], desc: item.id)
+      |> Repo.all()
+
+    audio = items |> Enum.filter(&(&1.kind == :audio)) |> Map.new(&{&1.entry_id, &1})
+    images = items |> Enum.filter(&(&1.kind == :image)) |> Enum.group_by(& &1.concept_id)
+
+    Enum.map(entries, fn entry ->
+      %{
+        entry: entry,
+        audio: Map.get(audio, entry.id),
+        images: Map.get(images, entry.concept_id, [])
+      }
+    end)
+  end
+
   def get_public_item(public_id) do
     with {:ok, public_id} <- Ecto.UUID.cast(public_id) do
       Item

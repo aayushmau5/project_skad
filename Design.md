@@ -1,7 +1,7 @@
 # Project Skad design direction
 
 - **Status:** Canonical for interface and UX decisions
-- **Last consolidated:** 2026-10-07
+- **Last consolidated:** 2026-10-13
 - **Product decisions:** [docs/product-decisions.md](docs/product-decisions.md)
 
 This document defines how Project Skad should look, behave, and communicate. It is the source of truth for public, contribution, and moderator interfaces. It does not silently expand the v0 feature scope: `docs/product-decisions.md` and `docs/future.md` still decide whether a capability exists now or later. When an implementation conflicts with this document, either bring the implementation back into alignment or update this document deliberately with the new decision and its reason.
@@ -221,7 +221,7 @@ Moderator header:
 - Accept a word, likely spelling, transliteration, or meaning in one field.
 - Put voice search next to the text field when recording is available.
 - Do not require a language selection before searching. Language is a refinement, not a gate.
-- Results show the form first, then language or variety, a short meaning, and why the result matched when useful.
+- Results show the form first, then language or variety, short previews of its meanings, and why the result matched when useful. Public search, alphabetical browse, recent words, and word counts group active entries by language and normalized primary spelling before result limits or pagination. Alternate forms remain search matches rather than grouping keys.
 - Empty results should invite a spelling retry, voice search, or contribution—not end with “No results.”
 
 The home page shows up to three recently added words below search, newest first by publication order. Each compact, square card contains the word linked to its page, its language, and a short meaning, with a link to the full archive beside the section heading. These bounded cards are an explicit home-page exception to the general preference for plain rows. They stack on narrow screens, exclude archived words and concepts, and hide while searching so results keep the reader's attention.
@@ -231,7 +231,7 @@ The home page shows up to three recently added words below search, newest first 
 The entry page follows this reading order, agreed on 2026-10-07, so readers see the meaning before pronunciation and supporting record details after the word's context:
 
 1. word or expression, with language, variety, place, and part of speech when known;
-2. concise meaning;
+2. meanings, with compact numbered rows when there is more than one;
 3. listen action;
 4. examples and translations;
 5. usage;
@@ -239,6 +239,10 @@ The entry page follows this reading order, agreed on 2026-10-07, so readers see 
 7. other forms and spellings, followed by equivalents in other languages;
 8. about this record, including review/source information;
 9. contextual contribution actions.
+
+Each numbered meaning retains its own translated descriptions, examples, forms, equivalents, usage, pronunciation, and village/variety context. Identical spelling groups records for reading; it does not merge their concepts or imply a shared pronunciation. Entry UUIDs remain stable, and example/equivalent links include a meaning anchor.
+
+For words with multiple meanings, show descriptions and their example sentences together in a compact numbered list. Numbers link to their meaning anchors. Avoid a separate index that repeats the same descriptions. Show pronunciation, supporting context, record details, and contribution actions directly beneath each meaning, without a collapsed disclosure. The **Record this pronunciation** action belongs under **Listen to this word**, including when a recording already exists, and is not repeated under **Share what you know**. Words with one meaning keep the reading order above.
 
 Do not present every database field with equal weight. Missing information should become a specific invitation such as **Record this pronunciation** or **Add the form used in your village**.
 
@@ -258,6 +262,8 @@ For audio:
 - explain public use permission in one plain sentence;
 - never imply that one recording represents every speaker.
 
+The public **Add another meaning** action reuses the one-meaning suggestion form with the existing word and language prefilled. The explanation has its own language choice, independent of the word language and interface language. A source-entry reference gives moderators context; approval creates a separate entry and requires the existing source word to remain available.
+
 For all contributions:
 
 - preserve entered values after validation and recoverable send errors;
@@ -276,9 +282,9 @@ Concept management starts with search and an alphabetical, paginated list. Creat
 
 Words are a first-class section in the moderator navigation and workspace landing page. Its searchable, alphabetical, paginated list supports language filters and opens each word's editor directly. Word editing returns to the word list; its related concept is a secondary link. Concepts group words by meaning and can also link to their editors.
 
-Word pages allow editing spellings, all meanings, usage, cultural context, variety, and place. Related examples have a separate editor for the sentence, translations, and reviewed word links. A changed sentence requires another link check before saving; shared examples update everywhere. Recording and image details can be edited in place. Delete actions explain their reach and require a reason and confirmation. Published records are archived with moderator history, and search updates in the same transaction. Deleting a word returns to Words and keeps shared examples and the other words in its concept; a concept must be empty before deletion.
+Each moderator word record edits one meaning: its spellings, translated descriptions, usage, cultural context, variety, and place. **Add a translation** adds a description of this same meaning; **Add another meaning** opens a separate proposal and publication flow. Related examples have a separate editor for the sentence, translations, and reviewed word links. A changed sentence requires another link check before saving; shared examples update everywhere. Recording and image details can be edited in place. Delete actions explain their reach and require a reason and confirmation. Published records are archived with moderator history, and search updates in the same transaction. Deleting a word returns to Words and keeps shared examples and the other words in its concept; a concept must be empty before deletion.
 
-Meaning and translation rows use a compact **Remove** button. It removes the row from the current form while keeping other unsaved edits; **Save word** or **Save example** commits the change. The last meaning cannot be removed, because every word needs at least one meaning.
+Description and translation rows use a compact **Remove** button. It removes the row from the current form while keeping other unsaved edits; **Save word** or **Save example** commits the change. The last description cannot be removed, because every meaning needs at least one explanation. Approving a public correction preserves descriptions in the other languages.
 
 The example editor names the sentence's archive language separately from its translations. Translation languages use named choices for supported archive languages, English, and Hindi; new rows require an explicit choice. Interface language never supplies the content language. Existing language codes remain compatible and appear under their full language names.
 

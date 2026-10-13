@@ -15,13 +15,21 @@
         {language_name(@entry.language)} ·
         <.link id="word-concept-link" href={~p"/moderator/concepts/#{@entry.concept.public_id}"}>{@entry.concept.editorial_label}</.link>
       </p>
-      <.link id="view-public-word" href={~p"/entries/#{@entry.public_id}"}>{gettext(
+      <.link id="view-public-word" href={SkadWeb.PageHTML.meaning_path(@entry)}>{gettext(
         "View public word page"
       )}</.link>
     </header>
 
     <section id="edit-word" class="entry-section">
       <h2>{gettext("Edit word")}</h2>
+      <p class="help-text">
+        {gettext("This record describes one meaning. Add translations of that meaning below.")}
+      </p>
+      <p>
+        <.link id="moderator-add-new-meaning" href={~p"/entries/#{@entry.public_id}/meanings/new"}>{gettext(
+          "Add another meaning"
+        )}</.link>
+      </p>
       <.form
         for={@form}
         action={~p"/moderator/entries/#{@entry.public_id}"}
@@ -45,7 +53,10 @@
             <div id={"meaning-#{definition.index}"} class="localized-text-fields">
               <.input
                 field={definition[:language]}
-                label={gettext("Meaning language")}
+                label={gettext("Language of this explanation")}
+                type="select"
+                options={definition_language_options(@languages, definition[:language].value)}
+                prompt={gettext("Choose a language")}
                 class="auth-input"
               />
               <.input
@@ -60,7 +71,7 @@
                 name="remove_meaning"
                 id={"remove-meaning-#{definition.index}"}
                 value={definition.index}
-                aria-label={gettext("Remove meaning")}
+                aria-label={gettext("Remove translation")}
                 disabled={@meaning_count <= 1}
                 formnovalidate
                 class="secondary-button"
@@ -68,7 +79,7 @@
             </div>
           </.inputs_for>
           <p :if={@meaning_count <= 1} class="help-text">
-            {gettext("Keep at least one meaning.")}
+            {gettext("Keep at least one explanation of this meaning.")}
           </p>
           <button
             id="add-meaning"
@@ -77,7 +88,7 @@
             value="add_meaning"
             formnovalidate
             class="secondary-button"
-          >{gettext("Add another meaning")}</button>
+          >{gettext("Add a translation")}</button>
         </fieldset>
         <.input
           field={@form[:part_of_speech]}

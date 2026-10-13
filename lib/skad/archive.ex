@@ -10,11 +10,24 @@ defmodule Skad.Archive do
   alias Skad.Archive.ExampleMatcher
   alias Skad.Archive.Language
   alias Skad.Archive.Search
+  alias Skad.Archive.Words
   alias Skad.Repo
 
   @lookup_limit 20
   @concept_limit 20
   @archive_page_size 20
+
+  def count_public_words, do: Words.count()
+  def list_recent_public_words, do: Words.recent()
+  def list_public_words(language \\ nil, page \\ 1), do: Words.list(language, page)
+  def search_words(query, language \\ nil), do: Words.search(query, language)
+
+  def get_public_word(public_id) do
+    case get_public_entry(public_id) do
+      nil -> nil
+      entry -> Words.get(entry)
+    end
+  end
 
   def list_active_languages do
     Language
@@ -609,9 +622,10 @@ defmodule Skad.Archive do
     end
   end
 
-  defp preload_public_entry(nil), do: nil
+  @doc false
+  def preload_public_entry(nil), do: nil
 
-  defp preload_public_entry(entry) do
+  def preload_public_entry(entry) do
     forms_query = from form in EntryForm, order_by: [desc: form.is_primary, asc: form.id]
     entries_query = from entry in Entry, where: is_nil(entry.archived_at), order_by: entry.id
     examples_query = from example in Example, where: is_nil(example.archived_at)
@@ -952,14 +966,15 @@ defmodule Skad.Archive do
     end
   end
 
-  defp normalize_text(text) when is_binary(text) do
+  @doc false
+  def normalize_text(text) when is_binary(text) do
     text
     |> String.normalize(:nfc)
     |> String.trim()
     |> String.downcase()
   end
 
-  defp normalize_text(_text), do: nil
+  def normalize_text(_text), do: nil
 
   defp attr(attrs, key, default \\ nil) do
     case Map.fetch(attrs, key) do

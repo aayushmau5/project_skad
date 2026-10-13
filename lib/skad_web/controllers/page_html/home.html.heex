@@ -82,22 +82,20 @@
     </div>
     <ol id="recent-word-list" class="recent-word-list">
       <li
-        :for={entry <- @recent_entries}
-        id={"recent-word-#{entry.public_id}"}
+        :for={word <- @recent_entries}
+        id={"recent-word-#{word.entry.public_id}"}
         class="result-card recent-word-card"
       >
         <h3>
           <.link
-            href={~p"/entries/#{entry.public_id}"}
+            href={~p"/entries/#{word.entry.public_id}"}
             class="result-link"
-            lang={entry.language.code || entry.language.slug}
-            dir={to_string(entry.language.direction)}
-          >{primary_form_text(entry)}</.link>
+            lang={word.entry.language.code || word.entry.language.slug}
+            dir={to_string(word.entry.language.direction)}
+          >{primary_form_text(word.entry)}</.link>
         </h3>
-        <p class="result-meta">{language_label(entry.language)}</p>
-        <p :if={first_definition(entry)} lang={definition_language(entry, @languages)} dir="auto">
-          {first_definition(entry)}
-        </p>
+        <p class="result-meta">{language_label(word.entry.language)}</p>
+        <.word_preview word={word} languages={@languages} />
       </li>
     </ol>
   </section>

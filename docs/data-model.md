@@ -188,7 +188,7 @@ This is the main dictionary table. One row means:
 
 It deliberately combines the earlier ideas of lexeme, sense, and definition. Searchable written forms are child rows in entry_forms because they are a performance-critical access path.
 
-If the spelling “bank” has two unrelated meanings, it has two entry rows connected to two concepts. The interface may group those rows into one word page.
+If the spelling “bank” has two unrelated meanings, it has two entry rows connected to two concepts. The public interface groups those rows into one word page by language and normalized primary spelling. This is a derived reading view; it adds no word table or shared mutable record. Public search and browse apply limits to groups and load their active meanings together. Existing entry URLs identify the requested meaning, and generated links use stable `meaning-<public_id>` anchors.
 
 ### Draft columns
 
@@ -198,7 +198,7 @@ If the spelling “bank” has two unrelated meanings, it has two entry rows con
 | public_id | TEXT | Stable public/export identifier |
 | language_id | INTEGER | Required entry language |
 | concept_id | INTEGER | Required shared concept |
-| definitions | JSON | One or more definitions with their language |
+| definitions | JSON | Descriptions/translations of this one meaning, with their language |
 | part_of_speech | TEXT, nullable | Noun, verb, phrase, etc. |
 | variety_label | TEXT, nullable | Reviewed regional/community label when known |
 | place_label | TEXT, nullable | Broad publishable place label when useful |
@@ -380,6 +380,10 @@ Initial rules:
 - Unique public_id and client_submission_id.
 - Index (status, received_at).
 - Submission payloads and review history are private.
+
+New-entry payloads may include `definition_language` independently of `language_slug`, and `source_entry_public_id` when proposing another meaning of an existing word. The source is validated at submission and rechecked at approval. Older proposals without these fields keep their original interpretation; existing definitions are not automatically split or relabelled.
+
+Correction payloads also carry the explanation language. Older corrections without this field keep their implicit word-language interpretation during review and approval, and retries return the original receipt.
 
 Approval changes canonical tables and creates revisions in one SQLite
 transaction. The current upload-completion path prepares the public object with

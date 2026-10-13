@@ -11,90 +11,91 @@
 msgid ""
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:10
+#: lib/skad_web/controllers/contribution_html/new.html.heex:17
 #, elixir-autogen, elixir-format
 msgid "1. Choose what you know: a word or expression"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:22
+#: lib/skad_web/controllers/contribution_html/new.html.heex:34
 #, elixir-autogen, elixir-format
 msgid "2. Share it with context"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:160
+#: lib/skad_web/controllers/contribution_html/new.html.heex:200
 #, elixir-autogen, elixir-format
 msgid "3. Confirm and send"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:113
+#: lib/skad_web/components/layouts.ex:115
 #, elixir-autogen, elixir-format
 msgid "A living archive of Kinnaur’s languages"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:307
+#: lib/skad_web/controllers/moderator_submission_controller.ex:312
 #, elixir-autogen, elixir-format
 msgid "A note is required for this decision."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:59
+#: lib/skad_web/controllers/page_html/pronunciation.html.heex:28
 #, elixir-autogen, elixir-format
 msgid "A pronunciation has not been recorded yet."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:332
+#: lib/skad_web/controllers/moderator_submission_controller.ex:337
 #, elixir-autogen, elixir-format
 msgid "A submission can have at most five images."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:96
+#: lib/skad_web/controllers/page_html/meaning.html.heex:135
 #, elixir-autogen, elixir-format
 msgid "About this record"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:221
-#: lib/skad_web/controllers/contribution_html.ex:55
-#: lib/skad_web/controllers/page_html/entry.html.heex:178
+#: lib/skad_web/controllers/contribution_controller.ex:248
+#: lib/skad_web/controllers/contribution_html.ex:48
+#: lib/skad_web/controllers/page_html/meaning.html.heex:163
 #, elixir-autogen, elixir-format
 msgid "Add an example"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:223
-#: lib/skad_web/controllers/contribution_html.ex:57
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:65
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:181
+#: lib/skad_web/controllers/contribution_controller.ex:250
+#: lib/skad_web/controllers/contribution_html.ex:50
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:62
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:186
 #, elixir-autogen, elixir-format
 msgid "Add cultural images"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:188
+#: lib/skad_web/controllers/page_html/meaning.html.heex:169
 #, elixir-autogen, elixir-format
 msgid "Add images"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:220
-#: lib/skad_web/controllers/contribution_html.ex:54
+#: lib/skad_web/controllers/contribution_controller.ex:247
+#: lib/skad_web/controllers/contribution_html.ex:47
 #, elixir-autogen, elixir-format
 msgid "Add information"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:89
+#: lib/skad_web/controllers/contribution_html/new.html.heex:122
 #, elixir-autogen, elixir-format
 msgid "Add one pronunciation recording and up to five images. Both are optional."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:222
-#: lib/skad_web/controllers/contribution_html.ex:56
+#: lib/skad_web/controllers/contribution_controller.ex:249
+#: lib/skad_web/controllers/contribution_html.ex:49
 #, elixir-autogen, elixir-format
 msgid "Add pronunciation audio"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:173
+#: lib/skad_web/controllers/page_html/meaning.html.heex:157
 #, elixir-autogen, elixir-format
 msgid "Add the form used in your village"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:85
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:238
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:97
+#: lib/skad_web/controllers/moderator_archive_html.ex:24
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:254
 #, elixir-autogen, elixir-format
 msgid "Alias"
 msgstr ""
@@ -104,49 +105,52 @@ msgstr ""
 msgid "All languages"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:83
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:229
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:164
+#: lib/skad_web/controllers/moderator_submission_html.ex:90
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:245
 #, elixir-autogen, elixir-format
 msgid "Alternate form"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:76
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:88
 #, elixir-autogen, elixir-format
 msgid "Alternate form (optional)"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:82
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:94
 #, elixir-autogen, elixir-format
 msgid "Alternate form type"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:505
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:536
 #, elixir-autogen, elixir-format
 msgid "Approve and publish"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:341
+#: lib/skad_web/controllers/moderator_submission_controller.ex:346
 #, elixir-autogen, elixir-format
 msgid "Attached media must finish processing before approval."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:141
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:146
 #, elixir-autogen, elixir-format
 msgid "Attached media must finish processing before this submission can be approved."
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:150
-#: lib/skad_web/components/layouts.ex:165
+#: lib/skad_web/components/layouts.ex:152
+#: lib/skad_web/components/layouts.ex:167
 #, elixir-autogen, elixir-format
 msgid "Attempting to reconnect"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:10
 #: lib/skad_web/controllers/moderator_concept_html/show.html.heex:9
 #, elixir-autogen, elixir-format
 msgid "Back to concepts"
 msgstr ""
 
 #: lib/skad_web/controllers/contribution_html/entry_change.html.heex:9
+#: lib/skad_web/controllers/contribution_html/new.html.heex:14
 #, elixir-autogen, elixir-format
 msgid "Back to entry"
 msgstr ""
@@ -173,22 +177,22 @@ msgstr ""
 msgid "Choose a contribution to review"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:328
+#: lib/skad_web/controllers/moderator_submission_controller.ex:333
 #, elixir-autogen, elixir-format
 msgid "Choose a valid moderation decision."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:319
+#: lib/skad_web/controllers/moderator_submission_controller.ex:324
 #, elixir-autogen, elixir-format
 msgid "Choose an available concept or create a new one."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:334
+#: lib/skad_web/controllers/moderator_submission_controller.ex:339
 #, elixir-autogen, elixir-format
 msgid "Choose media of the expected type."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:325
+#: lib/skad_web/controllers/moderator_submission_controller.ex:330
 #, elixir-autogen, elixir-format
 msgid "Choose valid entries for the example links."
 msgstr ""
@@ -198,12 +202,12 @@ msgstr ""
 msgid "Compare the proposal with published content, check its context, then decide."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:384
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:415
 #, elixir-autogen, elixir-format
 msgid "Concept"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex:20
+#: lib/skad_web/controllers/moderator_concept_controller.ex:56
 #, elixir-autogen, elixir-format
 msgid "Concept created."
 msgstr ""
@@ -213,117 +217,122 @@ msgstr ""
 msgid "Concept cultural context"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex:49
+#: lib/skad_web/controllers/moderator_concept_controller.ex:85
 #, elixir-autogen, elixir-format
 msgid "Concept updated."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:10
+#: lib/skad_web/components/layouts.ex:67
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:11
 #, elixir-autogen, elixir-format
 msgid "Concepts"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:187
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:199
+#: lib/skad_web/controllers/contribution_html/new.html.heex:200
 #, elixir-autogen, elixir-format
 msgid "Confirm and send"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:541
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:572
 #, elixir-autogen, elixir-format
 msgid "Confirm rejection"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:305
+#: lib/skad_web/controllers/moderator_submission_controller.ex:310
 #, elixir-autogen, elixir-format
 msgid "Confirm rejection before continuing."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:68
+#: lib/skad_web/controllers/contribution_controller.ex:86
 #, elixir-autogen, elixir-format
 msgid "Contribution received"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:453
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:484
 #, elixir-autogen, elixir-format
 msgid "Create a new concept"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:43
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:64
+#: lib/skad_web/controllers/moderator_concept_controller.ex:177
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:13
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:13
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:59
 #, elixir-autogen, elixir-format
 msgid "Create concept"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:67
-#: lib/skad_web/controllers/contribution_html/new.html.heex:70
-#: lib/skad_web/controllers/moderator_submission_html.ex:78
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:51
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:301
-#: lib/skad_web/controllers/page_html/entry.html.heex:145
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:77
+#: lib/skad_web/controllers/contribution_html/new.html.heex:101
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:118
+#: lib/skad_web/controllers/moderator_submission_html.ex:85
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:56
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:332
+#: lib/skad_web/controllers/page_html/meaning.html.heex:77
 #, elixir-autogen, elixir-format
 msgid "Cultural context"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:157
+#: lib/skad_web/controllers/page_html/meaning.html.heex:97
 #, elixir-autogen, elixir-format
 msgid "Cultural context for %{word}"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:172
-#: lib/skad_web/controllers/contribution_html/new.html.heex:137
-#: lib/skad_web/controllers/moderator_submission_html.ex:127
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:184
+#: lib/skad_web/controllers/contribution_html/new.html.heex:170
+#: lib/skad_web/controllers/moderator_submission_html.ex:134
 #, elixir-autogen, elixir-format
 msgid "Cultural image"
 msgstr ""
 
 #: lib/skad_web/controllers/moderator_concept_html/show.html.heex:34
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:74
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:79
 #, elixir-autogen, elixir-format
 msgid "Cultural images"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:193
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:201
 #, elixir-autogen, elixir-format
 msgid "Current published entry"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:436
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:467
 #, elixir-autogen, elixir-format
 msgid "Decision"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:368
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:399
 #, elixir-autogen, elixir-format
 msgid "Do not link"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:140
+#: lib/skad_web/controllers/page_html.ex:174
 #, elixir-autogen, elixir-format
 msgid "Duration not recorded"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:141
+#: lib/skad_web/controllers/page_html.ex:175
 #, elixir-autogen, elixir-format
 msgid "Duration: %{seconds} seconds"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:75
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:72
 #, elixir-autogen, elixir-format
 msgid "Edit concept"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:213
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:229
 #, elixir-autogen, elixir-format
 msgid "Edit proposal"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:53
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:86
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:36
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:83
 #, elixir-autogen, elixir-format
 msgid "Concept name"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_session_html/new.html.heex:15
+#: lib/skad_web/controllers/moderator_session_html/new.html.heex:25
 #, elixir-autogen, elixir-format
 msgid "Email"
 msgstr ""
@@ -333,38 +342,39 @@ msgstr ""
 msgid "Entries"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:92
-#: lib/skad_web/controllers/moderator_submission_html.ex:125
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:53
+#: lib/skad_web/controllers/moderator_submission_html.ex:99
+#: lib/skad_web/controllers/moderator_submission_html.ex:132
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:58
 #, elixir-autogen, elixir-format
 msgid "Example"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:326
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:357
 #, elixir-autogen, elixir-format
 msgid "Example links"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:105
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:247
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:255
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:309
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:117
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:263
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:271
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:340
 #, elixir-autogen, elixir-format
 msgid "Example sentence"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:94
-#: lib/skad_web/controllers/contribution_html/new.html.heex:154
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:106
+#: lib/skad_web/controllers/contribution_html/new.html.heex:193
 #, elixir-autogen, elixir-format
 msgid "Example sentence (optional)"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:78
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:127
+#: lib/skad_web/controllers/page_html/meaning.html.heex:33
 #, elixir-autogen, elixir-format
 msgid "Examples"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:452
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:483
 #, elixir-autogen, elixir-format
 msgid "Existing concept"
 msgstr ""
@@ -374,13 +384,14 @@ msgstr ""
 msgid "Find a word, a spelling, or a meaning in Kinnaur’s languages."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:397
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:428
 #, elixir-autogen, elixir-format
 msgid "Find an existing concept by concept or entry"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:87
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:235
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:171
+#: lib/skad_web/controllers/moderator_submission_html.ex:94
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:251
 #, elixir-autogen, elixir-format
 msgid "Form type"
 msgstr ""
@@ -390,33 +401,29 @@ msgstr ""
 msgid "Help keep these languages alive"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:88
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:241
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:100
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:257
 #, elixir-autogen, elixir-format
 msgid "Historical"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:138
+#: lib/skad_web/controllers/moderator_archive_html.ex:23
+#: lib/skad_web/controllers/page_html.ex:172
 #, elixir-autogen, elixir-format
 msgid "Historical form"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:532
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:563
 #, elixir-autogen, elixir-format
 msgid "I confirm this contribution should not be published."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:41
+#: lib/skad_web/controllers/contribution_html.ex:34
 #, elixir-autogen, elixir-format
 msgid "I have permission to share this media publicly after review."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex:107
-#, elixir-autogen, elixir-format
-msgid "Image removed from the concept."
-msgstr ""
-
-#: lib/skad_web/components/layouts.ex:67
+#: lib/skad_web/components/layouts.ex:69
 #, elixir-autogen, elixir-format
 msgid "Interface language"
 msgstr ""
@@ -426,8 +433,8 @@ msgstr ""
 msgid "Invalid email or password."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:281
-#: lib/skad_web/controllers/moderator_submission_controller.ex:327
+#: lib/skad_web/controllers/moderator_submission_controller.ex:286
+#: lib/skad_web/controllers/moderator_submission_controller.ex:332
 #, elixir-autogen, elixir-format
 msgid "Keep the example to 100 words or fewer."
 msgstr ""
@@ -442,71 +449,68 @@ msgstr ""
 msgid "Kind"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:25
+#: lib/skad_web/controllers/page_html.ex:31
 #, elixir-autogen, elixir-format
 msgid "Know this word? Share it for review"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:25
+#: lib/skad_web/controllers/contribution_html/new.html.heex:39
 #: lib/skad_web/controllers/moderator_submission_html.ex:61
 #: lib/skad_web/controllers/moderator_submission_html/show.html.heex:43
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:265
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:281
 #, elixir-autogen, elixir-format
 msgid "Language"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:34
+#: lib/skad_web/controllers/page_html/pronunciation.html.heex:2
 #, elixir-autogen, elixir-format
 msgid "Listen to this word"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:102
+#: lib/skad_web/controllers/page_html/meaning.html.heex:141
 #, elixir-autogen, elixir-format
 msgid "Local forms and pronunciations may vary. Share the form used in your village."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:27
-#, elixir-autogen, elixir-format
-msgid "Local language variety (optional)"
-msgstr ""
-
-#: lib/skad_web/controllers/page_html.ex:136
+#: lib/skad_web/controllers/page_html.ex:170
 #, elixir-autogen, elixir-format
 msgid "Local or alternative form"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_session_html/new.html.heex:28
+#: lib/skad_web/controllers/moderator_session_html/new.html.heex:38
 #, elixir-autogen, elixir-format
 msgid "Log in"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:89
+#: lib/skad_web/components/layouts.ex:91
 #, elixir-autogen, elixir-format
 msgid "Log out"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex:125
-#: lib/skad_web/controllers/moderator_html/home.html.heex:19
+#: lib/skad_web/controllers/moderator_concept_controller.ex:16
+#: lib/skad_web/controllers/moderator_html/home.html.heex:53
 #, elixir-autogen, elixir-format
 msgid "Manage concepts"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:114
+#: lib/skad_web/controllers/page_html.ex:148
 #, elixir-autogen, elixir-format
 msgid "Matched form:"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:42
-#: lib/skad_web/controllers/contribution_html/new.html.heex:38
-#: lib/skad_web/controllers/moderator_submission_html.ex:63
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:45
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:280
-#: lib/skad_web/controllers/page_html/entry.html.heex:66
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:50
+#: lib/skad_web/controllers/contribution_html/new.html.heex:66
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:48
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:64
+#: lib/skad_web/controllers/moderator_submission_html.ex:70
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:50
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:311
+#: lib/skad_web/controllers/page_html/entry.html.heex:35
 #, elixir-autogen, elixir-format
 msgid "Meaning"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:233
+#: lib/skad_web/controllers/contribution_controller.ex:260
 #, elixir-autogen, elixir-format
 msgid "Media is not accepted for this contribution type."
 msgstr ""
@@ -521,32 +525,32 @@ msgstr ""
 msgid "Moderator"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:115
+#: lib/skad_web/components/layouts.ex:117
 #: lib/skad_web/controllers/moderator_session_controller.ex:9
 #: lib/skad_web/controllers/moderator_session_controller.ex:37
-#: lib/skad_web/controllers/moderator_session_html/new.html.heex:9
+#: lib/skad_web/controllers/moderator_session_html/new.html.heex:10
 #, elixir-autogen, elixir-format
 msgid "Moderator log in"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:61
+#: lib/skad_web/components/layouts.ex:62
 #, elixir-autogen, elixir-format
 msgid "Moderator navigation"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:474
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:505
 #, elixir-autogen, elixir-format
 msgid "Moderator note"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_controller.ex:4
-#: lib/skad_web/controllers/moderator_html/home.html.heex:9
+#: lib/skad_web/controllers/moderator_controller.ex:6
+#: lib/skad_web/controllers/moderator_html/home.html.heex:10
 #, elixir-autogen, elixir-format
 msgid "Moderator workspace"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:69
-#: lib/skad_web/controllers/moderator_submission_html.ex:120
+#: lib/skad_web/controllers/contribution_html.ex:62
+#: lib/skad_web/controllers/moderator_submission_html.ex:127
 #, elixir-autogen, elixir-format
 msgid "More information needed"
 msgstr ""
@@ -556,12 +560,12 @@ msgstr ""
 msgid "Narrow by language (optional)"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:460
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:491
 #, elixir-autogen, elixir-format
 msgid "New concept label (used only when creating)"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:466
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:497
 #, elixir-autogen, elixir-format
 msgid "New concept private note (used only when creating)"
 msgstr ""
@@ -571,7 +575,7 @@ msgstr ""
 msgid "Next submissions"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:414
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:445
 #, elixir-autogen, elixir-format
 msgid "No decisions yet."
 msgstr ""
@@ -591,7 +595,7 @@ msgstr ""
 msgid "No images attached."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:79
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:84
 #, elixir-autogen, elixir-format
 msgid "No media attached."
 msgstr ""
@@ -601,7 +605,7 @@ msgstr ""
 msgid "No submissions need review."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:68
+#: lib/skad_web/controllers/contribution_html.ex:61
 #, elixir-autogen, elixir-format
 msgid "Not published"
 msgstr ""
@@ -616,51 +620,54 @@ msgstr ""
 msgid "Original contributor proposal"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:106
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:150
+#: lib/skad_web/controllers/page_html/meaning.html.heex:105
 #, elixir-autogen, elixir-format
 msgid "Other forms and spellings"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:117
+#: lib/skad_web/controllers/page_html/meaning.html.heex:120
 #, elixir-autogen, elixir-format
 msgid "Other languages"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:50
-#: lib/skad_web/controllers/contribution_html/new.html.heex:53
-#: lib/skad_web/controllers/moderator_submission_html.ex:69
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:47
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:288
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:58
+#: lib/skad_web/controllers/contribution_html/new.html.heex:82
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:95
+#: lib/skad_web/controllers/moderator_submission_html.ex:76
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:52
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:319
 #, elixir-autogen, elixir-format
 msgid "Part of speech"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_session_html/new.html.heex:23
+#: lib/skad_web/controllers/moderator_session_html/new.html.heex:33
 #, elixir-autogen, elixir-format
 msgid "Password"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:60
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:93
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:54
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:90
 #, elixir-autogen, elixir-format
 msgid "Notes"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:86
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:75
+#: lib/skad_web/controllers/contribution_html/new.html.heex:119
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:80
 #, elixir-autogen, elixir-format
 msgid "Pronunciation and cultural images"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:171
-#: lib/skad_web/controllers/contribution_html/new.html.heex:136
-#: lib/skad_web/controllers/moderator_submission_html.ex:126
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:73
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:183
+#: lib/skad_web/controllers/contribution_html/new.html.heex:169
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:198
+#: lib/skad_web/controllers/moderator_submission_html.ex:133
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:78
 #, elixir-autogen, elixir-format
 msgid "Pronunciation audio"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:41
+#: lib/skad_web/controllers/page_html/pronunciation.html.heex:9
 #, elixir-autogen, elixir-format
 msgid "Pronunciation of %{word}"
 msgstr ""
@@ -675,90 +682,89 @@ msgstr ""
 msgid "Proposal changes saved."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:99
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:111
 #, elixir-autogen, elixir-format
 msgid "Provide an alternate form, an example sentence, or both."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:120
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:125
 #, elixir-autogen, elixir-format
 msgid "Public-use permission is not recorded. Verify it before publication."
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:65
-#: lib/skad_web/controllers/contribution_html.ex:67
+#: lib/skad_web/controllers/contribution_html.ex:60
 #, elixir-autogen, elixir-format
 msgid "Published"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:97
+#: lib/skad_web/controllers/page_html/meaning.html.heex:136
 #, elixir-autogen, elixir-format
 msgid "Published in the community archive"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:523
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:554
 #, elixir-autogen, elixir-format
 msgid "Reason for rejection"
 msgstr ""
 
 #: lib/skad_web/controllers/contribution_html/show.html.heex:18
-#: lib/skad_web/controllers/moderator_submission_html.ex:99
+#: lib/skad_web/controllers/moderator_submission_html.ex:106
 #, elixir-autogen, elixir-format
 msgid "Receipt"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:97
+#: lib/skad_web/controllers/moderator_submission_html.ex:104
 #, elixir-autogen, elixir-format
 msgid "Received"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:134
-#: lib/skad_web/controllers/contribution_html/new.html.heex:101
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:173
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:146
+#: lib/skad_web/controllers/contribution_html/new.html.heex:134
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:178
 #, elixir-autogen, elixir-format
 msgid "Record pronunciation"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:172
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:177
 #, elixir-autogen, elixir-format
 msgid "Record replacement"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:60
-#: lib/skad_web/controllers/page_html/entry.html.heex:183
+#: lib/skad_web/controllers/page_html/pronunciation.html.heex:34
 #, elixir-autogen, elixir-format
 msgid "Record this pronunciation"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:45
+#: lib/skad_web/controllers/contribution_html.ex:38
 #, elixir-autogen, elixir-format
 msgid "Recording and uploads need JavaScript. You can still send a word or text suggestion."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:509
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:540
 #, elixir-autogen, elixir-format
 msgid "Reject this contribution"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:179
-#: lib/skad_web/controllers/contribution_html/new.html.heex:144
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:56
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:131
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:191
+#: lib/skad_web/controllers/contribution_html/new.html.heex:177
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:78
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:83
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:136
 #, elixir-autogen, elixir-format
 msgid "Remove"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:157
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:162
 #, elixir-autogen, elixir-format
 msgid "Replace pronunciation audio"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:329
+#: lib/skad_web/controllers/moderator_submission_controller.ex:334
 #, elixir-autogen, elixir-format
 msgid "Replace the existing audio instead."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:22
+#: lib/skad_web/controllers/page_html.ex:28
 #, elixir-autogen, elixir-format
 msgid "Results"
 msgstr ""
@@ -768,27 +774,28 @@ msgstr ""
 msgid "Return to the archive"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:412
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:443
 #, elixir-autogen, elixir-format
 msgid "Review history"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:64
+#: lib/skad_web/components/layouts.ex:65
 #: lib/skad_web/controllers/moderator_submission_html.ex:16
 #, elixir-autogen, elixir-format
 msgid "Review queue"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:234
+#: lib/skad_web/controllers/moderator_submission_controller.ex:238
 #, elixir-autogen, elixir-format
 msgid "Review submission"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_html/home.html.heex:14
+#: lib/skad_web/controllers/moderator_html/home.html.heex:27
 #, elixir-autogen, elixir-format
 msgid "Review submissions"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_html/home.html.heex:22
 #, elixir-autogen, elixir-format
 msgid "Review submissions: %{count} awaiting a decision"
 msgstr ""
@@ -798,40 +805,41 @@ msgstr ""
 msgid "Reviewed proposal"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:314
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:345
 #, elixir-autogen, elixir-format
 msgid "Save changes"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:97
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:95
 #, elixir-autogen, elixir-format
 msgid "Save concept"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:25
-#: lib/skad_web/controllers/page_controller.ex:20
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:38
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:32
+#: lib/skad_web/controllers/page_controller.ex:33
 #: lib/skad_web/controllers/page_html/home.html.heex:58
 #, elixir-autogen, elixir-format
 msgid "Search"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:401
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:432
 #, elixir-autogen, elixir-format
 msgid "Search concepts"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:22
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:29
 #, elixir-autogen, elixir-format
 msgid "Search concepts or entries"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:405
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:436
 #, elixir-autogen, elixir-format
 msgid "Select a result during approval, or leave the selection blank to create a new concept."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:200
-#: lib/skad_web/controllers/contribution_html/new.html.heex:172
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:212
+#: lib/skad_web/controllers/contribution_html/new.html.heex:213
 #, elixir-autogen, elixir-format
 msgid "Send for review"
 msgstr ""
@@ -842,16 +850,17 @@ msgid "Share a word you know. You don’t need an account."
 msgstr ""
 
 #: lib/skad_web/controllers/contribution_html/entry_change.html.heex:29
+#: lib/skad_web/controllers/contribution_html/new.html.heex:33
 #, elixir-autogen, elixir-format
 msgid "Share it with context"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:165
+#: lib/skad_web/controllers/page_html/meaning.html.heex:145
 #, elixir-autogen, elixir-format
 msgid "Share what you know"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_html/home.html.heex:11
+#: lib/skad_web/controllers/moderator_html/home.html.heex:12
 #, elixir-autogen, elixir-format
 msgid "Signed in as"
 msgstr ""
@@ -861,24 +870,25 @@ msgstr ""
 msgid "Skip to content"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:157
+#: lib/skad_web/components/layouts.ex:159
 #, elixir-autogen, elixir-format
 msgid "Something went wrong!"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:34
+#: lib/skad_web/controllers/contribution_html.ex:27
 #, elixir-autogen, elixir-format
 msgid "Speaker or photographer credit (optional, public)"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:86
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:239
-#: lib/skad_web/controllers/page_html.ex:135
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:98
+#: lib/skad_web/controllers/moderator_archive_html.ex:21
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:255
+#: lib/skad_web/controllers/page_html.ex:169
 #, elixir-autogen, elixir-format
 msgid "Spelling"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:487
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:518
 #, elixir-autogen, elixir-format
 msgid "Start review"
 msgstr ""
@@ -898,7 +908,7 @@ msgstr ""
 msgid "Submission approved and published."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:301
+#: lib/skad_web/controllers/moderator_submission_controller.ex:306
 #, elixir-autogen, elixir-format
 msgid "Submission marked as reviewing."
 msgstr ""
@@ -908,30 +918,30 @@ msgstr ""
 msgid "Submission queue"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:302
+#: lib/skad_web/controllers/moderator_submission_controller.ex:307
 #, elixir-autogen, elixir-format
 msgid "Submission rejected."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:106
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:111
 #, elixir-autogen, elixir-format
 msgid "Submitted cultural context"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:94
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:99
 #, elixir-autogen, elixir-format
 msgid "Submitted pronunciation"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:219
-#: lib/skad_web/controllers/contribution_html.ex:53
-#: lib/skad_web/controllers/page_html/entry.html.heex:168
+#: lib/skad_web/controllers/contribution_controller.ex:246
+#: lib/skad_web/controllers/contribution_html.ex:46
+#: lib/skad_web/controllers/page_html/meaning.html.heex:151
 #, elixir-autogen, elixir-format
 msgid "Suggest a correction"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:119
-#: lib/skad_web/controllers/contribution_html/new.html.heex:9
+#: lib/skad_web/controllers/contribution_controller.ex:144
+#: lib/skad_web/controllers/page_html/archive.html.heex:32
 #: lib/skad_web/controllers/page_html/home.html.heex:17
 #, elixir-autogen, elixir-format
 msgid "Suggest a word"
@@ -942,95 +952,91 @@ msgstr ""
 msgid "Suggestion received"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_html/home.html.heex:24
+#: lib/skad_web/controllers/moderator_html/home.html.heex:61
 #, elixir-autogen, elixir-format
 msgid "System dashboard"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:338
+#: lib/skad_web/controllers/moderator_submission_controller.ex:343
 #, elixir-autogen, elixir-format
 msgid "That content is already published on this entry."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:195
+#: lib/skad_web/controllers/contribution_controller.ex:222
 #, elixir-autogen, elixir-format
 msgid "That contribution is already part of this entry."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex:115
-#, elixir-autogen, elixir-format
-msgid "The concept image could not be removed."
-msgstr ""
-
-#: lib/skad_web/controllers/moderator_submission_controller.ex:322
+#: lib/skad_web/controllers/moderator_submission_controller.ex:327
 #, elixir-autogen, elixir-format
 msgid "The example must contain the proposed word."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:344
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:375
 #, elixir-autogen, elixir-format
 msgid "The example must contain the proposed word. Edit the sentence before approving."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:75
+#: lib/skad_web/controllers/page_html/meaning.html.heex:20
 #, elixir-autogen, elixir-format
 msgid "The meaning has not been recorded yet."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:343
+#: lib/skad_web/controllers/moderator_submission_controller.ex:348
 #, elixir-autogen, elixir-format
 msgid "The moderation decision could not be saved."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:310
+#: lib/skad_web/controllers/moderator_submission_controller.ex:315
 #, elixir-autogen, elixir-format
 msgid "The submission status changed. Reload and try again."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:315
+#: lib/skad_web/controllers/moderator_submission_controller.ex:320
 #, elixir-autogen, elixir-format
 msgid "The target entry is no longer available."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:335
+#: lib/skad_web/controllers/moderator_submission_controller.ex:340
 #, elixir-autogen, elixir-format
 msgid "The uploaded media could not be attached."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:47
+#: lib/skad_web/controllers/contribution_controller.ex:65
 #, elixir-autogen, elixir-format
 msgid "The uploaded media could not be attached. Please upload it again."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:56
+#: lib/skad_web/controllers/page_html/pronunciation.html.heex:24
 #, elixir-autogen, elixir-format
 msgid "This recording is unavailable. Try again when your connection returns."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:54
+#: lib/skad_web/controllers/page_html/pronunciation.html.heex:22
 #, elixir-autogen, elixir-format
 msgid "This recording reflects one speaker’s pronunciation."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:35
-#: lib/skad_web/controllers/contribution_controller.ex:183
+#: lib/skad_web/controllers/contribution_controller.ex:53
+#: lib/skad_web/controllers/contribution_controller.ex:210
 #, elixir-autogen, elixir-format
 msgid "This submission identifier was already used for different content."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:313
+#: lib/skad_web/controllers/moderator_submission_controller.ex:318
 #, elixir-autogen, elixir-format
 msgid "This submission payload cannot be approved."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:316
+#: lib/skad_web/controllers/moderator_submission_controller.ex:321
 #, elixir-autogen, elixir-format
 msgid "This submission's language is not active."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:87
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:240
-#: lib/skad_web/controllers/page_html.ex:137
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:99
+#: lib/skad_web/controllers/moderator_archive_html.ex:22
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:256
+#: lib/skad_web/controllers/page_html.ex:171
 #, elixir-autogen, elixir-format
 msgid "Transliteration"
 msgstr ""
@@ -1040,12 +1046,12 @@ msgstr ""
 msgid "Try a word or meaning"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:66
+#: lib/skad_web/controllers/contribution_html.ex:59
 #, elixir-autogen, elixir-format
 msgid "Under review"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:90
+#: lib/skad_web/controllers/page_html.ex:124
 #, elixir-autogen, elixir-format
 msgid "Untitled entry"
 msgstr ""
@@ -1055,49 +1061,50 @@ msgstr ""
 msgid "Untitled submission"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:232
+#: lib/skad_web/controllers/contribution_controller.ex:259
 #, elixir-autogen, elixir-format
 msgid "Upload between one and five ready images and try again."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:153
-#: lib/skad_web/controllers/contribution_html/new.html.heex:119
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:165
+#: lib/skad_web/controllers/contribution_html/new.html.heex:152
 #, elixir-autogen, elixir-format
 msgid "Upload cultural images"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:231
+#: lib/skad_web/controllers/contribution_controller.ex:258
 #, elixir-autogen, elixir-format
 msgid "Upload exactly one ready audio file and try again."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:122
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:134
 #, elixir-autogen, elixir-format
 msgid "Upload or record one pronunciation."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:141
-#: lib/skad_web/controllers/contribution_html/new.html.heex:108
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:158
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:153
+#: lib/skad_web/controllers/contribution_html/new.html.heex:141
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:163
 #, elixir-autogen, elixir-format
 msgid "Upload pronunciation audio"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:123
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:135
 #, elixir-autogen, elixir-format
 msgid "Upload up to five cultural images."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:132
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:111
+#: lib/skad_web/controllers/page_html/meaning.html.heex:64
 #, elixir-autogen, elixir-format
 msgid "Usage"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:59
-#: lib/skad_web/controllers/contribution_html/new.html.heex:62
-#: lib/skad_web/controllers/moderator_submission_html.ex:73
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:49
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:294
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:69
+#: lib/skad_web/controllers/contribution_html/new.html.heex:93
+#: lib/skad_web/controllers/moderator_submission_html.ex:80
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:54
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:325
 #, elixir-autogen, elixir-format
 msgid "Usage note"
 msgstr ""
@@ -1107,17 +1114,17 @@ msgstr ""
 msgid "Village or community (optional)"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:65
+#: lib/skad_web/controllers/contribution_html.ex:58
 #, elixir-autogen, elixir-format
 msgid "Waiting for review"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:142
+#: lib/skad_web/components/layouts.ex:144
 #, elixir-autogen, elixir-format
 msgid "We can't find the internet"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:24
+#: lib/skad_web/controllers/page_html.ex:30
 #, elixir-autogen, elixir-format
 msgid "We haven’t found this word yet. Try another spelling or search by meaning."
 msgstr ""
@@ -1132,16 +1139,17 @@ msgstr ""
 msgid "What word are you looking for?"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html.ex:70
-#: lib/skad_web/controllers/moderator_submission_html.ex:121
+#: lib/skad_web/controllers/contribution_html.ex:63
+#: lib/skad_web/controllers/moderator_submission_html.ex:128
 #, elixir-autogen, elixir-format
 msgid "Withdrawn"
 msgstr ""
 
 #: lib/skad_web/controllers/contribution_html/entry_change.html.heex:35
-#: lib/skad_web/controllers/contribution_html/new.html.heex:31
+#: lib/skad_web/controllers/contribution_html/new.html.heex:49
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:42
 #: lib/skad_web/controllers/moderator_submission_html/show.html.heex:41
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:273
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:289
 #, elixir-autogen, elixir-format
 msgid "Word or expression"
 msgstr ""
@@ -1151,12 +1159,12 @@ msgstr ""
 msgid "Word or meaning"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:63
+#: lib/skad_web/components/layouts.ex:64
 #, elixir-autogen, elixir-format
 msgid "Workspace"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:92
+#: lib/skad_web/components/layouts.ex:94
 #, elixir-autogen, elixir-format
 msgid "You are offline. Keep this page open to retain your entered information. Reconnect before sending or uploading."
 msgstr ""
@@ -1172,95 +1180,97 @@ msgid "Your suggestion has been saved. A moderator will review it before publica
 msgstr ""
 
 #: lib/skad_web/controllers/contribution_html/entry_change.html.heex:18
-#: lib/skad_web/controllers/contribution_html/new.html.heex:11
+#: lib/skad_web/controllers/contribution_html/new.html.heex:19
 #, elixir-autogen, elixir-format
 msgid "Your suggestion will be reviewed before it appears in the archive."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:189
-#: lib/skad_web/controllers/contribution_html/new.html.heex:162
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:201
+#: lib/skad_web/controllers/contribution_html/new.html.heex:203
 #, elixir-autogen, elixir-format
 msgid "Your suggestion will be reviewed before publication. Keep the receipt to check its status."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:359
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:390
 #, elixir-autogen, elixir-format
 msgid "proposed entry"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:360
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:391
 #, elixir-autogen, elixir-format
 msgid "target entry"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:77
+#: lib/skad_web/controllers/contribution_html/new.html.heex:110
 #, elixir-autogen, elixir-format
 msgid "Add a recording or images (optional)"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:124
+#: lib/skad_web/controllers/moderator_submission_html.ex:131
 #, elixir-autogen, elixir-format
 msgid "Addition"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:118
+#: lib/skad_web/controllers/moderator_submission_html.ex:125
 #, elixir-autogen, elixir-format
 msgid "Approved"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:135
+#: lib/skad_web/controllers/moderator_submission_html.ex:142
 #, elixir-autogen, elixir-format
 msgid "Audio replaced"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:425
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:456
 #, elixir-autogen, elixir-format
 msgid "Changed:"
 msgstr ""
 
-#: lib/skad_web/components/core_components.ex:317
+#: lib/skad_web/components/core_components.ex:344
 #, elixir-autogen, elixir-format
 msgid "Check the highlighted fields. Your entered information is still here."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:65
+#: lib/skad_web/controllers/contribution_controller.ex:83
 #, elixir-autogen, elixir-format
 msgid "Contribution receipt not found"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:123
+#: lib/skad_web/controllers/moderator_submission_html.ex:130
 #, elixir-autogen, elixir-format
 msgid "Correction"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/entry.html.heex:99
+#: lib/skad_web/controllers/page_html/meaning.html.heex:138
 #, elixir-autogen, elixir-format
 msgid "Detailed source and review information is not available here."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:133
+#: lib/skad_web/controllers/moderator_submission_html.ex:140
 #, elixir-autogen, elixir-format
 msgid "Edited"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:38
+#: lib/skad_web/controllers/moderator_concept_html.ex:44
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:62
 #, elixir-autogen, elixir-format
 msgid "Entries: %{count}"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_controller.ex:131
-#: lib/skad_web/controllers/contribution_controller.ex:158
-#: lib/skad_web/controllers/page_controller.ex:46
+#: lib/skad_web/controllers/contribution_controller.ex:18
+#: lib/skad_web/controllers/contribution_controller.ex:157
+#: lib/skad_web/controllers/contribution_controller.ex:185
+#: lib/skad_web/controllers/page_controller.ex:60
 #, elixir-autogen, elixir-format
 msgid "Entry not found"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:132
+#: lib/skad_web/controllers/moderator_submission_html.ex:139
 #, elixir-autogen, elixir-format
 msgid "Failed"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:367
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:398
 #, elixir-autogen, elixir-format
 msgid "Link “%{word}” to"
 msgstr ""
@@ -1270,58 +1280,53 @@ msgstr ""
 msgid "Logged out."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:134
+#: lib/skad_web/controllers/moderator_submission_html.ex:141
 #, elixir-autogen, elixir-format
 msgid "Media attached"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:136
+#: lib/skad_web/controllers/moderator_submission_html.ex:143
 #, elixir-autogen, elixir-format
 msgid "Media removed"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:122
+#: lib/skad_web/controllers/moderator_submission_html.ex:129
 #, elixir-autogen, elixir-format
 msgid "New word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:29
-#, elixir-autogen, elixir-format
-msgid "No concepts found. Try another word or create a concept below."
-msgstr ""
-
 #: lib/skad_web/controllers/error_html.ex:24
-#: lib/skad_web/controllers/page_controller.ex:63
+#: lib/skad_web/controllers/page_controller.ex:80
 #, elixir-autogen, elixir-format
 msgid "Page unavailable"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:116
+#: lib/skad_web/controllers/moderator_submission_html.ex:123
 #, elixir-autogen, elixir-format
 msgid "Pending"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:130
+#: lib/skad_web/controllers/moderator_submission_html.ex:137
 #, elixir-autogen, elixir-format
 msgid "Processing"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:131
+#: lib/skad_web/controllers/moderator_submission_html.ex:138
 #, elixir-autogen, elixir-format
 msgid "Ready"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:119
+#: lib/skad_web/controllers/moderator_submission_html.ex:126
 #, elixir-autogen, elixir-format
 msgid "Rejected"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:117
+#: lib/skad_web/controllers/moderator_submission_html.ex:124
 #, elixir-autogen, elixir-format
 msgid "Reviewing"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_controller.ex:282
+#: lib/skad_web/controllers/moderator_submission_controller.ex:287
 #, elixir-autogen, elixir-format
 msgid "The example could not be matched."
 msgstr ""
@@ -1338,17 +1343,17 @@ msgstr ""
 msgid "This page is unavailable"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:137
+#: lib/skad_web/controllers/moderator_submission_html.ex:144
 #, elixir-autogen, elixir-format
 msgid "Unknown"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:128
+#: lib/skad_web/controllers/moderator_submission_html.ex:135
 #, elixir-autogen, elixir-format
 msgid "Uploaded"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html.ex:129
+#: lib/skad_web/controllers/moderator_submission_html.ex:136
 #, elixir-autogen, elixir-format
 msgid "Validated"
 msgstr ""
@@ -1358,7 +1363,7 @@ msgstr ""
 msgid "You must log in to access this page."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:147
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:152
 #, elixir-autogen, elixir-format
 msgid "Replace or add media"
 msgstr ""
@@ -1373,7 +1378,7 @@ msgstr ""
 msgid "We couldn’t complete this request"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:55
+#: lib/skad_web/components/layouts.ex:56
 #, elixir-autogen, elixir-format
 msgid "Contribute"
 msgstr ""
@@ -1388,17 +1393,17 @@ msgstr ""
 msgid "Main navigation"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:116
+#: lib/skad_web/controllers/page_html.ex:150
 #, elixir-autogen, elixir-format
 msgid "Matched example:"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:117
+#: lib/skad_web/controllers/page_html.ex:151
 #, elixir-autogen, elixir-format
 msgid "Matched in context:"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:113
+#: lib/skad_web/controllers/page_html.ex:147
 #, elixir-autogen, elixir-format
 msgid "Matched transliteration:"
 msgstr ""
@@ -1408,7 +1413,7 @@ msgstr ""
 msgid "No matches yet."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html.ex:78
+#: lib/skad_web/controllers/page_html.ex:89
 #, elixir-autogen, elixir-format
 msgid "Related meaning"
 msgstr ""
@@ -1423,24 +1428,25 @@ msgstr ""
 msgid "Results updated."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:31
 #: lib/skad_web/controllers/page_html/home.html.heex:34
 #, elixir-autogen, elixir-format
 msgid "Searching…"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:114
+#: lib/skad_web/components/layouts.ex:116
 #, elixir-autogen, elixir-format
 msgid "Made by zed.tells"
 msgstr ""
 
-#: lib/skad_web/components/layouts.ex:105
+#: lib/skad_web/components/layouts.ex:107
 #, elixir-autogen, elixir-format
 msgid "%{count} entry"
 msgid_plural "%{count} entries"
 msgstr[0] ""
 msgstr[1] ""
 
-#: lib/skad_web/components/layouts.ex:104
+#: lib/skad_web/components/layouts.ex:106
 #, elixir-autogen, elixir-format
 msgid "Across all languages"
 msgstr ""
@@ -1450,49 +1456,50 @@ msgstr ""
 msgid "No languages are available right now. Please try again later."
 msgstr ""
 
-#: lib/skad_web/components/core_components.ex:306
+#: lib/skad_web/components/core_components.ex:333
 #, elixir-autogen, elixir-format
 msgid "Hamskad"
 msgstr ""
 
-#: lib/skad_web/components/core_components.ex:305
+#: lib/skad_web/components/core_components.ex:332
 #, elixir-autogen, elixir-format
 msgid "Hindi"
 msgstr ""
 
-#: lib/skad_web/components/core_components.ex:307
+#: lib/skad_web/components/core_components.ex:334
 #, elixir-autogen, elixir-format
 msgid "Navaskad"
 msgstr ""
 
-#: lib/skad_web/components/core_components.ex:308
+#: lib/skad_web/components/core_components.ex:335
 #, elixir-autogen, elixir-format
 msgid "Pahari Kinnauri"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/new.html.heex:49
+#: lib/skad_web/controllers/contribution_html/new.html.heex:78
 #, elixir-autogen, elixir-format
 msgid "Add usage or cultural context (optional)"
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:68
-#: lib/skad_web/controllers/contribution_html/new.html.heex:71
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:79
+#: lib/skad_web/controllers/contribution_html/new.html.heex:103
 #, elixir-autogen, elixir-format
 msgid "Any story, custom, or local tradition connected to this word."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:51
-#: lib/skad_web/controllers/contribution_html/new.html.heex:54
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:60
+#: lib/skad_web/controllers/contribution_html/new.html.heex:84
 #, elixir-autogen, elixir-format
 msgid "For example: noun (a person or thing), verb (an action), or adjective (a description)."
 msgstr ""
 
-#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:60
-#: lib/skad_web/controllers/contribution_html/new.html.heex:63
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:70
+#: lib/skad_web/controllers/contribution_html/new.html.heex:94
 #, elixir-autogen, elixir-format
 msgid "When, where, or how people use this word."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:72
 #: lib/skad_web/controllers/page_html/archive.html.heex:27
 #, elixir-autogen, elixir-format
 msgid "%{count} word"
@@ -1500,6 +1507,7 @@ msgid_plural "%{count} words"
 msgstr[0] ""
 msgstr[1] ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:59
 #: lib/skad_web/controllers/page_html/archive.html.heex:17
 #, elixir-autogen, elixir-format
 msgid "All"
@@ -1512,7 +1520,7 @@ msgstr ""
 msgid "Archive"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/archive.html.heex:67
+#: lib/skad_web/controllers/page_html/archive.html.heex:72
 #, elixir-autogen, elixir-format
 msgid "Archive pages"
 msgstr ""
@@ -1522,29 +1530,41 @@ msgstr ""
 msgid "Browse words and meanings in Kinnaur’s languages."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:52
 #: lib/skad_web/controllers/page_html/archive.html.heex:12
 #, elixir-autogen, elixir-format
 msgid "Filter by language"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/archive.html.heex:86
-#: lib/skad_web/controllers/page_html/archive.html.heex:88
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:139
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:140
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:92
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:98
+#: lib/skad_web/controllers/page_html/archive.html.heex:91
+#: lib/skad_web/controllers/page_html/archive.html.heex:93
 #, elixir-autogen, elixir-format
 msgid "Next"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:76
 #: lib/skad_web/controllers/page_html/archive.html.heex:31
 #, elixir-autogen, elixir-format
 msgid "No words have been published here yet."
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/archive.html.heex:79
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:130
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:82
+#: lib/skad_web/controllers/page_html/archive.html.heex:84
 #, elixir-autogen, elixir-format
 msgid "Page %{page} of %{pages}"
 msgstr ""
 
-#: lib/skad_web/controllers/page_html/archive.html.heex:74
-#: lib/skad_web/controllers/page_html/archive.html.heex:76
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:126
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:127
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:77
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:79
+#: lib/skad_web/controllers/page_html/archive.html.heex:79
+#: lib/skad_web/controllers/page_html/archive.html.heex:81
 #, elixir-autogen, elixir-format
 msgid "Previous"
 msgstr ""
@@ -1554,487 +1574,482 @@ msgstr ""
 msgid "Log in to review contributions and manage published words."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_html/home.html.heex:24
+#: lib/skad_web/controllers/moderator_html/home.html.heex:38
 #, elixir-autogen, elixir-format
 msgid "Review incoming suggestions before they are published."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_html/home.html.heex:32
-#, elixir-autogen, elixir-format
-msgid "Edit words, meanings, and links between languages."
-msgstr ""
-
-#: lib/skad_web/controllers/moderator_html/home.html.heex:40
+#: lib/skad_web/controllers/moderator_html/home.html.heex:65
 #, elixir-autogen, elixir-format
 msgid "Check application health and performance."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:39
 #, elixir-autogen, elixir-format
 msgid "Show all concepts"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:48
 #, elixir-autogen, elixir-format
 msgid "No concepts yet. Create one to start grouping words by meaning."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:49
 #, elixir-autogen, elixir-format
 msgid "No concepts found. Try another search."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:70
 #, elixir-autogen, elixir-format
 msgid "Concept pages"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:15
 #, elixir-autogen, elixir-format
 msgid "Use a name that describes the shared meaning. Existing concepts will appear as you type."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:29
 #, elixir-autogen, elixir-format
 msgid "Could not check existing concepts. Try again; what you entered is still here."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:50
 #, elixir-autogen, elixir-format
 msgid "Check existing concepts"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html.ex
+#: lib/skad_web/controllers/moderator_concept_html.ex:25
 #, elixir-autogen, elixir-format
 msgid "A concept with this name already exists. Open it below instead of creating it again."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html.ex
+#: lib/skad_web/controllers/moderator_concept_html.ex:29
 #, elixir-autogen, elixir-format
 msgid "These concepts may be related. Check them before creating a new one."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html.ex
+#: lib/skad_web/controllers/moderator_concept_html.ex:31
 #, elixir-autogen, elixir-format
 msgid "No matching concepts found."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/index.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/index.html.heex:44
 #, elixir-autogen, elixir-format
 msgid "%{count} concept"
 msgid_plural "%{count} concepts"
 msgstr[0] ""
 msgstr[1] ""
 
-#: lib/skad_web/controllers/moderator_concept_html/new.html.heex
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/new.html.heex:55
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:91
 #, elixir-autogen, elixir-format
 msgid "Only moderators can see these notes."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:92
 #, elixir-autogen, elixir-format
 msgid "Reason for deletion"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:100
 #, elixir-autogen, elixir-format
 msgid "I confirm this deletion."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:130
 #, elixir-autogen, elixir-format
 msgid "Edit media details"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:132
 #, elixir-autogen, elixir-format
 msgid "Attribution"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:133
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:100
 #, elixir-autogen, elixir-format
 msgid "Language variety"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:134
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:105
 #, elixir-autogen, elixir-format
 msgid "Village or place"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:135
 #, elixir-autogen, elixir-format
 msgid "Save media details"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:144
 #, elixir-autogen, elixir-format
 msgid "Delete media"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html.ex
+#: lib/skad_web/controllers/moderator_archive_html.ex:145
 #, elixir-autogen, elixir-format
 msgid "This removes the recording or image from public pages. Its history is kept."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:52
 #, elixir-autogen, elixir-format
 msgid "Word saved."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:68
 #, elixir-autogen, elixir-format
 msgid "Form saved."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:88
 #, elixir-autogen, elixir-format
 msgid "Form deleted."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:106
 #, elixir-autogen, elixir-format
 msgid "Word deleted."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:148
 #, elixir-autogen, elixir-format
 msgid "Review the word links, then save the example."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:156
 #, elixir-autogen, elixir-format
 msgid "Example saved."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:188
 #, elixir-autogen, elixir-format
 msgid "Example deleted."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:213
 #, elixir-autogen, elixir-format
 msgid "Media details saved."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:232
 #, elixir-autogen, elixir-format
 msgid "Media deleted."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:251
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:24
 #, elixir-autogen, elixir-format
 msgid "Edit word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:268
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:11
 #, elixir-autogen, elixir-format
 msgid "Edit example"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:301
 #, elixir-autogen, elixir-format
 msgid "Word not found"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:308
 #, elixir-autogen, elixir-format
 msgid "Example not found"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:328
 #, elixir-autogen, elixir-format
 msgid "Media not found"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:405
 #, elixir-autogen, elixir-format
 msgid "Keep the primary word form. Edit it above instead."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:408
 #, elixir-autogen, elixir-format
 msgid "This example already exists for one of the selected words."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:411
 #, elixir-autogen, elixir-format
 msgid "This example is too long to check. Shorten it and try again."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:414
 #, elixir-autogen, elixir-format
 msgid "This record is no longer available. Refresh the page."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_controller.ex
+#: lib/skad_web/controllers/moderator_archive_controller.ex:417
 #, elixir-autogen, elixir-format
 msgid "The change could not be saved. Check the word links and try again."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
-#, elixir-autogen, elixir-format
-msgid "Back to concept"
-msgstr ""
-
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:18
 #, elixir-autogen, elixir-format
 msgid "View public word page"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
-#, elixir-autogen, elixir-format
-msgid "Meaning language"
-msgstr ""
-
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
-#, elixir-autogen, elixir-format
-msgid "Remove this meaning when saving"
-msgstr ""
-
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/contribution_controller.ex:144
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:29
+#: lib/skad_web/controllers/page_html/entry.html.heex:51
 #, elixir-autogen, elixir-format
 msgid "Add another meaning"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:122
 #, elixir-autogen, elixir-format
 msgid "Save word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:128
 #, elixir-autogen, elixir-format
 msgid "No examples yet."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:144
 #, elixir-autogen, elixir-format
 msgid "Edit or delete example"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:151
 #, elixir-autogen, elixir-format
 msgid "No other forms yet."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:175
 #, elixir-autogen, elixir-format
 msgid "Save form"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:183
 #, elixir-autogen, elixir-format
 msgid "Delete form"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:185
 #, elixir-autogen, elixir-format
 msgid "This removes only this alternate form. The word and its meaning remain."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:193
 #, elixir-autogen, elixir-format
 msgid "Listen"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:212
 #, elixir-autogen, elixir-format
 msgid "Delete word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:214
 #, elixir-autogen, elixir-format
 msgid "This removes the word and its recording from public pages and search. Shared examples and other words in this concept remain. History is kept."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:9
 #, elixir-autogen, elixir-format
 msgid "Back to word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:13
 #, elixir-autogen, elixir-format
 msgid "An example may appear under several words. Saving changes updates it everywhere."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:44
 #, elixir-autogen, elixir-format
 msgid "Translations"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:62
 #, elixir-autogen, elixir-format
 msgid "Translation language"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:71
 #, elixir-autogen, elixir-format
 msgid "Translation"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
-#, elixir-autogen, elixir-format
-msgid "Remove this translation when saving"
-msgstr ""
-
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:93
 #, elixir-autogen, elixir-format
 msgid "Add translation"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:96
 #, elixir-autogen, elixir-format
 msgid "Word links"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:98
 #, elixir-autogen, elixir-format
 msgid "Check the sentence after editing, then confirm which words it illustrates. At least one main word is required."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:109
 #, elixir-autogen, elixir-format
 msgid "Check word links"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:117
 #, elixir-autogen, elixir-format
 msgid "No words could be linked. Include a recorded word, then check again."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:142
 #, elixir-autogen, elixir-format
 msgid "Word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:143
 #, elixir-autogen, elixir-format
 msgid "Ignore this word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:152
 #, elixir-autogen, elixir-format
 msgid "Use in this example"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:153
 #, elixir-autogen, elixir-format
 msgid "Main word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:153
 #, elixir-autogen, elixir-format
 msgid "Related word"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:163
 #, elixir-autogen, elixir-format
 msgid "Save example"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:170
 #, elixir-autogen, elixir-format
 msgid "Delete example"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_archive_html/example.html.heex
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:172
 #, elixir-autogen, elixir-format
 msgid "This removes the example from every word where it appears and from search. Its history is kept."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex
+#: lib/skad_web/controllers/moderator_concept_controller.ex:112
 #, elixir-autogen, elixir-format
 msgid "Concept deleted."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex
+#: lib/skad_web/controllers/moderator_concept_controller.ex:122
 #, elixir-autogen, elixir-format
 msgid "Delete this concept's words first. Other languages may still use them."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_controller.ex
+#: lib/skad_web/controllers/moderator_concept_controller.ex:128
 #, elixir-autogen, elixir-format
 msgid "The concept could not be deleted. Try again."
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:103
 #, elixir-autogen, elixir-format
 msgid "Delete concept"
 msgstr ""
 
-#: lib/skad_web/controllers/moderator_concept_html/show.html.heex
+#: lib/skad_web/controllers/moderator_concept_html/show.html.heex:105
 #, elixir-autogen, elixir-format
 msgid "Only an empty concept can be deleted. Its images are removed from public pages and its history is kept."
 msgstr ""
 
+#: lib/skad_web/components/layouts.ex:66
+#: lib/skad_web/controllers/moderator_archive_controller.ex:15
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:10
 #, elixir-autogen, elixir-format
 msgid "Words"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_html/home.html.heex:43
 #, elixir-autogen, elixir-format
 msgid "Manage words"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_html/home.html.heex:48
 #, elixir-autogen, elixir-format
 msgid "Find and edit words, meanings, examples, forms, and recordings."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_html/home.html.heex:57
 #, elixir-autogen, elixir-format
 msgid "Group words with the same meaning across languages."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:10
 #, elixir-autogen, elixir-format
 msgid "Back to words"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:12
 #, elixir-autogen, elixir-format
 msgid "Find a word to edit its meaning, examples, forms, and recording."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:35
 #, elixir-autogen, elixir-format
 msgid "Search words or meanings"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:45
 #, elixir-autogen, elixir-format
 msgid "Show all words"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:77
 #, elixir-autogen, elixir-format
 msgid "No words found. Try another search."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/index.html.heex:119
 #, elixir-autogen, elixir-format
 msgid "Word pages"
 msgstr ""
 
-#, elixir-autogen, elixir-format
-msgid "Remove meaning"
-msgstr ""
-
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:74
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:80
 #, elixir-autogen, elixir-format
 msgid "Remove translation"
 msgstr ""
 
-#, elixir-autogen, elixir-format
-msgid "Keep at least one meaning."
-msgstr ""
-
+#: lib/skad_web/components/core_components.ex:331
 #, elixir-autogen, elixir-format
 msgid "English"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:29
 #, elixir-autogen, elixir-format
 msgid "Example sentence (%{language})"
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:32
 #, elixir-autogen, elixir-format
 msgid "Write the sentence in %{language}. To add an example in another language, open a word in that language."
 msgstr ""
 
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:46
 #, elixir-autogen, elixir-format
 msgid "Translate this sentence into another language. Choose a language for each translation."
 msgstr ""
 
+#: lib/skad_web/controllers/contribution_html/new.html.heex:60
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:59
+#: lib/skad_web/controllers/moderator_archive_html/example.html.heex:63
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:298
 #, elixir-autogen, elixir-format
 msgid "Choose a language"
 msgstr ""
@@ -2047,4 +2062,44 @@ msgstr ""
 #: lib/skad_web/controllers/page_html/home.html.heex:80
 #, elixir-autogen, elixir-format
 msgid "View all words"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:91
+#, elixir-autogen, elixir-format
+msgid "Add a translation"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:200
+#, elixir-autogen, elixir-format
+msgid "Existing meanings of this word"
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:82
+#, elixir-autogen, elixir-format
+msgid "Keep at least one explanation of this meaning."
+msgstr ""
+
+#: lib/skad_web/controllers/contribution_html/entry_change.html.heex:42
+#: lib/skad_web/controllers/contribution_html/new.html.heex:57
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:56
+#: lib/skad_web/controllers/moderator_submission_html.ex:64
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:45
+#: lib/skad_web/controllers/moderator_submission_html/show.html.heex:296
+#, elixir-autogen, elixir-format
+msgid "Language of this explanation"
+msgstr ""
+
+#: lib/skad_web/controllers/page_html/entry.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "Meaning %{number}"
+msgstr ""
+
+#: lib/skad_web/controllers/contribution_html/new.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Share a different meaning of this word. Its existing meanings will stay as they are."
+msgstr ""
+
+#: lib/skad_web/controllers/moderator_archive_html/entry.html.heex:26
+#, elixir-autogen, elixir-format
+msgid "This record describes one meaning. Add translations of that meaning below."
 msgstr ""

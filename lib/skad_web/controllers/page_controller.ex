@@ -7,7 +7,7 @@ defmodule SkadWeb.PageController do
   def archive(conn, params) do
     languages = Archive.list_active_languages()
     language = Enum.find(languages, &(&1.slug == params["language"]))
-    archive = Archive.list_public_entries(language, params["page"])
+    archive = Archive.list_public_words(language, params["page"])
 
     render(conn, :archive,
       page_title: gettext("Archive"),
@@ -33,8 +33,8 @@ defmodule SkadWeb.PageController do
       page_title: gettext("Search"),
       search_form: search_form,
       languages: languages,
-      entry_count: Archive.count_public_entries(),
-      recent_entries: Archive.list_recent_public_entries(),
+      entry_count: Archive.count_public_words(),
+      recent_entries: Archive.list_recent_public_words(),
       results: results,
       searched?: query != ""
     )
@@ -55,17 +55,20 @@ defmodule SkadWeb.PageController do
   end
 
   def entry(conn, %{"public_id" => public_id}) do
-    case Archive.get_public_entry(public_id) do
+    case Archive.get_public_word(public_id) do
       nil ->
         not_found(conn, gettext("Entry not found"))
 
-      entry ->
+      word ->
+        entry = word.entry
+
+        meanings = Media.public_word_meanings(word.meanings)
+
         render(conn, :entry,
           page_title: SkadWeb.PageHTML.primary_form_text(entry),
           entry: entry,
           languages: Archive.list_active_languages(),
-          audio: Media.get_public_entry_audio(entry),
-          images: Media.list_public_concept_images(entry.concept)
+          meanings: meanings
         )
     end
   end
@@ -81,7 +84,7 @@ defmodule SkadWeb.PageController do
     languages = Archive.list_active_languages()
     query = params |> Map.get("q", "") |> String.trim()
     language = Enum.find(languages, &(&1.slug == params["language"]))
-    results = if query == "", do: [], else: Archive.search(query, language)
+    results = if query == "", do: [], else: Archive.search_words(query, language)
     {languages, language, query, results}
   end
 end

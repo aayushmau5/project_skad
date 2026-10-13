@@ -42,6 +42,11 @@
           <dd>{original_payload_value(@submission, "primary_form")}</dd>
           <dt>{gettext("Language")}</dt>
           <dd>{original_payload_value(@submission, "language_slug")}</dd>
+          <dt>{gettext("Language of this explanation")}</dt>
+          <dd>
+            {original_payload_value(@submission, "definition_language") ||
+              original_payload_value(@submission, "language_slug")}
+          </dd>
           <dt>{gettext("Meaning")}</dt>
           <dd>{original_payload_value(@submission, "definition")}</dd>
           <dt>{gettext("Part of speech")}</dt>
@@ -190,13 +195,24 @@
       </section>
 
       <section :if={@target_entry} id="submission-target" class="entry-section">
-        <h2>{gettext("Current published entry")}</h2>
+        <h2>
+          {if @submission.kind == :new_entry,
+            do: gettext("Existing meanings of this word"),
+            else: gettext("Current published entry")}
+        </h2>
         <p>
-          <.link href={~p"/entries/#{@target_entry.public_id}"}>
+          <.link href={SkadWeb.PageHTML.meaning_path(@target_entry)}>
             {SkadWeb.PageHTML.primary_form_text(@target_entry)}
           </.link>
         </p>
         <p>{SkadWeb.PageHTML.first_definition(@target_entry)}</p>
+        <ol :if={@submission.kind == :new_entry} id="submission-existing-meanings">
+          <li :for={meaning <- @existing_meanings} id={"existing-meaning-#{meaning.public_id}"}>
+            <.link href={SkadWeb.PageHTML.meaning_path(meaning)}>{SkadWeb.PageHTML.first_definition(
+              meaning
+            )}</.link>
+          </li>
+        </ol>
       </section>
 
       <.proposal :if={@submission.reviewed_payload} submission={@submission} />
@@ -272,6 +288,21 @@
                 type="text"
                 label={gettext("Word or expression")}
                 class="auth-input"
+                required
+              />
+              <.input
+                field={@edit_form[:definition_language]}
+                type="select"
+                label={gettext("Language of this explanation")}
+                value={@edit_form[:definition_language].value || @edit_form[:language_slug].value}
+                prompt={gettext("Choose a language")}
+                class="auth-input"
+                options={
+                  definition_language_options(
+                    @languages,
+                    @edit_form[:definition_language].value || @edit_form[:language_slug].value
+                  )
+                }
                 required
               />
               <.input

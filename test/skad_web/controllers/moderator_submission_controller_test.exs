@@ -126,6 +126,34 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     assert Repo.get!(Submission, List.last(submissions).id).status == :reviewing
   end
 
+  test "legacy proposals keep their explanation language selected when reviewed", %{conn: conn} do
+    {:ok, _english} =
+      Archive.create_language(%{slug: "english", code: "en", name: "English", direction: :ltr})
+
+    {:ok, hamskad} =
+      Archive.create_language(%{slug: "hamskad", name: "Hamskad", direction: :ltr})
+
+    {:ok, receipt} =
+      Contributions.submit_new_entry(%{
+        client_submission_id: Ecto.UUID.generate(),
+        language_slug: hamskad.slug,
+        primary_form: "Legacy word",
+        definition: "Legacy explanation"
+      })
+
+    document =
+      conn
+      |> log_in()
+      |> get(~p"/moderator/submissions/#{receipt.public_id}")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert LazyHTML.attribute(
+             LazyHTML.query(document, "#proposal_definition_language option[selected]"),
+             "value"
+           ) == [hamskad.slug]
+  end
+
   test "requires explicit rejection confirmation and keeps the reason on errors", %{conn: conn} do
     submission = create_submission()
     conn = log_in(conn)
@@ -378,7 +406,7 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
     assert Enum.count(
              LazyHTML.query(
                document,
-               "#entry-examples a[href='/entries/#{water.public_id}']"
+               "#entry-examples a[href='/entries/#{water.public_id}#meaning-#{water.public_id}']"
              )
            ) == 1
   end
@@ -473,7 +501,7 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       |> recycle()
       |> patch(path, %{"moderation" => %{"decision" => "approve", "note" => "Verified"}})
 
-    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+    assert redirected_to(conn) == SkadWeb.PageHTML.meaning_path(entry)
     corrected = Archive.get_public_entry(entry.public_id)
     assert hd(corrected.forms).text == "Water"
     assert hd(corrected.definitions).text == "A clear liquid."
@@ -507,7 +535,7 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       |> recycle()
       |> patch(path, %{"moderation" => %{"decision" => "approve"}})
 
-    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+    assert redirected_to(conn) == SkadWeb.PageHTML.meaning_path(entry)
 
     assert Enum.map(Archive.get_public_entry(entry.public_id).forms, & &1.text) == [
              "Water",
@@ -538,7 +566,7 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       |> recycle()
       |> patch(path, %{"moderation" => %{"decision" => "approve"}})
 
-    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+    assert redirected_to(conn) == SkadWeb.PageHTML.meaning_path(entry)
     updated = Archive.get_public_entry(entry.public_id)
     assert Enum.any?(updated.example_links, &(&1.example.text == "Drink water."))
   end
@@ -577,7 +605,7 @@ defmodule SkadWeb.ModeratorSubmissionControllerTest do
       |> recycle()
       |> patch(path, %{"moderation" => %{"decision" => "approve"}})
 
-    assert redirected_to(conn) == ~p"/entries/#{entry.public_id}"
+    assert redirected_to(conn) == SkadWeb.PageHTML.meaning_path(entry)
     assert Media.get_public_entry_audio(Archive.get_public_entry(entry.public_id)).id == audio.id
   end
 

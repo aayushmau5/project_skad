@@ -139,7 +139,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
       {:ok, %{entry: entry}} ->
         conn
         |> put_flash(:info, gettext("Submission approved and published."))
-        |> redirect(to: ~p"/entries/#{entry.public_id}")
+        |> redirect(to: SkadWeb.PageHTML.meaning_path(entry))
 
       {:error, reason} ->
         decision_error(conn, submission, params, reason)
@@ -211,9 +211,13 @@ defmodule SkadWeb.ModeratorSubmissionController do
 
     {example_suggestions, example_match_error} = example_suggestions(submission)
 
-    target_entry =
-      if submission.target_type == "entry",
-        do: Archive.get_public_entry(submission.target_public_id)
+    target_id =
+      if submission.kind == :new_entry,
+        do: Contributions.effective_payload(submission)["source_entry_public_id"],
+        else: submission.target_public_id
+
+    target_word = if target_id, do: Archive.get_public_word(target_id)
+    target_entry = if target_word, do: target_word.entry
 
     example_choices =
       case params["example_choices"] do
@@ -234,6 +238,7 @@ defmodule SkadWeb.ModeratorSubmissionController do
       page_title: gettext("Review submission"),
       submission: submission,
       target_entry: target_entry,
+      existing_meanings: if(target_word, do: target_word.meanings, else: []),
       form: Phoenix.Component.to_form(moderation_params, as: :moderation),
       edit_form: edit_changeset && Phoenix.Component.to_form(edit_changeset, as: :proposal),
       concept_search_form:

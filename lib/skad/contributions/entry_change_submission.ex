@@ -11,6 +11,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
     field :language_slug, :string
     field :primary_form, :string, redact: true
     field :definition, :string, redact: true
+    field :definition_language, :string
     field :part_of_speech, :string, redact: true
     field :usage_note, :string, redact: true
     field :cultural_note, :string, redact: true
@@ -26,6 +27,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
     |> normalize_text_fields()
     |> validate_required(required_fields(kind))
     |> validate_length(:language_slug, max: 100)
+    |> validate_length(:definition_language, max: 100)
     |> validate_length(:primary_form, max: 255)
     |> validate_length(:definition, max: 2_000)
     |> validate_length(:part_of_speech, max: 100)
@@ -45,6 +47,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
       language_slug: entry.language.slug,
       primary_form: primary_form && primary_form.text,
       definition: definition && definition.text,
+      definition_language: definition && definition.language,
       part_of_speech: entry.part_of_speech,
       usage_note: entry.usage_note,
       cultural_note: entry.cultural_note,
@@ -57,6 +60,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
       :language_slug,
       :primary_form,
       :definition,
+      :definition_language,
       :part_of_speech,
       :usage_note,
       :cultural_note
@@ -95,6 +99,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
       :language_slug,
       :primary_form,
       :definition,
+      :definition_language,
       :part_of_speech,
       :usage_note,
       :cultural_note
@@ -112,7 +117,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
     do: [:client_submission_id, :language_slug, :primary_form]
 
   defp required_fields(:correction),
-    do: [:client_submission_id, :language_slug, :primary_form, :definition]
+    do: [:client_submission_id, :language_slug, :primary_form, :definition, :definition_language]
 
   defp required_fields(:addition),
     do: [:client_submission_id, :language_slug, :primary_form]
@@ -140,6 +145,7 @@ defmodule Skad.Contributions.EntryChangeSubmission do
         :language_slug,
         :primary_form,
         :definition,
+        :definition_language,
         :part_of_speech,
         :usage_note,
         :cultural_note,

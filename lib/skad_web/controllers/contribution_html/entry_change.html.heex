@@ -6,7 +6,7 @@
   moderator={@moderator_workspace?}
 >
   <section id="entry-change-contribution" class="auth-panel">
-    <p><.link href={~p"/entries/#{@entry.public_id}"}>{gettext("Back to entry")}</.link></p>
+    <p><.link href={SkadWeb.PageHTML.meaning_path(@entry)}>{gettext("Back to entry")}</.link></p>
     <h1>{entry_change_title(@kind)}</h1>
     <p>
       <span
@@ -34,6 +34,14 @@
               type="text"
               label={gettext("Word or expression")}
               class="auth-input"
+              required
+            />
+            <.input
+              field={@form[:definition_language]}
+              type="select"
+              label={gettext("Language of this explanation")}
+              class="auth-input"
+              options={definition_language_options(@languages, @form[:definition_language].value)}
               required
             />
             <.input

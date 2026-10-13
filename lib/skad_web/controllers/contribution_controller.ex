@@ -12,6 +12,24 @@ defmodule SkadWeb.ContributionController do
     render_new(conn, changeset)
   end
 
+  def new_meaning(conn, %{"public_id" => public_id}) do
+    case Archive.get_public_entry(public_id) do
+      nil ->
+        SkadWeb.PageController.not_found(conn, gettext("Entry not found"))
+
+      entry ->
+        changeset =
+          Contributions.change_new_entry(%{
+            client_submission_id: Ecto.UUID.generate(),
+            source_entry_public_id: entry.public_id,
+            primary_form: SkadWeb.PageHTML.primary_form_text(entry),
+            language_slug: entry.language.slug
+          })
+
+        render_new(conn, changeset)
+    end
+  end
+
   def create(conn, %{"contribution" => params}) do
     media_public_ids = params |> Map.get("media_public_ids") |> List.wrap()
     proposal_params = Map.delete(params, "media_public_ids")
@@ -115,8 +133,16 @@ defmodule SkadWeb.ContributionController do
       |> Enum.map(&Media.get_item/1)
       |> Enum.reject(&is_nil/1)
 
+    source_entry =
+      case Ecto.Changeset.get_field(changeset, :source_entry_public_id) do
+        nil -> nil
+        public_id -> Archive.get_public_entry(public_id)
+      end
+
     render(conn, :new,
-      page_title: gettext("Suggest a word"),
+      page_title:
+        if(source_entry, do: gettext("Add another meaning"), else: gettext("Suggest a word")),
+      source_entry: source_entry,
       form: Phoenix.Component.to_form(changeset, as: :contribution),
       languages: Archive.list_active_languages(),
       media_items: media_items,
@@ -142,6 +168,7 @@ defmodule SkadWeb.ContributionController do
           entry: entry,
           kind: kind,
           form: Phoenix.Component.to_form(changeset, as: :contribution),
+          languages: Archive.list_active_languages(),
           media_items: media_items(media_public_ids),
           media_context_form:
             Phoenix.Component.to_form(conn.params["media_context"] || %{}, as: :media_context)

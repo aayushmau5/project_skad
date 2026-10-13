@@ -25,31 +25,9 @@ defmodule SkadWeb.ModeratorArchiveHTML do
     ]
   end
 
-  def translation_language_options(languages, selected) do
-    languages =
-      Enum.uniq_by(
-        languages ++
-          [
-            %{slug: "english", code: "en", name: "English"},
-            %{slug: "hindi", code: "hi", name: "Hindi"}
-          ],
-        & &1.slug
-      )
-
-    options =
-      Enum.map(languages, fn language ->
-        value =
-          if selected not in [nil, ""] && selected == language.code,
-            do: selected,
-            else: language.slug
-
-        {language_name(language), value}
-      end)
-
-    if selected in [nil, ""] || Enum.any?(options, &(elem(&1, 1) == selected)),
-      do: options,
-      else: options ++ [{selected, selected}]
-  end
+  defdelegate translation_language_options(languages, selected),
+    to: SkadWeb.CoreComponents,
+    as: :definition_language_options
 
   def word_form(form, errors) do
     id = "word-form-#{form.id}"

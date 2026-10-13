@@ -54,6 +54,5 @@ completed implementation plans do not belong here.
 
 ## Later product work
 
-- Present identical written forms with different meanings more clearly.
 - Revisit Burrito packaging after a standard release is proven.
 - Consider versioned offline dictionary packs for v1.

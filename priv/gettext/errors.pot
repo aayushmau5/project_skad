@@ -110,3 +110,9 @@ msgstr ""
 
 msgid "matches another form of this word"
 msgstr ""
+
+msgid "is unavailable"
+msgstr ""
+
+msgid "must match the existing word"
+msgstr ""

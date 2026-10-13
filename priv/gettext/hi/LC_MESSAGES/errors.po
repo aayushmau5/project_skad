@@ -37,3 +37,9 @@ msgstr "कृपया इसकी पुष्टि करें"
 
 msgid "matches another form of this word"
 msgstr "इस शब्द के किसी अन्य रूप से मेल खाता है"
+
+msgid "is unavailable"
+msgstr "यह शब्द अभी उपलब्ध नहीं है"
+
+msgid "must match the existing word"
+msgstr "शब्द और उसकी भाषा मौजूदा प्रविष्टि के अनुसार रखें"

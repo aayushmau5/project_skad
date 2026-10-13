@@ -84,6 +84,52 @@ defmodule Skad.Contributions do
 
   def change_new_entry(attrs \\ %{}) when is_map(attrs) do
     NewEntrySubmission.changeset(%NewEntrySubmission{}, attrs)
+    |> validate_definition_language()
+    |> validate_meaning_source()
+  end
+
+  defp validate_definition_language(changeset, existing \\ []) do
+    languages = Archive.list_active_languages()
+
+    tags =
+      ["english", "hindi", "en", "hi"] ++
+        existing ++ Enum.flat_map(languages, &[&1.slug, &1.code])
+
+    case Changeset.get_field(changeset, :definition_language) do
+      nil ->
+        changeset
+
+      tag ->
+        if tag in tags,
+          do: changeset,
+          else: Changeset.add_error(changeset, :definition_language, "is invalid")
+    end
+  end
+
+  defp validate_meaning_source(changeset) do
+    case Changeset.get_field(changeset, :source_entry_public_id) do
+      nil ->
+        changeset
+
+      public_id ->
+        changeset = Changeset.validate_required(changeset, [:definition_language])
+
+        case Archive.get_public_entry(public_id) do
+          nil ->
+            Changeset.add_error(changeset, :source_entry_public_id, "is unavailable")
+
+          entry ->
+            form = Enum.find(entry.forms, & &1.is_primary)
+
+            if Changeset.get_field(changeset, :language_slug) == entry.language.slug and
+                 Archive.normalize_text(Changeset.get_field(changeset, :primary_form)) ==
+                   form.normalized_text do
+              changeset
+            else
+              Changeset.add_error(changeset, :primary_form, "must match the existing word")
+            end
+        end
+    end
   end
 
   def submit_new_entry(attrs, media_public_ids \\ [])
@@ -128,6 +174,7 @@ defmodule Skad.Contributions do
       end)
 
     EntryChangeSubmission.changeset(kind, base, attrs)
+    |> validate_definition_language(Enum.map(entry.definitions, & &1.language))
   end
 
   def submit_entry_change(kind, entry, attrs, media_public_ids \\ [])
@@ -139,6 +186,13 @@ defmodule Skad.Contributions do
     if changeset.valid? do
       change = Changeset.apply_changes(changeset)
       payload = EntryChangeSubmission.to_payload(kind, change)
+
+      payload =
+        if kind == :correction and
+             not (Map.has_key?(attrs, :definition_language) or
+                    Map.has_key?(attrs, "definition_language")),
+           do: Map.delete(payload, "definition_language"),
+           else: payload
 
       case Repo.get_by(Submission, client_submission_id: change.client_submission_id) do
         nil ->
@@ -352,7 +406,14 @@ defmodule Skad.Contributions do
         |> effective_payload()
         |> Map.put("client_submission_id", submission.client_submission_id)
         |> Map.merge(stringify_keys(attrs))
-        |> then(&change_entry_change(kind, entry, &1))
+        |> then(fn params ->
+          params =
+            if kind == :correction,
+              do: Map.put_new(params, "definition_language", params["language_slug"]),
+              else: params
+
+          change_entry_change(kind, entry, params)
+        end)
 
       nil ->
         {:error, :target_not_found}
@@ -463,6 +524,7 @@ defmodule Skad.Contributions do
     with %Submission{} = submission <- Repo.get(Submission, id),
          :ok <- approvable?(submission),
          payload = effective_payload(submission),
+         :ok <- validate_new_entry_payload(submission, payload),
          {:ok, language, archive_attrs} <-
            new_entry_archive_attrs(payload),
          {:ok, concept, archive_attrs} <- concept_choice(concept_params, archive_attrs),
@@ -519,6 +581,13 @@ defmodule Skad.Contributions do
   def approve_submission(_scope, %Submission{}, _note, _example_choices, _concept_params),
     do: {:error, :unauthorized}
 
+  defp validate_new_entry_payload(submission, payload) do
+    changeset =
+      change_new_entry(Map.put(payload, "client_submission_id", submission.client_submission_id))
+
+    if changeset.valid?, do: :ok, else: {:error, changeset}
+  end
+
   defp approve_entry_change(
          %Submission{kind: :correction} = submission,
          entry,
@@ -530,7 +599,7 @@ defmodule Skad.Contributions do
     before_state = canonical_entry_snapshot(entry)
 
     with :ok <- validate_entry_change_content(:correction, entry, payload, []),
-         {:ok, archive_attrs} <- correction_archive_attrs(payload),
+         {:ok, archive_attrs} <- correction_archive_attrs(payload, entry),
          {:ok, multi} <-
            approval_multi(submission, moderator, note)
            |> Archive.correct_entry_multi(entry, archive_attrs) do
@@ -859,11 +928,18 @@ defmodule Skad.Contributions do
     primary_form = Enum.find(entry.forms, & &1.is_primary)
 
     definition =
-      Enum.find(entry.definitions, &(&1.language == payload["language_slug"])) ||
+      Enum.find(
+        entry.definitions,
+        &(&1.language == (payload["definition_language"] || payload["language_slug"]))
+      ) ||
         List.first(entry.definitions)
 
     same_value?(primary_form && primary_form.text, payload["primary_form"]) and
       same_value?(definition && definition.text, payload["definition"]) and
+      same_value?(
+        definition && definition.language,
+        payload["definition_language"] || (definition && definition.language)
+      ) and
       same_value?(entry.part_of_speech, payload["part_of_speech"]) and
       same_value?(entry.usage_note, payload["usage_note"]) and
       same_value?(entry.cultural_note, payload["cultural_note"])
@@ -985,14 +1061,20 @@ defmodule Skad.Contributions do
            "language_slug" => language_slug,
            "primary_form" => primary_form,
            "definition" => definition
-         } = payload
+         } = payload,
+         entry
        )
        when is_binary(language_slug) and is_binary(primary_form) and is_binary(definition) do
     {:ok,
      %{
        primary_form: primary_form,
        entry: %{
-         definitions: [%{language: language_slug, text: definition}],
+         definitions:
+           corrected_definitions(
+             entry,
+             payload["definition_language"] || language_slug,
+             definition
+           ),
          part_of_speech: payload["part_of_speech"],
          usage_note: payload["usage_note"],
          cultural_note: payload["cultural_note"]
@@ -1000,7 +1082,16 @@ defmodule Skad.Contributions do
      }}
   end
 
-  defp correction_archive_attrs(_payload), do: {:error, :unsupported_payload}
+  defp correction_archive_attrs(_payload, _entry), do: {:error, :unsupported_payload}
+
+  defp corrected_definitions(entry, language, text) do
+    definitions = Enum.map(entry.definitions, &%{language: &1.language, text: &1.text})
+
+    case Enum.find_index(definitions, &(&1.language == language)) do
+      nil -> definitions ++ [%{language: language, text: text}]
+      index -> List.update_at(definitions, index, &%{&1 | text: text})
+    end
+  end
 
   defp addition_form_attrs(%{"alternate_form" => nil}), do: nil
   defp addition_form_attrs(%{"alternate_form" => ""}), do: nil
@@ -1035,7 +1126,9 @@ defmodule Skad.Contributions do
          %{
            concept: %{editorial_label: primary_form},
            entry: %{
-             definitions: [%{language: language_slug, text: definition}],
+             definitions: [
+               %{language: payload["definition_language"] || language_slug, text: definition}
+             ],
              part_of_speech: payload["part_of_speech"],
              usage_note: payload["usage_note"],
              cultural_note: payload["cultural_note"]

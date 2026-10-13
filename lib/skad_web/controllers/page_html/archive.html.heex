@@ -34,33 +34,34 @@
 
   <ol :if={@archive.entries != []} id="archive-words" class="result-list">
     <li
-      :for={entry <- @archive.entries}
-      id={"archive-word-#{entry.public_id}"}
+      :for={word <- @archive.entries}
+      id={"archive-word-#{word.entry.public_id}"}
       class="result-card"
     >
       <div class="archive-word-heading">
         <.link
-          href={~p"/entries/#{entry.public_id}"}
+          href={~p"/entries/#{word.entry.public_id}"}
           class="result-link"
-          lang={entry.language.code || entry.language.slug}
-          dir={to_string(entry.language.direction)}
-        >{primary_form_text(entry)}</.link>
+          lang={word.entry.language.code || word.entry.language.slug}
+          dir={to_string(word.entry.language.direction)}
+        >{primary_form_text(word.entry)}</.link>
         <span :if={is_nil(@language)} class="archive-language-pill">
-          {language_label(entry.language)}
+          {language_label(word.entry.language)}
         </span>
       </div>
       <p
-        :if={entry.part_of_speech || entry.variety_label || entry.place_label}
+        :if={word.entry.part_of_speech || word.entry.variety_label || word.entry.place_label}
         class="result-meta"
       >
         {Enum.join(
-          Enum.reject([entry.part_of_speech, entry.variety_label, entry.place_label], &is_nil/1),
+          Enum.reject(
+            [word.entry.part_of_speech, word.entry.variety_label, word.entry.place_label],
+            &is_nil/1
+          ),
           " · "
         )}
       </p>
-      <p :if={first_definition(entry)} lang={definition_language(entry, @languages)} dir="auto">
-        {first_definition(entry)}
-      </p>
+      <.word_preview word={word} languages={@languages} />
     </li>
   </ol>
 

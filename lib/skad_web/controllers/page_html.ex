@@ -39,7 +39,7 @@ defmodule SkadWeb.PageHTML do
           class="result-card"
         >
           <.link
-            href={~p"/entries/#{result.entry.public_id}"}
+            href={word_path(result)}
             class="result-link"
             lang={result.entry.language.code || result.entry.language.slug}
             dir={to_string(result.entry.language.direction)}
@@ -59,12 +59,17 @@ defmodule SkadWeb.PageHTML do
               " · "
             )}
           </p>
+          <.word_preview word={result} languages={@languages} />
           <p
-            :if={result_definition(result)}
+            :if={
+              result.match_source == :meaning &&
+                result.match_excerpt != first_definition(result.entry)
+            }
+            class="result-meta"
             lang={result_definition_language(result, @languages)}
             dir="auto"
           >
-            {result_definition(result)}
+            {result.match_excerpt}
           </p>
           <p :if={result.matched_form && !result.matched_form.is_primary} class="result-meta">
             {form_match_label(result.matched_form.kind)}
@@ -87,6 +92,29 @@ defmodule SkadWeb.PageHTML do
       </ol>
     </section>
     """
+  end
+
+  attr :word, :map, required: true
+  attr :languages, :list, required: true
+
+  def word_preview(assigns) do
+    ~H"""
+    <p class="word-preview" lang={definition_language(@word.entry, @languages)} dir="auto">
+      <span
+        :for={{meaning, index} <- Enum.with_index(@word.meanings)}
+        lang={definition_language(meaning, @languages)}
+      >{if index > 0, do: "; "}{first_definition(meaning)}</span>
+    </p>
+    """
+  end
+
+  def meaning_path(entry), do: ~p"/entries/#{entry.public_id}" <> "#meaning-#{entry.public_id}"
+
+  def word_path(%{entry: entry, meanings: [_]}), do: ~p"/entries/#{entry.public_id}"
+  def word_path(%{entry: entry}), do: meaning_path(entry)
+
+  def meaning_dom_id(id, entry, selected_id) do
+    if entry.id == selected_id, do: id, else: "#{id}-#{entry.public_id}"
   end
 
   def primary_form(entry), do: Enum.find(entry.forms, & &1.is_primary)

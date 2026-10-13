@@ -180,6 +180,7 @@ defmodule SkadWeb.PageControllerTest do
     document = conn |> html_response(200) |> LazyHTML.from_document()
 
     assert String.trim(LazyHTML.text(LazyHTML.query_by_id(document, "entry-title"))) == "Water"
+    assert Enum.empty?(LazyHTML.query(document, "#entry-meanings details"))
 
     assert LazyHTML.text(LazyHTML.query_by_id(document, "entry-definitions")) =~
              "A clear liquid used for drinking."
@@ -194,7 +195,7 @@ defmodule SkadWeb.PageControllerTest do
     assert LazyHTML.attribute(
              LazyHTML.query(document, "#equivalent-entry-#{hindi_water.public_id} a"),
              "href"
-           ) == [~p"/entries/#{hindi_water.public_id}"]
+           ) == [SkadWeb.PageHTML.meaning_path(hindi_water)]
 
     assert LazyHTML.attribute(
              LazyHTML.query(document, "#equivalent-entry-#{hindi_water.public_id} span"),
@@ -215,7 +216,7 @@ defmodule SkadWeb.PageControllerTest do
                "example-link-#{example.public_id}-#{hd(example.links).id}"
              ),
              "href"
-           ) == [~p"/entries/#{water.public_id}"]
+           ) == [SkadWeb.PageHTML.meaning_path(water)]
 
     assert LazyHTML.attribute(
              LazyHTML.query_by_id(document, "entry-audio-#{audio.public_id}"),
@@ -240,8 +241,13 @@ defmodule SkadWeb.PageControllerTest do
     assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-example"), "href") ==
              [~p"/entries/#{water.public_id}/examples/new"]
 
-    assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-audio"), "href") ==
+    assert LazyHTML.attribute(
+             LazyHTML.query(document, "#entry-pronunciation #record-missing-pronunciation"),
+             "href"
+           ) ==
              [~p"/entries/#{water.public_id}/audio/new"]
+
+    assert Enum.empty?(LazyHTML.query(document, "#entry-contributions a[href$='/audio/new']"))
 
     assert LazyHTML.attribute(LazyHTML.query_by_id(document, "suggest-entry-images"), "href") ==
              [~p"/entries/#{water.public_id}/images/new"]

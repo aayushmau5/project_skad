@@ -33,6 +33,7 @@ defmodule SkadWeb.Router do
     get "/archive", PageController, :archive
     get "/search/results", PageController, :results
     get "/entries/:public_id", PageController, :entry
+    get "/entries/:public_id/meanings/new", ContributionController, :new_meaning
     get "/entries/:public_id/correct", ContributionController, :correct
     post "/entries/:public_id/corrections", ContributionController, :create_correction
     get "/entries/:public_id/add", ContributionController, :add

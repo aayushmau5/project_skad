@@ -6,8 +6,16 @@
   moderator={@moderator_workspace?}
 >
   <section id="new-entry-contribution" class="auth-panel">
-    <h1>{gettext("Suggest a word")}</h1>
-    <p class="help-text">{gettext("1. Choose what you know: a word or expression")}</p>
+    <h1>{@page_title}</h1>
+    <p :if={@source_entry} id="new-meaning-context">
+      {gettext(
+        "Share a different meaning of this word. Its existing meanings will stay as they are."
+      )}
+      <.link href={SkadWeb.PageHTML.meaning_path(@source_entry)}>{gettext("Back to entry")}</.link>
+    </p>
+    <p :if={!@source_entry} class="help-text">
+      {gettext("1. Choose what you know: a word or expression")}
+    </p>
     <p>{gettext("Your suggestion will be reviewed before it appears in the archive.")}</p>
 
     <.form
@@ -18,18 +26,38 @@
     >
       <.form_errors form={@form} id="new-entry-errors" />
       <.input field={@form[:client_submission_id]} type="hidden" />
+      <.input field={@form[:source_entry_public_id]} type="hidden" />
       <fieldset id="contribution-content" class="form-stage">
-        <legend>{gettext("2. Share it with context")}</legend>
+        <legend>
+          {if @source_entry,
+            do: gettext("Share it with context"),
+            else: gettext("2. Share it with context")}
+        </legend>
         <.language_chips
+          :if={!@source_entry}
           field={@form[:language_slug]}
           label={gettext("Language")}
           languages={@languages}
         />
+        <%= if @source_entry do %>
+          <.input field={@form[:language_slug]} type="hidden" />
+          <p id="new-meaning-word-language">{language_label(@source_entry.language)}</p>
+        <% end %>
         <.input
           field={@form[:primary_form]}
           type="text"
           label={gettext("Word or expression")}
           class="auth-input"
+          readonly={not is_nil(@source_entry)}
+          required
+        />
+        <.input
+          field={@form[:definition_language]}
+          type="select"
+          label={gettext("Language of this explanation")}
+          class="auth-input"
+          options={definition_language_options(@languages, @form[:definition_language].value)}
+          prompt={gettext("Choose a language")}
           required
         />
         <.input
@@ -168,7 +196,9 @@
         />
       </fieldset>
       <fieldset id="contribution-confirm" class="form-stage">
-        <legend>{gettext("3. Confirm and send")}</legend>
+        <legend>
+          {if @source_entry, do: gettext("Confirm and send"), else: gettext("3. Confirm and send")}
+        </legend>
         <p>
           {gettext(
             "Your suggestion will be reviewed before publication. Keep the receipt to check its status."

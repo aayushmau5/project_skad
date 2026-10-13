@@ -60,6 +60,13 @@ defmodule SkadWeb.ModeratorSubmissionHTML do
         <dd>{status_label(@submission.kind)}</dd>
         <dt>{gettext("Language")}</dt>
         <dd id="submission-language">{payload_value(@submission, "language_slug")}</dd>
+        <dt :if={@submission.kind in [:new_entry, :correction]}>
+          {gettext("Language of this explanation")}
+        </dt>
+        <dd :if={@submission.kind in [:new_entry, :correction]} id="submission-definition-language">
+          {payload_value(@submission, "definition_language") ||
+            payload_value(@submission, "language_slug")}
+        </dd>
         <dt :if={@submission.kind in [:new_entry, :correction]}>{gettext("Meaning")}</dt>
         <dd
           :if={@submission.kind in [:new_entry, :correction]}
