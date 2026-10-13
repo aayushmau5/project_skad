@@ -26,6 +26,7 @@ defmodule SkadWeb.Endpoint do
     from: :skad,
     gzip: not code_reloading?,
     only: SkadWeb.static_paths(),
+    only_matching: ["app-"],
     raise_on_missing_only: code_reloading?
 
   # Code reloading can be explicitly enabled under the
