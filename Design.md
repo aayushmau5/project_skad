@@ -324,6 +324,8 @@ Every feature must design these states, not only the happy path:
 
 Status messages should answer: **What happened? Is my information safe? What can I do now?**
 
+Disposable review instances show a restrained English or Hindi notice above the page content explaining that suggestions and uploads reset when the instance restarts.
+
 ## Accessibility
 
 - Use semantic HTML and native controls first.

@@ -93,6 +93,11 @@ msgstr ""
 msgid "Add another form"
 msgstr ""
 
+#: lib/skad_web/components/layouts.ex
+#, elixir-autogen, elixir-format
+msgid "Review instance: suggestions and uploads reset when the app restarts."
+msgstr ""
+
 #: lib/skad_web/controllers/contribution_html/entry_change.html.heex:97
 #: lib/skad_web/controllers/moderator_archive_html.ex:24
 #: lib/skad_web/controllers/moderator_submission_html/show.html.heex:254

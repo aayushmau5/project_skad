@@ -1,7 +1,35 @@
 defmodule Skad.Media.Storage do
+  alias Skad.Media.ReviewStorage
+
   @upload_expires_in 300
 
   def presign_put(object_key, mime_type) do
+    if review_instance?(),
+      do: ReviewStorage.presign_put(object_key, mime_type),
+      else: s3_presign_put(object_key, mime_type)
+  end
+
+  def presign_get(object_key) do
+    if review_instance?(),
+      do: ReviewStorage.presign_get(object_key),
+      else: s3_presign_get(object_key)
+  end
+
+  def head_object(object_key) do
+    if review_instance?(),
+      do: ReviewStorage.head_object(object_key),
+      else: s3_head_object(object_key)
+  end
+
+  def copy_object(source_key, destination_key) do
+    if review_instance?(),
+      do: ReviewStorage.copy_object(source_key, destination_key),
+      else: s3_copy_object(source_key, destination_key)
+  end
+
+  defp review_instance?, do: Application.get_env(:skad, :review_instance, false)
+
+  defp s3_presign_put(object_key, mime_type) do
     config = config()
     headers = [{"content-type", mime_type}]
 
@@ -25,7 +53,7 @@ defmodule Skad.Media.Storage do
      }}
   end
 
-  def presign_get(object_key) do
+  defp s3_presign_get(object_key) do
     config = config()
 
     url =
@@ -42,7 +70,7 @@ defmodule Skad.Media.Storage do
     {:ok, %{url: URI.to_string(url), expires_in: @upload_expires_in}}
   end
 
-  def head_object(object_key) do
+  defp s3_head_object(object_key) do
     config = config()
 
     case Req.head(object_url(config, object_key), request_options(config)) do
@@ -53,7 +81,7 @@ defmodule Skad.Media.Storage do
     end
   end
 
-  def copy_object(source_key, destination_key) do
+  defp s3_copy_object(source_key, destination_key) do
     config = config()
 
     options =

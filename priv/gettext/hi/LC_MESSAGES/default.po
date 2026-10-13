@@ -86,6 +86,11 @@ msgstr "उच्चारण की रिकॉर्डिंग जोड़
 msgid "Add another form"
 msgstr "शब्द का दूसरा रूप जोड़ें"
 
+#: lib/skad_web/components/layouts.ex
+#, elixir-autogen, elixir-format
+msgid "Review instance: suggestions and uploads reset when the app restarts."
+msgstr "यह समीक्षा के लिए बना परीक्षण संस्करण है। ऐप दोबारा शुरू होने पर सुझाव और अपलोड मिट जाते हैं।"
+
 #: lib/skad_web/controllers/contribution_html/entry_change.html.heex:97
 #: lib/skad_web/controllers/moderator_archive_html.ex:24
 #: lib/skad_web/controllers/moderator_submission_html/show.html.heex:254

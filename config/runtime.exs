@@ -48,20 +48,27 @@ if config_env() == :dev do
 end
 
 if config_env() == :prod do
-  config :skad, :object_storage,
-    endpoint: System.fetch_env!("R2_ENDPOINT"),
-    region: System.get_env("R2_REGION", "auto"),
-    bucket: System.fetch_env!("R2_BUCKET"),
-    access_key_id: System.fetch_env!("R2_ACCESS_KEY_ID"),
-    secret_access_key: System.fetch_env!("R2_SECRET_ACCESS_KEY"),
-    path_style: false
-
   database_path =
     System.get_env("DATABASE_PATH") ||
       raise """
       environment variable DATABASE_PATH is missing.
       For example: /etc/skad/skad.db
       """
+
+  review_instance? = System.get_env("SKAD_REVIEW_INSTANCE") == "true"
+  config :skad, :review_instance, review_instance?
+
+  if review_instance? do
+    config :skad, :review_upload_path, Path.join(Path.dirname(database_path), "uploads")
+  else
+    config :skad, :object_storage,
+      endpoint: System.fetch_env!("R2_ENDPOINT"),
+      region: System.get_env("R2_REGION", "auto"),
+      bucket: System.fetch_env!("R2_BUCKET"),
+      access_key_id: System.fetch_env!("R2_ACCESS_KEY_ID"),
+      secret_access_key: System.fetch_env!("R2_SECRET_ACCESS_KEY"),
+      path_style: false
+  end
 
   config :skad, Skad.Repo,
     database: database_path,
@@ -79,7 +86,7 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  host = System.get_env("PHX_HOST") || System.get_env("RENDER_EXTERNAL_HOSTNAME") || "example.com"
 
   config :skad, SkadWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],

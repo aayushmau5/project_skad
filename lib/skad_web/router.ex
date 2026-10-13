@@ -19,6 +19,12 @@ defmodule SkadWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # These routes authenticate with short-lived signed URLs rather than browser sessions.
+  scope "/review-media", SkadWeb do
+    put "/:token", ReviewMediaController, :upload
+    get "/:token", ReviewMediaController, :download
+  end
+
   scope "/", SkadWeb do
     pipe_through :api
 

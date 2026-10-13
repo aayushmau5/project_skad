@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: skad-review
+    runtime: elixir
+    plan: free
+    region: singapore
+    branch: codex/review-deployment
+    buildCommand: ./bin/build-review
+    startCommand: _build/prod/rel/skad/bin/review
+    healthCheckPath: /ready
+    autoDeployTrigger: "off"
+    envVars:
+      - key: ELIXIR_VERSION
+        value: 1.20.4
+      - key: ERLANG_VERSION
+        value: 29.1.1
+      - key: SKAD_REVIEW_INSTANCE
+        value: "true"
+      - key: DATABASE_PATH
+        value: /tmp/skad-review/skad.sqlite3
+      - key: POOL_SIZE
+        value: "2"
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: SKAD_REVIEW_MODERATOR_PASSWORD
+        generateValue: true

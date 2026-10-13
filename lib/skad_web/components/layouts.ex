@@ -97,6 +97,13 @@ defmodule SkadWeb.Layouts do
     </div>
     <main id="main-content" class={["site-main", @moderator && "moderator-main"]} tabindex="-1">
       <.flash_group flash={@flash} />
+      <p
+        :if={Application.get_env(:skad, :review_instance, false)}
+        id="review-instance-notice"
+        class="help-text"
+      >
+        {gettext("Review instance: suggestions and uploads reset when the app restarts.")}
+      </p>
       {render_slot(@inner_block)}
     </main>
     <footer id="site-footer" class={["site-footer", @moderator && "moderator-footer"]}>
