@@ -90,7 +90,7 @@ msgstr ""
 
 #: lib/skad_web/controllers/page_html/meaning.html.heex:157
 #, elixir-autogen, elixir-format
-msgid "Add the form used in your village"
+msgid "Add another form"
 msgstr ""
 
 #: lib/skad_web/controllers/contribution_html/entry_change.html.heex:97
@@ -469,7 +469,7 @@ msgstr ""
 
 #: lib/skad_web/controllers/page_html/meaning.html.heex:141
 #, elixir-autogen, elixir-format
-msgid "Local forms and pronunciations may vary. Share the form used in your village."
+msgid "Local forms and pronunciations may vary. Share another form of this word."
 msgstr ""
 
 #: lib/skad_web/controllers/page_html.ex:170

@@ -138,7 +138,7 @@
     {gettext("Detailed source and review information is not available here.")}
   </p>
   <p class="help-text">
-    {gettext("Local forms and pronunciations may vary. Share the form used in your village.")}
+    {gettext("Local forms and pronunciations may vary. Share another form of this word.")}
   </p>
 </section>
 <section id={meaning_dom_id("entry-contributions", @entry, @selected_id)} class="entry-section">
@@ -154,7 +154,7 @@
       <.link
         id={meaning_dom_id("suggest-entry-addition", @entry, @selected_id)}
         href={~p"/entries/#{@entry.public_id}/add"}
-      >{gettext("Add the form used in your village")}</.link>
+      >{gettext("Add another form")}</.link>
     </li>
     <li>
       <.link

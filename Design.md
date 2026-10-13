@@ -244,7 +244,7 @@ Each numbered meaning retains its own translated descriptions, examples, forms, 
 
 For words with multiple meanings, show descriptions and their example sentences together in a compact numbered list. Numbers link to their meaning anchors. Avoid a separate index that repeats the same descriptions. Show pronunciation, supporting context, record details, and contribution actions directly beneath each meaning, without a collapsed disclosure. The **Record this pronunciation** action belongs under **Listen to this word**, including when a recording already exists, and is not repeated under **Share what you know**. Words with one meaning keep the reading order above.
 
-Do not present every database field with equal weight. Missing information should become a specific invitation such as **Record this pronunciation** or **Add the form used in your village**.
+Do not present every database field with equal weight. Missing information should become a specific invitation such as **Record this pronunciation** or **Add another form**. Contribution prompts must match the information their forms actually collect; the alternate-form prompt does not ask for village context.
 
 ### Contribution flow
 
