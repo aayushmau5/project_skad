@@ -12,7 +12,7 @@ from `priv/review/skad.sqlite3` whenever the runtime database is absent.
 
 The packaged database contains public archive records only. Moderator accounts,
 sessions, submissions, revisions, examples, and media are excluded. On first boot,
-the release creates `reviewer@skad.example` using the password configured in
+the release creates `moderator@test.com` using the password configured in
 `SKAD_REVIEW_MODERATOR_PASSWORD`.
 
 ## Render configuration
@@ -34,7 +34,7 @@ Required environment variables:
 | `DATABASE_PATH` | `/tmp/skad-review/skad.sqlite3` |
 | `POOL_SIZE` | `2` |
 | `SECRET_KEY_BASE` | A generated secret of at least 64 bytes |
-| `SKAD_REVIEW_MODERATOR_PASSWORD` | A generated password of at least 12 characters |
+| `SKAD_REVIEW_MODERATOR_PASSWORD` | A configured password of at least 12 characters |
 
 Render supplies `PORT` and `RENDER_EXTERNAL_HOSTNAME`. A custom domain can use
 `PHX_HOST` instead. Store secrets in Render, never in the repository.

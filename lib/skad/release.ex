@@ -19,7 +19,7 @@ defmodule Skad.Release do
       Ecto.Migrator.with_repo(Repo, fn repo ->
         Ecto.Migrator.run(repo, :up, all: true)
         password = System.fetch_env!("SKAD_REVIEW_MODERATOR_PASSWORD")
-        email = "reviewer@skad.example"
+        email = "moderator@test.com"
 
         unless Accounts.get_moderator_account_by_email(email) do
           {:ok, _account} =
