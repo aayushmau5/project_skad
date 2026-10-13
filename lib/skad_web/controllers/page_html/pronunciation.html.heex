@@ -1,0 +1,35 @@
+<section id={meaning_dom_id("entry-pronunciation", @entry, @selected_id)} class="entry-section">
+  <h3>{gettext("Listen to this word")}</h3>
+  <%= if @audio do %>
+    <audio
+      id={"entry-audio-#{@audio.public_id}"}
+      controls
+      preload="none"
+      src={~p"/media/#{@audio.public_id}"}
+      aria-label={gettext("Pronunciation of %{word}", word: primary_form_text(@entry))}
+      aria-describedby={meaning_dom_id("entry-audio-context", @entry, @selected_id)}
+    ></audio>
+    <p id={meaning_dom_id("entry-audio-context", @entry, @selected_id)} class="result-meta">
+      {Enum.join(
+        Enum.reject(
+          [@audio.variety_label, @audio.place_label, @audio.attribution_text],
+          &is_nil/1
+        ),
+        " · "
+      )}
+    </p>
+    <p class="result-meta">{audio_duration(@audio.duration_ms)}</p>
+    <p class="help-text">{gettext("This recording reflects one speaker’s pronunciation.")}</p>
+    <p data-media-error hidden role="status">
+      {gettext("This recording is unavailable. Try again when your connection returns.")}
+    </p>
+  <% else %>
+    <p id={meaning_dom_id("entry-audio-missing", @entry, @selected_id)}>
+      {gettext("A pronunciation has not been recorded yet.")}
+    </p>
+  <% end %>
+  <.link
+    id={meaning_dom_id("record-missing-pronunciation", @entry, @selected_id)}
+    href={~p"/entries/#{@entry.public_id}/audio/new"}
+  >{gettext("Record this pronunciation")}</.link>
+</section>
